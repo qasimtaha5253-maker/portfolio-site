@@ -3,6 +3,9 @@ import { projects } from './data/projects.js';
 import { buildChapters } from './chapters.js';
 import { buildCards } from './cards.js';
 import { initScroll } from './scroll.js';
+import { initIntro } from './intro.js';
+
+initIntro(document.getElementById('top'));
 
 const featured = projects.filter((p) => p.featured);
 const others = projects.filter((p) => !p.featured);

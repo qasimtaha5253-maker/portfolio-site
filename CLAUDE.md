@@ -28,7 +28,11 @@ anything the user must do on their end in plain terms.
 - Git + GitHub, deployed on Vercel
 
 ## Code layout
-- `index.html` — page shell: hero/intro, `#chapters`, `#more-projects-grid`, footer
+- `index.html` — page shell: `#top` animated intro, `#about`, `#chapters`,
+  `#more-projects-grid`, footer
+- `src/intro.js` — full-screen canvas intro (vanilla port of the "HelixChronoMatrix" React
+  component, Double Helix mode only, no controls). Follows system light/dark theme, pauses
+  off-screen, still frame under reduced motion. Kept vanilla on purpose: no React/Tailwind/TS.
 - `src/data/projects.js` — **the only file to edit to add/change projects** (shape documented at top).
   `featured: true` → pinned scrollytelling chapter; `false` → card in the "More projects" grid.
 - `src/chapters.js` — builds featured chapters from the config
