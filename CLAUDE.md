@@ -37,6 +37,12 @@ anything the user must do on their end in plain terms.
   `{ el, setProgress(stepIndex, progress) }`, registered in `src/visuals/index.js`.
 - `src/style.css` — layout (desktop split / mobile sticky) and reduced-motion rules
 
+## Hosting
+- Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)
+- Live site (Vercel, auto-deploys on push to `main`):
+  https://portfolio-site-qasim-1db5.vercel.app/
+- Project lives at `C:\Users\qasim\Documents\portfolio-site` (moved out of OneDrive).
+
 ## Commands
 - `npm run dev` — dev server, exposed on the local network (open from phone)
 - `npm run build` / `npm run preview`
@@ -44,4 +50,5 @@ anything the user must do on their end in plain terms.
 ## Status
 - Session 1 (2026-09-16): skeleton only — hero, two placeholder chapters with
   coloured boxes, pinned step scrolling, config structure, git init.
+  Pushed to GitHub and deployed on Vercel; verified live on desktop and mobile.
 - Not started yet: real content, visual design, image sequences, Three.js model.
