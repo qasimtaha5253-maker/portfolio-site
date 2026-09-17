@@ -47,8 +47,13 @@ anything the user must do on their end in plain terms.
 - Source photos: `content/photos/<project-id>/<name>.(jpg|png|...)`
 - `npm run images` converts them to `public/projects/<project-id>/<name>-{480,960,1600}.webp`
   (commit both). Config refers to photos by `<name>` only.
-- Current photos were extracted from the user's PDF portfolio and are low-res (≈300–850 px);
-  replace with originals of the same name when available.
+- The script has no pixel limit (SolidWorks renders can be huge, e.g. 24000×19000), refuses
+  to run if two files in a folder share a name, and deletes WebP files whose source is gone.
+- Most photos are now the user's originals. Still PDF-extracted (low-res): coffee-cup-gripper/
+  built-gripper, conveyor-cart/shaft-assembly-render, hydraulic-hand/part-drawing,
+  reef-rover/collection-mechanism.
+- Cooling unit: `final-design` is the dimensioned towable cart (the actual final design);
+  `interim-concept` is the earlier solar-lid concept the team pivoted away from.
 
 ## Content decisions
 - Featured (pinned chapters): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are grid cards.

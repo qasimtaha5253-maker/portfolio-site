@@ -50,6 +50,16 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
     continue;
   }
 
+  // Remove WebP files whose source photo was deleted or renamed.
+  const sizePattern = new RegExp(`^(.*)-(${IMAGE_WIDTHS.join('|')})\\.webp$`);
+  for (const out of await fs.readdir(outDir)) {
+    const match = out.match(sizePattern);
+    if (match && !byName[match[1]]) {
+      await fs.rm(path.join(outDir, out));
+      console.log(`  removed ${project.name}/${out}`);
+    }
+  }
+
   for (const file of files) {
     const name = path.basename(file, path.extname(file));
     const src = path.join(srcDir, file);
@@ -61,7 +71,8 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
     }
 
     for (const [i, width] of IMAGE_WIDTHS.entries()) {
-      await sharp(src)
+      // No pixel limit: SolidWorks renders can be exported at huge resolutions.
+      await sharp(src, { limitInputPixels: false })
         .rotate() // respect phone-camera orientation
         .flatten({ background: '#ffffff' }) // transparent renders -> white
         .resize({ width, withoutEnlargement: true })

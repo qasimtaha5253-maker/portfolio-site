@@ -45,7 +45,7 @@ export const projects = [
           'Goal: cool fruit to 0–2 °C in the field, before it ever reaches cold storage.',
           'Off-grid, six vented flats, towable by one worker, keeps fruit dry, low-GWP refrigerant.',
         ],
-        image: { src: 'final-design', alt: 'Rendered cooling cart with solar lid open, showing six strawberry flats and cold-air flow arrows' },
+        image: { src: 'strawberry-flat', alt: 'CAD of a standard 16 × 12 × 4 in vented strawberry flat, empty and loaded' },
       },
       {
         label: 'Choosing a concept',
@@ -53,7 +53,7 @@ export const projects = [
           'Ranked 7 concepts with weighted decision matrices.',
           'A why-why analysis showed the interim design fell short, so the team pivoted.',
         ],
-        image: { src: 'alternative-concepts', alt: 'Isometric, side and front views of an alternative cabinet-style cooling concept' },
+        image: { src: 'interim-concept', alt: 'Annotated interim concept: solar-lid cooling cart with evaporator coil, DC compressor, battery and insulated compartment' },
       },
       {
         label: 'How it works',
@@ -62,7 +62,7 @@ export const projects = [
           'R-290 refrigeration cycle analysed on a P-h diagram; variable-speed compressor selected.',
           '48 V LiFePO₄ battery and inverter sized from a duty-cycle energy analysis.',
         ],
-        image: { src: 'refrigeration-cutaway', alt: 'Cutaway of the enclosure showing strawberries, evaporator fan, and compressor' },
+        image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
       },
       {
         label: 'Validation',
@@ -87,7 +87,7 @@ export const projects = [
           '461 kg CO₂e/yr avoided (R-290 GWP of 3 vs 1,430 for R-134a).',
           'Met every design criterion; recommended for prototype fabrication.',
         ],
-        image: { src: 'final-design', alt: 'Rendered cooling cart with solar lid open' },
+        image: { src: 'final-design', alt: 'Final towable cooling cart design with overall dimensions' },
       },
     ],
   },
