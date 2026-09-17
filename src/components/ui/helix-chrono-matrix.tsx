@@ -8,6 +8,8 @@
  * - `gradient` prop colours the rings (and their particles) from top to bottom,
  *   with separate stops for light and dark mode. Without it the original monochrome look is kept.
  * - `speed` prop (default 1) scales all motion: helix wave, ring rotation, particles.
+ * - Motion is time-based, so it runs at the same speed regardless of display refresh rate
+ *   (the original advanced a fixed amount per frame, so it ran ~2x faster on a 120Hz screen).
  * - `children` render under the headline.
  * - Animation pauses while off-screen and draws a single still frame when the
  *   visitor prefers reduced motion. Animation time is kept in a ref so pausing
@@ -230,9 +232,18 @@ export function HelixChronoMatrix({
         if (!ctx) return;
 
         let animId = 0;
+        let lastFrame = 0;
+        // Motion is scaled by elapsed time (1 = one 60fps frame) so the animation
+        // runs at the same speed on 60Hz, 120Hz and 144Hz displays.
+        let step = 1;
 
-        const drawFrame = () => {
-            if (shouldAnimate) timeRef.current += 0.012 * speed;
+        const drawFrame = (now = performance.now()) => {
+            const elapsed = lastFrame ? (now - lastFrame) / (1000 / 60) : 1;
+            lastFrame = now;
+            // Clamp so a background tab or a stall doesn't jump the animation.
+            step = Math.min(Math.max(elapsed, 0), 3) * speed;
+
+            if (shouldAnimate) timeRef.current += 0.012 * step;
             const time = timeRef.current;
             const { width, height } = dimensionsRef.current;
             const pointer = pointerRef.current;
@@ -241,12 +252,15 @@ export function HelixChronoMatrix({
             const trans = topologyTransitionRef.current;
 
             if (trans.progress < 1) {
-                trans.progress = shouldAnimate ? Math.min(1, trans.progress + 0.05) : 1;
+                trans.progress = shouldAnimate ? Math.min(1, trans.progress + 0.05 * step) : 1;
             }
 
-            // Silky smooth mouse interpolation (Lerp)
-            pointer.x += (pointer.targetX - pointer.x) * 0.1;
-            pointer.y += (pointer.targetY - pointer.y) * 0.1;
+            // Silky smooth mouse interpolation (Lerp), time-based like the rest
+            const lerp = Math.min(1, 0.1 * step);
+            pointer.x += (pointer.targetX - pointer.x) * lerp;
+            pointer.y += (pointer.targetY - pointer.y) * lerp;
+            // Per-frame decay rates, corrected for elapsed time
+            const decay = Math.pow(0.92, step);
 
             const isDark = document.documentElement.classList.contains('dark') || isDarkMode;
             const bgColor = isDark ? '#090a0f' : '#f8fafc';
@@ -264,7 +278,7 @@ export function HelixChronoMatrix({
             // Render fibers
             for (let rIdx = 0; rIdx < rings.length; rIdx++) {
                 const ring = rings[rIdx];
-                if (shouldAnimate) ring.angle += ring.rotationSpeed * speed;
+                if (shouldAnimate) ring.angle += ring.rotationSpeed * step;
 
                 const points = ring.points;
                 const numPoints = points.length;
@@ -320,13 +334,13 @@ export function HelixChronoMatrix({
                     if (dist < pointer.radius && dist > 0) {
                         const ratio = 1 - dist / pointer.radius;
                         const targetVy = Math.sin(theta + time) * ratio * 15;
-                        pt.vy += (targetVy - pt.vy) * 0.1;
+                        pt.vy += (targetVy - pt.vy) * lerp;
                         pt.excitation = Math.max(pt.excitation, ratio);
                     } else {
-                        pt.vy *= 0.92;
+                        pt.vy *= decay;
                     }
 
-                    pt.excitation *= 0.92;
+                    pt.excitation *= decay;
                     avgExcitation += pt.excitation;
 
                     if (pIdx === 0) {
@@ -367,7 +381,7 @@ export function HelixChronoMatrix({
             // Render Traveling Points along the Lines (Black normally, White when hovered/excited)
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
-                if (shouldAnimate) p.progress = (p.progress + p.speed * speed + 1) % 1;
+                if (shouldAnimate) p.progress = (p.progress + p.speed * step + 1) % 1;
 
                 const ring = rings[p.ringIndex];
                 if (!ring) continue;
@@ -424,8 +438,8 @@ export function HelixChronoMatrix({
             }
         };
 
-        const render = () => {
-            drawFrame();
+        const render = (now?: number) => {
+            drawFrame(now);
             if (shouldAnimate) animId = requestAnimationFrame(render);
         };
 
