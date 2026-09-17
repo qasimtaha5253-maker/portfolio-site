@@ -1,8 +1,10 @@
 import { createVisual } from './visuals/index.js';
+import { createPhoto } from './images.js';
+import { renderStepContent } from './step-content.js';
 
 /**
- * Builds one <section class="chapter"> per project and returns
- * [{ project, section, stepEls, visual }] for the scroll controller.
+ * Builds one <section class="chapter"> per featured project and returns
+ * [{ project, section, pin, stepEls, dotEls, visual }] for the scroll controller.
  */
 export function buildChapters(container, projects) {
   return projects.map((project, i) => {
@@ -10,11 +12,13 @@ export function buildChapters(container, projects) {
     section.className = 'chapter';
     section.id = project.id;
     section.setAttribute('aria-labelledby', `${project.id}-title`);
+    const hasStepImages = project.steps.some((s) => s.image);
+    section.classList.toggle('has-step-media', hasStepImages);
 
     const pin = document.createElement('div');
     pin.className = 'chapter__pin';
 
-    const visual = createVisual(project.visual);
+    const visual = createVisual(project);
     const visualWrap = document.createElement('div');
     visualWrap.className = 'chapter__visual';
     visualWrap.append(visual.el);
@@ -24,13 +28,20 @@ export function buildChapters(container, projects) {
 
     const header = document.createElement('header');
     header.className = 'chapter__header';
-    header.innerHTML = `
-      <p class="chapter__index">Project ${String(i + 1).padStart(2, '0')}</p>
-      <h2 class="chapter__title" id="${project.id}-title"></h2>
-      ${project.subtitle ? '<p class="chapter__subtitle"></p>' : ''}
-    `;
-    header.querySelector('.chapter__title').textContent = project.title;
-    if (project.subtitle) header.querySelector('.chapter__subtitle').textContent = project.subtitle;
+    const index = document.createElement('p');
+    index.className = 'chapter__index';
+    index.textContent = `Project ${String(i + 1).padStart(2, '0')}`;
+    const title = document.createElement('h2');
+    title.className = 'chapter__title';
+    title.id = `${project.id}-title`;
+    title.textContent = project.title;
+    header.append(index, title);
+    if (project.context) {
+      const context = document.createElement('p');
+      context.className = 'chapter__context';
+      context.textContent = project.context;
+      header.append(context);
+    }
 
     const stepsWrap = document.createElement('ol');
     stepsWrap.className = 'chapter__steps';
@@ -41,10 +52,15 @@ export function buildChapters(container, projects) {
       const h = document.createElement('h3');
       h.className = 'step__label';
       h.textContent = step.label;
-      const p = document.createElement('p');
-      p.className = 'step__body';
-      p.textContent = step.body;
-      li.append(h, p);
+      li.append(h);
+      renderStepContent(li, step);
+      // Inline photo, shown only in the static (reduced-motion) layout.
+      if (step.image) {
+        const fig = document.createElement('figure');
+        fig.className = 'step__media';
+        fig.append(createPhoto(project.id, step.image, { sizes: '(min-width: 768px) 40rem, 100vw' }));
+        li.append(fig);
+      }
       stepsWrap.append(li);
       return li;
     });

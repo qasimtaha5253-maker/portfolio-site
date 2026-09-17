@@ -28,14 +28,33 @@ anything the user must do on their end in plain terms.
 - Git + GitHub, deployed on Vercel
 
 ## Code layout
-- `index.html` — page shell (hero + empty `#chapters` container)
-- `src/data/projects.js` — **the only file to edit to add/change projects**
-- `src/chapters.js` — builds chapter DOM from the config
+- `index.html` — page shell: hero/intro, `#chapters`, `#more-projects-grid`, footer
+- `src/data/projects.js` — **the only file to edit to add/change projects** (shape documented at top).
+  `featured: true` → pinned scrollytelling chapter; `false` → card in the "More projects" grid.
+- `src/chapters.js` — builds featured chapters from the config
+- `src/cards.js` — builds the "More projects" grid (`<details>` cards, no JS needed)
+- `src/step-content.js` — shared rendering of step body / bullets / stats
 - `src/scroll.js` — Lenis + GSAP ScrollTrigger pinning/step logic
-- `src/visuals/` — one module per visual type (`placeholder` now; `image`,
-  `sequence`, `model` later). Each exports `create(visual)` returning
-  `{ el, setProgress(stepIndex, progress) }`, registered in `src/visuals/index.js`.
-- `src/style.css` — layout (desktop split / mobile sticky) and reduced-motion rules
+- `src/visuals/` — one module per visual type (`photos`, `placeholder`; `sequence`, `model`
+  later). Each exports `create(project)` returning `{ el, setProgress(stepIndex, progress) }`,
+  registered in `src/visuals/index.js`.
+- `src/images.js` — responsive lazy `<img>` helper; widths in `src/image-widths.js`
+- `src/style.css` — layout and reduced-motion rules. Side-by-side layout applies at
+  `(min-width: 768px) and (orientation: landscape), (min-width: 1100px)`; everything else
+  (phones, portrait tablets) uses the stacked visual-on-top layout.
+
+## Photos
+- Source photos: `content/photos/<project-id>/<name>.(jpg|png|...)`
+- `npm run images` converts them to `public/projects/<project-id>/<name>-{480,960,1600}.webp`
+  (commit both). Config refers to photos by `<name>` only.
+- Current photos were extracted from the user's PDF portfolio and are low-res (≈300–850 px);
+  replace with originals of the same name when available.
+
+## Content decisions
+- Featured (pinned chapters): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are grid cards.
+- Contact on the public site: LinkedIn + email only (no phone number).
+- Text is condensed from the user's PDF; keep steps short enough to fit a 375x667 phone
+  when pinned (tallest step must not push the progress dots off-screen).
 
 ## Hosting
 - Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)
@@ -46,9 +65,13 @@ anything the user must do on their end in plain terms.
 ## Commands
 - `npm run dev` — dev server, exposed on the local network (open from phone)
 - `npm run build` / `npm run preview`
+- `npm run images` — convert new/changed photos in `content/photos` to WebP
 
 ## Status
 - Session 1 (2026-09-16): skeleton only — hero, two placeholder chapters with
   coloured boxes, pinned step scrolling, config structure, git init.
   Pushed to GitHub and deployed on Vercel; verified live on desktop and mobile.
-- Not started yet: real content, visual design, image sequences, Three.js model.
+- Session 2 (2026-09-16): real content from the PDF portfolio (10 projects, 3 featured + 7 cards), photo
+  visual + WebP pipeline, orientation-aware layout. Verified fit at 360x740, 375x667,
+  768x1024, 1024x768, 1280x720.
+- Not started yet: visual design pass, image sequences, Three.js model, high-res photos.

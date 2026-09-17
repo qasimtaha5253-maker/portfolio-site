@@ -1,17 +1,20 @@
 import * as placeholder from './placeholder.js';
+import * as photos from './photos.js';
 
 // Map of visual.type -> renderer module. Each module exports
-// create(visual) => { el, setProgress(stepIndex, progress) }.
-// Future: image, sequence, model.
+// create(project) => { el, setProgress(stepIndex, progress) }.
+// Future: sequence, model.
 const renderers = {
   placeholder,
+  photos,
 };
 
-export function createVisual(visual) {
-  const renderer = renderers[visual?.type];
+export function createVisual(project) {
+  const type = project.visual?.type;
+  const renderer = renderers[type];
   if (!renderer) {
-    console.warn(`Unknown visual type "${visual?.type}", using placeholder.`);
-    return placeholder.create(visual ?? {});
+    console.warn(`Unknown visual type "${type}" for "${project.id}", using placeholder.`);
+    return placeholder.create(project);
   }
-  return renderer.create(visual);
+  return renderer.create(project);
 }

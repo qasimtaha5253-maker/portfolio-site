@@ -2,8 +2,8 @@
  * Placeholder visual: a coloured box that changes colour per step and
  * rotates slightly with scroll progress, so the scrub is visible.
  */
-export function create(visual) {
-  const colors = visual.colors?.length ? visual.colors : ['#888'];
+export function create(project) {
+  const colors = project.visual?.colors?.length ? project.visual.colors : ['#888'];
 
   const el = document.createElement('div');
   el.className = 'placeholder-visual';
