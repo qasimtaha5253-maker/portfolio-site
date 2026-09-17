@@ -39,9 +39,18 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
   const outDir = path.join(OUT, project.name);
   await fs.mkdir(outDir, { recursive: true });
 
-  for (const file of await fs.readdir(srcDir)) {
-    const ext = path.extname(file).toLowerCase();
-    if (!EXTENSIONS.has(ext)) continue;
+  const files = (await fs.readdir(srcDir)).filter((f) => EXTENSIONS.has(path.extname(f).toLowerCase()));
+  const byName = Object.groupBy(files, (f) => path.basename(f, path.extname(f)));
+  const clashes = Object.values(byName).filter((group) => group.length > 1);
+  if (clashes.length) {
+    for (const group of clashes) {
+      console.error(`  ${project.name}: ${group.join(' and ')} share a name — delete the one you don't want.`);
+    }
+    process.exitCode = 1;
+    continue;
+  }
+
+  for (const file of files) {
     const name = path.basename(file, path.extname(file));
     const src = path.join(srcDir, file);
     const outputs = IMAGE_WIDTHS.map((w) => path.join(outDir, `${name}-${w}.webp`));
