@@ -12,7 +12,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import { IMAGE_WIDTHS } from '../src/image-widths.js';
+import IMAGE_WIDTHS from '../src/image-widths.json' with { type: 'json' };
 
 const SRC = 'content/photos';
 const OUT = 'public/projects';

@@ -1,33 +1,15 @@
+import type { Project } from './types';
+
 /**
  * Project config — the single source of truth for every project.
  * Add, remove or reorder projects here; no animation code needs to change.
+ * Field meanings are documented in ./types.ts.
  *
- * Project shape:
- *   id        unique slug. Photos live in content/photos/<id>/ (run `npm run images`)
- *   title     project name
- *   context   where it was done ("Linamar co-op", "Engineering Design III", ...)
- *   featured  true  -> full pinned scrollytelling chapter
- *             false -> compact card in the "More projects" grid
- *   summary   one or two sentences (shown on grid cards)
- *   cover     photo name used as the grid card thumbnail (defaults to first step photo)
- *   visual    pinned visual for featured chapters. `type` picks the renderer:
- *               'photos'       shows each step's `image`          (available)
- *               'placeholder'  coloured box per step              (available)
- *               'sequence'     scroll-scrubbed SolidWorks frames  (planned)
- *               'model'        Three.js .glb exploded view        (planned)
- *   steps     ordered list; chapters step through them, cards show them as sections.
- *               label    step heading
- *               body     paragraph text (optional)
- *               bullets  list of points (optional)
- *               stats    [{ value, label }] highlight numbers (optional)
- *               image    { src: '<photo name>', alt: '...' } — a step without an image
- *                        keeps showing the previous one
- *   gallery   extra photos [{ src, alt }] shown when a grid card is expanded (optional)
- *
- * Photo names are file names without extension or size, e.g. 'final-design'
- * for content/photos/cooling-unit/final-design.png.
+ * Photos live in content/photos/<project id>/ — run `npm run images` after adding
+ * them, then refer to a photo by its file name without extension or size,
+ * e.g. 'final-design' for content/photos/cooling-unit/final-design.png.
  */
-export const projects = [
+export const projects: Project[] = [
   {
     id: 'cooling-unit',
     title: 'Mobile Harvest Buffer Cooling Unit',

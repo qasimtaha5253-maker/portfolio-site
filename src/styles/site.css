@@ -1,110 +1,62 @@
-/* Functional styles — the full visual design pass comes later. */
+/*
+ * Site styles — functional; the full visual design pass comes later.
+ * Base rules sit in `@layer base` and the rest in `@layer components`, so
+ * Tailwind utilities can override them.
+ * The pinned layout applies under `.site.is-animated` (set in App.tsx when
+ * motion is allowed); otherwise chapters render as a plain stacked list.
+ */
 
-:root {
-  --bg: #f4f4f1;
-  --surface: #ffffff;
-  --fg: #151515;
-  --muted: #5f5f5f;
-  --line: #deded8;
-  --accent: #b4441f;
-  --radius: 12px;
-  --gutter: clamp(16px, 4vw, 48px);
-  --step-fade: 0.45s;
-  color-scheme: light;
+@layer base {
+  :root {
+    --bg: #f4f4f1;
+    --surface: #ffffff;
+    --fg: #151515;
+    --muted: #5f5f5f;
+    --line: #deded8;
+    --accent: #b4441f;
+    --radius: 12px;
+    --gutter: clamp(16px, 4vw, 48px);
+    --step-fade: 0.45s;
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 700;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  margin: 0;
-}
-
-body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-h1,
-h2,
-h3,
-h4,
-p,
-figure,
-dl,
-dd {
-  margin: 0;
-}
-
-img {
-  display: block;
-  max-width: 100%;
-}
-
-a {
-  color: var(--accent);
-}
-
+@layer components {
 /* ---------- Intro (opening animation) ---------- */
 
 .intro {
-  --intro-bg: var(--bg);
-  --intro-fg: rgba(21, 21, 21, 0.9);
   --intro-muted: #5f5f5f;
   position: relative;
   height: 100vh;
   height: 100svh;
   min-height: 420px;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  background: var(--intro-bg);
-  color: var(--intro-fg);
-  user-select: none;
 }
 
 @media (prefers-color-scheme: dark) {
   .intro {
-    --intro-bg: #090a0f;
-    --intro-fg: rgba(255, 255, 255, 0.9);
     --intro-muted: #a3a3a3;
   }
-}
-
-.intro__canvas {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  cursor: crosshair;
-}
-
-.intro__content {
-  position: relative;
-  z-index: 1;
-  pointer-events: none;
-  display: grid;
-  gap: 0.75rem;
-  justify-items: center;
-  padding: 0 var(--gutter);
-  text-align: center;
-}
-
-.intro__title {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
-  font-size: clamp(2.75rem, 11vw, 8rem);
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 1;
-  text-transform: uppercase;
 }
 
 .intro__role,
@@ -116,9 +68,13 @@ a {
   color: var(--intro-muted);
 }
 
+.intro__role {
+  margin-top: 1rem;
+}
+
 .intro__cue {
   position: absolute;
-  z-index: 1;
+  z-index: 30;
   bottom: max(24px, env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
@@ -232,6 +188,7 @@ a {
 
 .step__bullets {
   margin: 0;
+  list-style: disc;
   padding-left: 1.2em;
   display: grid;
   gap: 0.35rem;
@@ -260,15 +217,15 @@ a {
 }
 
 /* Static layout (reduced motion): photos sit inline with each step */
-html:not(.is-animated) .has-step-media .chapter__visual {
+.site:not(.is-animated) .has-step-media .chapter__visual {
   display: none;
 }
 
-html:not(.is-animated) .step__media {
+.site:not(.is-animated) .step__media {
   display: block;
 }
 
-html:not(.is-animated) .step__media img {
+.site:not(.is-animated) .step__media img {
   width: 100%;
   max-height: 60vh;
   object-fit: contain;
@@ -276,7 +233,7 @@ html:not(.is-animated) .step__media img {
   border-radius: var(--radius);
 }
 
-html:not(.is-animated) .chapter {
+.site:not(.is-animated) .chapter {
   max-width: 44rem;
   margin: 0 auto;
 }
@@ -613,3 +570,4 @@ html:not(.is-animated) .chapter {
     scroll-behavior: auto !important;
   }
 }
+} /* end @layer components */

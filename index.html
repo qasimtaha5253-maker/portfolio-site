@@ -8,55 +8,10 @@
       content="Qasim Taha — Mechanical Engineering co-op student at the University of Guelph. Mechanical design, robotics and automation projects."
     />
     <title>Qasim Taha — Mechanical Engineering Portfolio</title>
-    <script type="module" src="/src/main.js"></script>
   </head>
   <body>
-    <main>
-      <section class="intro" id="top" aria-labelledby="intro-title">
-        <canvas class="intro__canvas" aria-hidden="true"></canvas>
-        <div class="intro__content">
-          <h1 class="intro__title" id="intro-title">Qasim Taha</h1>
-          <p class="intro__role">Mechanical Engineering · University of Guelph</p>
-        </div>
-        <a class="intro__cue" href="#about">Scroll to explore ↓</a>
-      </section>
-
-      <section class="hero" id="about" aria-labelledby="about-title">
-        <div class="hero__inner">
-          <p class="hero__eyebrow">Mechanical Engineering Co-op · University of Guelph</p>
-          <h2 class="hero__title" id="about-title">About me</h2>
-          <p class="hero__lede">
-            I’m a final-year Mechanical Engineering co-op student with a strong interest in
-            mechanical design, especially robotics and automation. I enjoy taking ideas from early
-            concepts to working hardware through CAD, prototyping, testing and iteration.
-          </p>
-          <p class="hero__lede hero__lede--secondary">
-            These projects show how I design, build and refine — with a focus on real-world
-            performance, reliability and clear design intent.
-          </p>
-          <ul class="contact">
-            <li><a href="https://www.linkedin.com/in/qasim-taha" target="_blank" rel="noopener">LinkedIn</a></li>
-            <li><a href="mailto:qtaha@uoguelph.ca">qtaha@uoguelph.ca</a></li>
-          </ul>
-        </div>
-      </section>
-
-      <!-- Featured project chapters are generated from src/data/projects.js -->
-      <div id="chapters"></div>
-
-      <section class="more" id="more-projects" aria-labelledby="more-projects-title">
-        <h2 class="more__title" id="more-projects-title">More projects</h2>
-        <!-- Generated from src/data/projects.js (featured: false) -->
-        <div class="more__grid" id="more-projects-grid"></div>
-      </section>
-
-      <footer class="footer" id="contact">
-        <h2 class="footer__title">Get in touch</h2>
-        <ul class="contact">
-          <li><a href="https://www.linkedin.com/in/qasim-taha" target="_blank" rel="noopener">LinkedIn</a></li>
-          <li><a href="mailto:qtaha@uoguelph.ca">qtaha@uoguelph.ca</a></li>
-        </ul>
-      </footer>
-    </main>
+    <div id="root"></div>
+    <noscript>This portfolio needs JavaScript to display. Contact: qtaha@uoguelph.ca</noscript>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

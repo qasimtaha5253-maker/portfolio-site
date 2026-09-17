@@ -23,29 +23,45 @@ anything the user must do on their end in plain terms.
 - Performance matters on phones: WebP images, lazy loading.
 
 ## Stack
-- Vite + vanilla HTML/CSS/JavaScript (no React)
-- GSAP + ScrollTrigger, Lenis for smooth scroll, Three.js for 3D
+- Vite + React 19 + TypeScript + Tailwind CSS v4, shadcn project structure
+  (switched from vanilla JS on 2026-09-16 so shadcn/21st.dev-style components can be
+  dropped in; the vanilla version is tagged `vanilla-js-version`)
+- GSAP + ScrollTrigger (via `@gsap/react` `useGSAP`), Lenis for smooth scroll,
+  Three.js for 3D (planned; React Three Fiber is a good fit)
 - Git + GitHub, deployed on Vercel
 
+## Adding shadcn / React components
+- shadcn config: `components.json`; alias `@/` → `src/`; UI components go in
+  `src/components/ui/` (the shadcn default, imported as `@/components/ui/...`);
+  `cn()` helper in `src/lib/utils.ts`; icons from `lucide-react`.
+- `npx shadcn@latest add <component>` works; it may add theme variables to `src/index.css`.
+- Tailwind `dark:` follows the system colour scheme (Tailwind default). Don't add a
+  class-based dark variant unless the site gets a theme toggle.
+
 ## Code layout
-- `index.html` — page shell: `#top` animated intro, `#about`, `#chapters`,
-  `#more-projects-grid`, footer
-- `src/intro.js` — full-screen canvas intro (vanilla port of the "HelixChronoMatrix" React
-  component, Double Helix mode only, no controls). Follows system light/dark theme, pauses
-  off-screen, still frame under reduced motion. Kept vanilla on purpose: no React/Tailwind/TS.
-- `src/data/projects.js` — **the only file to edit to add/change projects** (shape documented at top).
-  `featured: true` → pinned scrollytelling chapter; `false` → card in the "More projects" grid.
-- `src/chapters.js` — builds featured chapters from the config
-- `src/cards.js` — builds the "More projects" grid (`<details>` cards, no JS needed)
-- `src/step-content.js` — shared rendering of step body / bullets / stats
-- `src/scroll.js` — Lenis + GSAP ScrollTrigger pinning/step logic
-- `src/visuals/` — one module per visual type (`photos`, `placeholder`; `sequence`, `model`
-  later). Each exports `create(project)` returning `{ el, setProgress(stepIndex, progress) }`,
-  registered in `src/visuals/index.js`.
-- `src/images.js` — responsive lazy `<img>` helper; widths in `src/image-widths.js`
-- `src/style.css` — layout and reduced-motion rules. Side-by-side layout applies at
+- `index.html` — shell with `#root`; `src/main.tsx` mounts `src/App.tsx`
+- `src/App.tsx` — page order: Intro, About, featured Chapters, "More projects" grid, footer.
+  Adds `is-animated` to `<main class="site">` when motion is allowed.
+- `src/data/projects.ts` — **the only file to edit to add/change projects**; field docs and
+  types in `src/data/types.ts`. `featured: true` → pinned chapter; `false` → grid card.
+- `src/components/ui/helix-chrono-matrix.tsx` — the intro canvas component (user-supplied),
+  with added `showControls` and `children` props, off-screen pause and reduced-motion still frame.
+- `src/components/sections/` — `Intro` (uses HelixChronoMatrix, headline "Qasim Taha", no
+  controls), `About`, `ContactLinks`
+- `src/components/Chapter.tsx` — pinned step-by-step chapter (ScrollTrigger in `useGSAP`);
+  shows all steps stacked with inline photos when not animated
+- `src/components/ProjectCard.tsx` — grid card (`<details>`), `StepContent.tsx`, `Photo.tsx`
+  (responsive lazy WebP; widths in `src/image-widths.json`, shared with the image script)
+- `src/components/visuals/` — one component per visual type (`photos`, `placeholder`;
+  `sequence`, `model` later), registered in `index.ts`. Props: `{ project, step, progress }`
+  where `progress` is a subscribe-able store (`src/lib/progress.ts`) for per-frame visuals.
+- `src/hooks/` — `useMediaQuery`/`useMotionAllowed` (dev-only `?reduced-motion` URL flag
+  previews the reduced-motion layout), `useSmoothScroll` (Lenis + GSAP ticker)
+- `src/styles/site.css` — site styles in `@layer base/components` (so Tailwind utilities
+  win). Side-by-side layout applies at
   `(min-width: 768px) and (orientation: landscape), (min-width: 1100px)`; everything else
-  (phones, portrait tablets) uses the stacked visual-on-top layout.
+  (phones, portrait tablets) uses the stacked visual-on-top layout. Tailwind's preflight
+  resets lists/headings/links, so site.css sets bullets, heading weight and link underline.
 
 ## Photos
 - Source photos: `content/photos/<project-id>/<name>.(jpg|png|...)`
@@ -73,7 +89,10 @@ anything the user must do on their end in plain terms.
 
 ## Commands
 - `npm run dev` — dev server, exposed on the local network (open from phone)
-- `npm run build` / `npm run preview`
+- `npm run build` — type-check (`tsc -b`, TypeScript 7) then build; `npm run preview`
+- `npm run typecheck`
+- On Windows, stopping a background `npm run dev` task can leave `vite` holding port 5173;
+  find it with `Get-NetTCPConnection -LocalPort 5173` and stop that process.
 - `npm run images` — convert new/changed photos in `content/photos` to WebP
 
 ## Status
@@ -83,4 +102,8 @@ anything the user must do on their end in plain terms.
 - Session 2 (2026-09-16): real content from the PDF portfolio (10 projects, 3 featured + 7 cards), photo
   visual + WebP pipeline, orientation-aware layout. Verified fit at 360x740, 375x667,
   768x1024, 1024x768, 1280x720.
-- Not started yet: visual design pass, image sequences, Three.js model, high-res photos.
+- Session 2 (cont.): user's high-res photos; animated HelixChronoMatrix intro; migrated to
+  React + TypeScript + Tailwind + shadcn structure. Re-verified layout at the same sizes,
+  every chapter step (pin, text, dot, photo), reduced-motion layout, all 111 photo URLs.
+  JS bundle is ~139 KB gzip (was ~58 KB before React).
+- Not started yet: visual design pass, image sequences, Three.js model, remaining high-res photos.
