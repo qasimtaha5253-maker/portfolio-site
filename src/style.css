@@ -1,0 +1,266 @@
+/* Skeleton styles only — no visual design yet. */
+
+:root {
+  --bg: #f4f4f1;
+  --fg: #151515;
+  --muted: #666;
+  --gutter: clamp(16px, 4vw, 48px);
+  --step-fade: 0.45s;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+}
+
+.hero__inner {
+  max-width: 40rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.hero__eyebrow,
+.hero__cue {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.hero__title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  line-height: 1;
+}
+
+.hero__lede {
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+}
+
+/* ---------- Chapter layout ---------- */
+
+.chapter__pin {
+  display: grid;
+  gap: var(--gutter);
+  padding: var(--gutter);
+}
+
+.chapter__visual {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
+
+.chapter__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-height: 0;
+}
+
+.chapter__index {
+  color: var(--muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.chapter__title {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1.1;
+}
+
+.chapter__subtitle {
+  color: var(--muted);
+}
+
+.chapter__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2rem;
+}
+
+.step__label {
+  font-size: 1.15rem;
+  margin-bottom: 0.4rem;
+}
+
+.chapter__dots {
+  display: none;
+  gap: 0.5rem;
+}
+
+.chapter__dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.2;
+  transition: opacity var(--step-fade);
+}
+
+.chapter__dots span.is-active {
+  opacity: 1;
+}
+
+/* Desktop: visual on one side, text on the other */
+@media (min-width: 768px) {
+  .chapter__pin {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .chapter__visual {
+    height: 70vh;
+  }
+
+  .is-animated .chapter__visual {
+    height: 100%;
+    align-self: stretch;
+  }
+}
+
+/* ---------- Animated (pinned) mode ----------
+   .is-animated is added by scroll.js only when motion is allowed,
+   so reduced-motion users get the plain stacked layout above. */
+
+.is-animated .chapter__pin {
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.is-animated .chapter__steps {
+  gap: 0;
+}
+
+/* Stack every step in the same grid cell and crossfade between them */
+.is-animated .step {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(1rem);
+  visibility: hidden;
+  transition:
+    opacity var(--step-fade) ease,
+    transform var(--step-fade) ease,
+    visibility 0s linear var(--step-fade);
+}
+
+.is-animated .step.is-active {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.is-animated .chapter__dots {
+  display: flex;
+}
+
+/* Mobile: visual sticks at the top, text steps below it */
+@media (max-width: 767px) {
+  .chapter__pin {
+    grid-template-rows: auto auto;
+  }
+
+  .chapter__visual {
+    aspect-ratio: 4 / 3;
+  }
+
+  .is-animated .chapter__pin {
+    grid-template-rows: minmax(0, 45%) 1fr;
+    align-content: stretch;
+  }
+
+  .is-animated .chapter__visual {
+    aspect-ratio: auto;
+  }
+
+  .chapter__text {
+    gap: 1rem;
+  }
+}
+
+/* ---------- Placeholder visual ---------- */
+
+.placeholder-visual {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+  max-height: 70vh;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+
+.placeholder-visual__box {
+  --turn: 0deg;
+  /* 70% of the smaller side, so the box still fits when rotated */
+  width: 70cqmin;
+  height: 70cqmin;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  transform: rotate(var(--turn));
+  transition: background-color var(--step-fade) ease;
+}
+
+.placeholder-visual__label {
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.25rem;
+  transform: rotate(calc(var(--turn) * -1));
+}
+
+/* ---------- Footer ---------- */
+
+.footer {
+  min-height: 50vh;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  color: var(--muted);
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
