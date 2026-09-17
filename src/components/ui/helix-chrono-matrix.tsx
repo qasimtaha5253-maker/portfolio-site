@@ -5,6 +5,9 @@
  *
  * Changes from the original component:
  * - `showControls` prop (default true) hides the topology/freeze buttons.
+ * - `gradient` prop colours the rings (and their particles) from top to bottom,
+ *   with separate stops for light and dark mode. Without it the original monochrome look is kept.
+ * - `speed` prop (default 1) scales all motion: helix wave, ring rotation, particles.
  * - `children` render under the headline.
  * - Animation pauses while off-screen and draws a single still frame when the
  *   visitor prefers reduced motion. Animation time is kept in a ref so pausing
@@ -44,7 +47,23 @@ export interface HelixChronoMatrixProps {
     headline?: string;
     className?: string;
     showControls?: boolean;
+    /** Animation speed multiplier (1 = original speed). */
+    speed?: number;
+    /** Ring colours from top to bottom, per colour scheme (hex, e.g. "#1e3a8a"). */
+    gradient?: { light: [string, string]; dark: [string, string] };
     children?: React.ReactNode;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+/** 'r, g, b' string between two hex colours (t = 0..1). */
+function mixColor(from: string, to: string, t: number) {
+    const a = hexToRgb(from);
+    const b = hexToRgb(to);
+    return a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(', ');
 }
 
 type TopologyMode = 'DOUBLE_HELIX' | 'NEURAL_STRATA' | 'QUANTUM_RIBBONS';
@@ -65,6 +84,8 @@ export function HelixChronoMatrix({
     headline = "STRATA",
     className = "",
     showControls = true,
+    speed = 1,
+    gradient,
     children,
 }: HelixChronoMatrixProps) {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -211,7 +232,7 @@ export function HelixChronoMatrix({
         let animId = 0;
 
         const drawFrame = () => {
-            if (shouldAnimate) timeRef.current += 0.012;
+            if (shouldAnimate) timeRef.current += 0.012 * speed;
             const time = timeRef.current;
             const { width, height } = dimensionsRef.current;
             const pointer = pointerRef.current;
@@ -230,6 +251,9 @@ export function HelixChronoMatrix({
             const isDark = document.documentElement.classList.contains('dark') || isDarkMode;
             const bgColor = isDark ? '#090a0f' : '#f8fafc';
             const strokeBase = isDark ? '255, 255, 255' : '15, 23, 42';
+            const stops = gradient ? (isDark ? gradient.dark : gradient.light) : null;
+            const ringColor = (rIdx: number) =>
+                stops ? mixColor(stops[0], stops[1], rIdx / Math.max(1, rings.length - 1)) : null;
 
             ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, width, height);
@@ -240,7 +264,7 @@ export function HelixChronoMatrix({
             // Render fibers
             for (let rIdx = 0; rIdx < rings.length; rIdx++) {
                 const ring = rings[rIdx];
-                if (shouldAnimate) ring.angle += ring.rotationSpeed;
+                if (shouldAnimate) ring.angle += ring.rotationSpeed * speed;
 
                 const points = ring.points;
                 const numPoints = points.length;
@@ -320,7 +344,14 @@ export function HelixChronoMatrix({
                 const depthAlpha = 0.15 + (rIdx / rings.length) * 0.45;
                 const isExcited = avgExcitation > 0.05;
 
-                if (isExcited) {
+                const color = ringColor(rIdx);
+
+                if (color) {
+                    ctx.strokeStyle = isExcited
+                        ? `rgba(${color}, ${Math.min(1, 0.5 + avgExcitation * 0.5)})`
+                        : `rgba(${color}, ${depthAlpha * 0.9})`;
+                    ctx.lineWidth = isExcited ? 1.2 + avgExcitation * 1.5 : 0.75;
+                } else if (isExcited) {
                     ctx.strokeStyle = isDark
                         ? `rgba(255, 255, 255, ${Math.min(1, 0.4 + avgExcitation * 0.6)})`
                         : `rgba(0, 0, 0, ${Math.min(1, 0.4 + avgExcitation * 0.6)})`;
@@ -336,7 +367,7 @@ export function HelixChronoMatrix({
             // Render Traveling Points along the Lines (Black normally, White when hovered/excited)
             for (let i = 0; i < particles.length; i++) {
                 const p = particles[i];
-                if (shouldAnimate) p.progress = (p.progress + p.speed + 1) % 1;
+                if (shouldAnimate) p.progress = (p.progress + p.speed * speed + 1) % 1;
 
                 const ring = rings[p.ringIndex];
                 if (!ring) continue;
@@ -380,8 +411,9 @@ export function HelixChronoMatrix({
                     // Inverted to white (or high contrast) when hovered
                     ctx.fillStyle = isDark ? '#ffffff' : '#000000';
                 } else {
-                    // Standard color opposite to lines (Black by default)
-                    ctx.fillStyle = isDark ? '#000000' : '#ffffff';
+                    // Ring colour with a gradient; otherwise opposite to lines (black by default)
+                    const color = ringColor(p.ringIndex);
+                    ctx.fillStyle = color ? `rgb(${color})` : isDark ? '#000000' : '#ffffff';
                 }
                 ctx.fill();
 
@@ -400,7 +432,7 @@ export function HelixChronoMatrix({
         // Paint immediately (also covers paused / reduced-motion still frames).
         render();
         return () => cancelAnimationFrame(animId);
-    }, [shouldAnimate, topology, isDarkMode, size]);
+    }, [shouldAnimate, topology, isDarkMode, size, speed, gradient]);
 
     const handlePointerMove = (e: React.MouseEvent<HTMLDivElement>) => {
         const container = containerRef.current;
