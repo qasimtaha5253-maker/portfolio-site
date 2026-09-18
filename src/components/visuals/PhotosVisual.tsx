@@ -1,42 +1,51 @@
 import { useMemo, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Photo } from '@/components/Photo';
-import type { ProjectImage, StepEmbed } from '@/data/types';
+import { useMotionAllowed } from '@/hooks/useMediaQuery';
+import type { ProjectImage, StepEmbed, StepModel } from '@/data/types';
+import { ModelLayer } from './ModelLayer';
 import type { VisualProps } from './types';
 
 const SIZES = '(min-width: 1100px) 55vw, (min-width: 768px) and (orientation: landscape) 55vw, 100vw';
 const base = import.meta.env.BASE_URL;
 
-type Layer = { kind: 'image'; value: ProjectImage } | { kind: 'embed'; value: StepEmbed };
+type Layer =
+  | { kind: 'image'; value: ProjectImage }
+  | { kind: 'embed'; value: StepEmbed }
+  | { kind: 'model'; value: StepModel };
 
 /**
- * Shows each step's photo, or its HTML animation, crossfading between them.
- * A step without either keeps whatever the previous step showed.
+ * Shows what each step calls for — a photo, an HTML animation or a 3D model —
+ * crossfading between them. A step that sets none keeps the previous one.
  */
 export function PhotosVisual({ project, step }: VisualProps) {
-  const { images, embeds, perStep } = useMemo(() => {
+  const animated = useMotionAllowed();
+
+  const { images, embeds, models, perStep } = useMemo(() => {
     const images: ProjectImage[] = [];
     const embeds: StepEmbed[] = [];
+    const models: StepModel[] = [];
     const perStep: (Layer | undefined)[] = [];
     let current: Layer | undefined;
 
     for (const s of project.steps) {
-      // A step can set a photo, an animation, or neither; the newest wins.
       if (s.image && !images.some((i) => i.src === s.image!.src)) images.push(s.image);
       if (s.embed && !embeds.some((e) => e.src === s.embed!.src)) embeds.push(s.embed);
-      if (s.embed) current = { kind: 'embed', value: s.embed };
+      if (s.model && !models.some((m) => m.src === s.model!.src)) models.push(s.model);
+      // Newest wins when a step sets more than one.
+      if (s.model) current = { kind: 'model', value: s.model };
+      else if (s.embed) current = { kind: 'embed', value: s.embed };
       else if (s.image) current = { kind: 'image', value: s.image };
       perStep.push(current);
     }
-    return { images, embeds, perStep };
+    return { images, embeds, models, perStep };
   }, [project]);
 
   const active = perStep[step] ?? perStep.find(Boolean);
 
-  // Load an animation only once its step has been reached, so it costs nothing
-  // for visitors who never scroll that far.
+  // Heavy layers load only once their step has been reached.
   const reached = useRef(new Set<string>());
-  if (active?.kind === 'embed') reached.current.add(active.value.src);
+  if (active && active.kind !== 'image') reached.current.add(active.value.src);
 
   return (
     <div className="photo-visual">
@@ -65,6 +74,17 @@ export function PhotosVisual({ project, step }: VisualProps) {
               'photo-visual__frame',
               active?.kind === 'embed' && active.value.src === embed.src && 'is-active',
             )}
+          />
+        ) : null,
+      )}
+
+      {models.map((model) =>
+        reached.current.has(model.src) ? (
+          <ModelLayer
+            key={model.src}
+            model={model}
+            active={active?.kind === 'model' && active.value.src === model.src}
+            animated={animated}
           />
         ) : null,
       )}

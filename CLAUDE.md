@@ -68,7 +68,9 @@ anything the user must do on their end in plain terms.
 ## Theme
 - Always dark, matching the intro: `--bg #090a0f`, `--surface #14161f` (cards, stat boxes),
   `--fg #f2f3f5`, `--muted #9aa0ad`, `--accent #fb923c` (orange), `--navy #3b5cc4`.
-- `--photo-bg #ffffff`: photo panels stay white so white-background CAD renders look right.
+- `--photo-bg #ffffff`: opaque photos get a white panel (set on the img, not the container).
+  Transparent cut-out renders are listed in `src/transparent-photos.json` (written by
+  `npm run images`) and get `is-transparent`, so they sit straight on the dark page.
 - Small labels (eyebrow, project index, card context, stat labels) use `--font-mono`
   uppercase, echoing the intro type.
 - Intro gradient stops live in `src/components/sections/Intro.tsx`.
@@ -84,6 +86,21 @@ anything the user must do on their end in plain terms.
   reef-rover/collection-mechanism.
 - Cooling unit: `final-design` is the dimensioned towable cart (the actual final design);
   `interim-concept` is the earlier solar-lid concept the team pivoted away from.
+
+## Chapter visuals (cooling unit showpiece)
+A step in projects.ts can show a photo (`image`), a standalone HTML animation
+(`embed`) or a rotatable 3D model (`model`); the visual cross-fades between them
+and each carries forward until a later step changes it.
+- `embed: { src: 'animations/<file>.html', title }` — file lives in public/animations/,
+  runs in an iframe so its CSS/JS can't clash, added to the page only once its step is reached.
+- `model: { src: 'models/<file>.glb', title }` — public/models/. src/components/visuals/
+  ModelLayer.tsx loads three.js + GLTFLoader + OrbitControls on demand (~187 KB gzip chunk,
+  not in the main bundle). Self-rotates, mouse drag orbits, touch gestures deliberately
+  disabled so phones keep scrolling; pauses off-screen; no self-rotation under reduced motion.
+- `npm run model -- <in.glb> <out.glb>` cleans and quantizes an export (three reads
+  quantized meshes natively — no decoder download). Keep source exports in content/models/.
+- Planned for the cooling unit: 3D model on step 1, cross-fading into Qasim's HTML animation
+  later in the chapter.
 
 ## Content decisions
 - Featured (pinned chapters): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are grid cards.
@@ -120,5 +137,8 @@ anything the user must do on their end in plain terms.
   always-dark theme matching the intro; intro cross-fades into About on scroll.
   Re-verified fit at 360x740, 375x667, 768x1024, 1280x720 (mono labels made the cooling
   unit stats taller, so mobile stat spacing was tightened).
-- Not started yet: full visual design pass beyond the theme, image sequences, Three.js model,
-  remaining high-res photos.
+- Session 3 (cont.): transparent-render support (image script keeps alpha, writes
+  src/transparent-photos.json; cut-outs get no white panel), bento-style stat tiles,
+  and the embed + 3D model layers (both verified with throwaway test assets).
+- Not started yet: full visual design pass beyond the theme, image sequences, the real
+  cooling-unit .glb and HTML animation, remaining high-res photos.

@@ -16,6 +16,14 @@ export interface StepEmbed {
   title: string;
 }
 
+/** A real-time 3D model (.glb) the visitor can rotate. */
+export interface StepModel {
+  /** Path under public/, e.g. 'models/cooling-unit.glb'. */
+  src: string;
+  /** Described for screen readers, e.g. '3D model of the cooling unit assembly'. */
+  title: string;
+}
+
 export interface Stat {
   value: string;
   label: string;
@@ -37,6 +45,11 @@ export interface Step {
    * Like `image`, it carries forward until a later step sets a different one.
    */
   embed?: StepEmbed;
+  /**
+   * Rotatable 3D model for this step. Also carries forward, and cross-fades to
+   * whatever the next step shows.
+   */
+  model?: StepModel;
 }
 
 /**
