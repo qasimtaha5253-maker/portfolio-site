@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Flip } from 'gsap/Flip';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
 import type { Project, ProjectImage } from '@/data/types';
@@ -8,7 +10,7 @@ import { Photo } from './Photo';
 import { StepContent } from './StepContent';
 import { StepVisual } from './StepVisual';
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+gsap.registerPlugin(ScrollTrigger, Flip, useGSAP);
 
 function coverImage(project: Project): ProjectImage | undefined {
   const images = [...project.steps.map((s) => s.image), ...(project.gallery ?? [])].filter(
@@ -45,6 +47,27 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
     { dependencies: [animated], scope: gridRef, revertOnUpdate: true },
   );
 
+  /**
+   * Expanding a tile reflows every other tile in the grid, not just the one
+   * tapped — Flip animates all of them from their old bounds to their new
+   * ones instead of letting the grid jump straight to the new layout.
+   */
+  function toggle(id: string) {
+    if (!animated || !gridRef.current) {
+      setExpanded((current) => (current === id ? null : id));
+      return;
+    }
+    const state = Flip.getState(gridRef.current.querySelectorAll('.bento-tile'));
+    flushSync(() => setExpanded((current) => (current === id ? null : id)));
+    Flip.from(state, {
+      duration: 0.6,
+      ease: 'power2.inOut',
+      absolute: true,
+      onEnter: (els) => gsap.fromTo(els, { opacity: 0 }, { opacity: 1, duration: 0.4, delay: 0.2 }),
+      onLeave: (els) => gsap.to(els, { opacity: 0, duration: 0.15 }),
+    });
+  }
+
   return (
     <div className="bento-grid" ref={gridRef}>
       {projects.map((project) => {
@@ -64,7 +87,7 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
               type="button"
               className="bento-tile__hit"
               aria-expanded={isExpanded}
-              onClick={() => setExpanded(isExpanded ? null : project.id)}
+              onClick={() => toggle(project.id)}
             >
               {cover && (
                 <Photo
