@@ -442,6 +442,16 @@
   overflow: hidden;
 }
 
+/* Layers stack in one cell, so the faded-out ones must not swallow clicks or
+   drags meant for the visible one (e.g. rotating the 3D model). */
+.photo-visual > * {
+  pointer-events: none;
+}
+
+.photo-visual > .is-active {
+  pointer-events: auto;
+}
+
 .photo-visual__img {
   grid-area: 1 / 1;
   width: 100%;
