@@ -91,8 +91,10 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
                 <h3 className="bento-tile__title">{project.title}</h3>
                 {project.summary && !isExpanded && <p className="bento-tile__summary">{project.summary}</p>}
               </div>
+              {/* Always "+"; CSS rotates it 45° when expanded so it morphs into a "×"
+                  instead of snapping between two different glyphs. */}
               <span className="bento-tile__toggle" aria-hidden="true">
-                {isExpanded ? '×' : '+'}
+                +
               </span>
             </button>
 
