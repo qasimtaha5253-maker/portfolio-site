@@ -247,20 +247,53 @@
   gap: 0.5rem;
 }
 
+/* Bento-style stat tiles: a hairline of the intro gradient across the top, a
+   faint ellipse behind the number, and the number itself in the same navy-to-
+   orange gradient. */
 .stats__item {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column-reverse; /* value above label */
-  padding: 0.5rem 0.75rem;
+  align-items: center;
+  text-align: center;
+  padding: 0.75rem 0.75rem 0.6rem;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
+}
+
+.stats__item::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--navy), var(--accent), transparent);
+}
+
+/* The ellipse motif, drawn behind the number */
+.stats__item::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0.55rem;
+  width: 115%;
+  height: 2.1rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .stats__value {
-  font-size: 1.25rem;
+  position: relative;
+  font-size: 1.35rem;
   font-weight: 700;
   line-height: 1.2;
-  color: var(--accent);
+  background: linear-gradient(100deg, #8fa8ff, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .stats__label {
@@ -381,7 +414,12 @@
   }
 
   .stats__item {
-    padding: 0.15rem 0.4rem;
+    padding: 0.3rem 0.4rem 0.25rem;
+  }
+
+  /* No room for the ellipse motif on a phone */
+  .stats__item::after {
+    display: none;
   }
 
   .stats__value {
