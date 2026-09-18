@@ -5,6 +5,17 @@ export interface ProjectImage {
   alt: string;
 }
 
+/**
+ * A standalone HTML animation shown in the pinned visual. The file keeps its own
+ * markup, CSS and JS: it loads in a frame, so it can't clash with the site.
+ */
+export interface StepEmbed {
+  /** Path under public/, e.g. 'animations/cooling-unit.html'. */
+  src: string;
+  /** Described for screen readers, e.g. 'Animated airflow through the cooling unit'. */
+  title: string;
+}
+
 export interface Stat {
   value: string;
   label: string;
@@ -21,6 +32,11 @@ export interface Step {
   stats?: Stat[];
   /** Photo for this step. A step without one keeps showing the previous photo. */
   image?: ProjectImage;
+  /**
+   * HTML animation for this step; the visual cross-fades from the photo to it.
+   * Like `image`, it carries forward until a later step sets a different one.
+   */
+  embed?: StepEmbed;
 }
 
 /**
