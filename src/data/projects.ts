@@ -31,14 +31,6 @@ export const projects: Project[] = [
         image: { src: 'strawberry-flat', alt: 'CAD of a standard 16 × 12 × 4 in vented strawberry flat, empty and loaded' },
       },
       {
-        label: 'Choosing a concept',
-        bullets: [
-          'Ranked alternative concepts with weighted decision matrices.',
-          'A why-why analysis showed the interim design fell short, so the team pivoted.',
-        ],
-        image: { src: 'interim-concept', alt: 'Annotated interim concept: solar-lid cooling cart with evaporator coil, DC compressor, battery and insulated compartment' },
-      },
-      {
         label: 'How it works',
         bullets: [
           'SolidWorks model of the cart, enclosure and flats with a 12 m/s forced-air cooling path.',
