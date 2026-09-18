@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
 import { StepContent } from './StepContent';
+import { StepVisual } from './StepVisual';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -91,9 +92,7 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
                   <section className="bento-tile__step" key={step.label}>
                     <h4>{step.label}</h4>
                     <StepContent step={step} />
-                    {step.image && step.image.src !== cover?.src && (
-                      <Photo projectId={project.id} image={step.image} sizes="(min-width: 768px) 40rem, 100vw" />
-                    )}
+                    <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
                   </section>
                 ))}
               </div>
