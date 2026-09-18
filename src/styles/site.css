@@ -1,9 +1,8 @@
 /*
- * Site styles — functional; the full visual design pass comes later.
- * Base rules sit in `@layer base` and the rest in `@layer components`, so
- * Tailwind utilities can override them.
- * The pinned layout applies under `.site.is-animated` (set in App.tsx when
- * motion is allowed); otherwise chapters render as a plain stacked list.
+ * Site styles. Base rules sit in `@layer base` and the rest in
+ * `@layer components`, so Tailwind utilities can override them.
+ * Sections: intro, about, step content (bullets, stats), step visuals,
+ * bento grid, footer.
  */
 
 @layer base {
@@ -125,118 +124,12 @@
   font-weight: 600;
 }
 
-/* ---------- Chapter layout ---------- */
-
-.chapter__pin {
-  display: grid;
-  gap: var(--gutter);
-  padding: var(--gutter);
-}
-
-.chapter__visual {
-  display: grid;
-  place-items: center;
-  min-height: 0;
-}
-
-.chapter__text {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  min-height: 0;
-}
-
-.chapter__header {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.chapter__index {
-  font-family: var(--font-mono);
-  color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.chapter__title {
-  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
-  line-height: 1.1;
-}
-
-.chapter__context {
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.chapter__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 2.5rem;
-}
-
-.step {
-  display: grid;
-  gap: 0.6rem;
-  align-content: start;
-}
-
-.step__label {
-  font-size: 1.15rem;
-}
-
 .step__bullets {
   margin: 0;
   list-style: disc;
   padding-left: 1.2em;
   display: grid;
   gap: 0.35rem;
-}
-
-.step__media {
-  display: none;
-}
-
-.chapter__dots {
-  display: none;
-  gap: 0.5rem;
-}
-
-.chapter__dots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.2;
-  transition: opacity var(--step-fade);
-}
-
-.chapter__dots span.is-active {
-  opacity: 1;
-}
-
-/* Static layout (reduced motion): photos sit inline with each step */
-.site:not(.is-animated) .has-step-media .chapter__visual {
-  display: none;
-}
-
-.site:not(.is-animated) .step__media {
-  display: block;
-}
-
-.site:not(.is-animated) .step__media img {
-  width: 100%;
-  max-height: 60vh;
-  object-fit: contain;
-  background: var(--photo-bg);
-  border-radius: var(--radius);
-}
-
-.site:not(.is-animated) .chapter {
-  max-width: 44rem;
-  margin: 0 auto;
 }
 
 /* ---------- Stats ---------- */
@@ -304,110 +197,9 @@
   color: var(--muted);
 }
 
-/* ---------- Desktop: visual on one side, text on the other ---------- */
-
-@media (min-width: 768px) and (orientation: landscape), (min-width: 1100px) {
-  .chapter__pin {
-    grid-template-columns: 1.25fr 1fr;
-    align-items: center;
-    min-height: 100vh;
-  }
-
-  .chapter__visual {
-    height: 70vh;
-  }
-
-  .is-animated .chapter__visual {
-    height: 100%;
-    align-self: stretch;
-  }
-}
-
-/* ---------- Animated (pinned) mode ----------
-   .is-animated is added by scroll.js only when motion is allowed,
-   so reduced-motion users get the plain stacked layout above. */
-
-.is-animated .chapter__pin {
-  height: 100vh;
-  height: 100svh;
-  overflow: hidden;
-}
-
-.is-animated .chapter__steps {
-  gap: 0;
-}
-
-/* Stack every step in the same grid cell and crossfade between them */
-.is-animated .step {
-  grid-area: 1 / 1;
-  opacity: 0;
-  transform: translateY(1rem);
-  visibility: hidden;
-  transition:
-    opacity var(--step-fade) ease,
-    transform var(--step-fade) ease,
-    visibility 0s linear var(--step-fade);
-}
-
-.is-animated .step.is-active {
-  opacity: 1;
-  transform: none;
-  visibility: visible;
-  transition-delay: 0s;
-}
-
-.is-animated .chapter__dots {
-  display: flex;
-}
-
-/* ---------- Mobile: visual sticks at the top, text steps below it ---------- */
+/* ---------- Stats on small screens ---------- */
 
 @media (max-width: 767px), (orientation: portrait) and (max-width: 1099px) {
-  .chapter__pin {
-    grid-template-rows: auto auto;
-  }
-
-  .chapter__visual {
-    aspect-ratio: 4 / 3;
-  }
-
-  .is-animated .chapter__pin {
-    grid-template-rows: minmax(0, 38%) 1fr;
-    align-content: stretch;
-    gap: 1rem;
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-
-  .is-animated .chapter__visual {
-    aspect-ratio: auto;
-  }
-
-  .chapter__text {
-    gap: 0.6rem;
-  }
-
-  .chapter__index {
-    display: none;
-  }
-
-  .chapter__title {
-    font-size: 1.35rem;
-  }
-
-  .chapter__context {
-    font-size: 0.85rem;
-  }
-
-  .step {
-    gap: 0.4rem;
-    font-size: 0.92rem;
-  }
-
-  .step__label {
-    font-size: 1.05rem;
-  }
-
   .stats {
     grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
     gap: 0.3rem;
@@ -432,42 +224,9 @@
   }
 }
 
-/* ---------- Photo visual ---------- */
+/* ---------- Step visuals (used inside an expanded tile) ---------- */
 
-.photo-visual {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-/* Layers stack in one cell, so the faded-out ones must not swallow clicks or
-   drags meant for the visible one (e.g. rotating the 3D model). */
-.photo-visual > * {
-  pointer-events: none;
-}
-
-.photo-visual > .is-active {
-  pointer-events: auto;
-}
-
-.photo-visual__img {
-  grid-area: 1 / 1;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: var(--photo-bg);
-  border-radius: var(--radius);
-  opacity: 0;
-  transition: opacity var(--step-fade) ease;
-}
-
-.photo-visual__img.is-active {
-  opacity: 1;
-}
-
-/* Standalone HTML animation for a step; sits in the same cell as the photos. */
+/* Standalone HTML animation for a step (EmbedLayer). */
 .photo-visual__frame {
   grid-area: 1 / 1;
   width: 100%;
@@ -479,29 +238,6 @@
 }
 
 .photo-visual__frame.is-active {
-  opacity: 1;
-}
-
-/* Two visuals in one row (e.g. a concept model beside a concept drawing). */
-.photo-visual__split {
-  grid-area: 1 / 1;
-  display: grid;
-  /* Column count is set per step in PhotosVisual. */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity var(--step-fade) ease;
-}
-
-.photo-visual__split.is-active {
-  opacity: 1;
-}
-
-.photo-visual__split .model-layer {
-  grid-area: auto;
   opacity: 1;
 }
 
@@ -517,7 +253,7 @@
   background: none;
 }
 
-/* Rotatable 3D model; shares the same cell as photos and animations. */
+/* Rotatable 3D model (ModelLayer). */
 .model-layer {
   grid-area: 1 / 1;
   position: relative;
@@ -547,148 +283,9 @@
   color: var(--muted);
 }
 
-@media (min-width: 768px) and (orientation: landscape), (min-width: 1100px) {
-  .photo-visual {
-    height: auto;
-    aspect-ratio: 4 / 3;
-    max-height: 100%;
-  }
-}
-
 /* Cut-out (transparent) renders need no panel behind them. */
-.photo-visual__img.is-transparent,
-.card__thumb.is-transparent,
-.card__gallery img.is-transparent,
-.step__media img.is-transparent,
 .step-visual__img.is-transparent {
   background: none;
-}
-
-/* ---------- Placeholder visual ---------- */
-
-.placeholder-visual {
-  width: 100%;
-  height: 100%;
-  min-height: 240px;
-  max-height: 70vh;
-  display: grid;
-  place-items: center;
-  container-type: size;
-}
-
-.placeholder-visual__box {
-  --turn: 0deg;
-  /* 70% of the smaller side, so the box still fits when rotated */
-  width: 70cqmin;
-  height: 70cqmin;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  transform: rotate(var(--turn));
-  transition: background-color var(--step-fade) ease;
-}
-
-.placeholder-visual__label {
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.25rem;
-  transform: rotate(calc(var(--turn) * -1));
-}
-
-/* ---------- More projects grid ---------- */
-
-.more {
-  padding: calc(var(--gutter) * 2) var(--gutter);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.more__title {
-  font-size: clamp(1.5rem, 3.4vw, 2.2rem);
-  margin-bottom: 1.5rem;
-}
-
-.more__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
-  gap: 1.25rem;
-  align-items: start;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.card__thumb {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: contain;
-  background: var(--photo-bg);
-  border-bottom: 1px solid var(--line);
-}
-
-.card__body {
-  padding: 1rem 1.1rem 1.1rem;
-  display: grid;
-  gap: 0.4rem;
-}
-
-.card__title {
-  font-size: 1.1rem;
-  line-height: 1.25;
-}
-
-.card__context {
-  font-family: var(--font-mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.card__summary {
-  font-size: 0.95rem;
-}
-
-.card__details {
-  margin-top: 0.4rem;
-  font-size: 0.92rem;
-}
-
-.card__details summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--accent);
-  padding: 0.25rem 0;
-}
-
-.card__section {
-  margin-top: 0.9rem;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.card__section h4 {
-  font-size: 0.95rem;
-}
-
-.card__gallery {
-  margin-top: 1rem;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
-}
-
-.card__gallery img {
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: contain;
-  background: var(--photo-bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 
 /* ---------- Bento grid (all projects) ---------- */

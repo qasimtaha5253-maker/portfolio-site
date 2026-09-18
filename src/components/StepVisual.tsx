@@ -40,10 +40,10 @@ interface StepVisualProps {
 }
 
 /**
- * A step's own visual, shown inline below its text (the bento tile shows every
- * step at once, so unlike the pinned chapter layout there's no shared cell to
- * crossfade in). Split rows, models and animations only appear with motion
- * allowed; reduced motion always falls back to the step's plain photo.
+ * A step's own visual, shown inline below its text (an expanded tile shows
+ * every step at once, each with its own visual). Split rows, models and
+ * animations only appear with motion allowed; reduced motion always falls
+ * back to the step's plain photo.
  */
 export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepVisualProps) {
   const [ref, onScreen] = useOnScreen<HTMLDivElement>();

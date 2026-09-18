@@ -1,6 +1,6 @@
 import type { Step } from '@/data/types';
 
-/** A step's body, stats and bullets. Shared by chapters and grid cards. */
+/** A step's body, stats and bullets, shown in an expanded tile. */
 export function StepContent({ step }: { step: Step }) {
   return (
     <>

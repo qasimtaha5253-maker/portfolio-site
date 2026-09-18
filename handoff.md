@@ -1,37 +1,30 @@
 # Handoff — Qasim Taha portfolio site
 
 Written for a fresh Claude Code / Cowork session picking this up cold.
-Read `CLAUDE.md` first (project rules — **note: it's stale, see §0**), then this.
+Read `CLAUDE.md` first (project rules and architecture — refreshed 2026-09-18 for the bento
+grid), then this.
 
-Last updated: 2026-09-18, after session 4 (the bento-grid rebuild).
+Last updated: 2026-09-18, after session 4 (the bento-grid rebuild), the merge to `main`, and the
+dead-code cleanup.
 
 ---
-
-## 0. Read this first: CLAUDE.md is out of date
-
-`CLAUDE.md`'s "Concept" and "Code layout" sections still describe the **old pinned-chapter
-scrollytelling** site. That architecture is superseded. The site is now a **bento grid** — every
-project is a tile in one grid, sized by `featured`; tapping a tile expands it in place. This
-handoff describes the real, current state. Don't trust CLAUDE.md's architecture description until
-someone refreshes it (flagged as a to-do in §8).
 
 ## 1. What this is, and where it lives
 
 Single-page portfolio for Qasim Taha, final-year Mechanical Engineering co-op student at the
 University of Guelph. 10 projects, loaded from one config file, rendered as a bento grid.
 
-- **Live (main, still the old pinned-chapter version):** https://portfolio-site-qasim-1db5.vercel.app/
-- **Branch preview (bento grid — this is the current direction):**
-  https://portfolio-site-git-bento-layout-qasim-1db5.vercel.app/
-  Auto-deploys on every push to `bento-layout`, same as main auto-deploys on push to `main`.
-- **Repo:** https://github.com/qasimtaha5253-maker/portfolio-site — branch `bento-layout`
+- **Live (main — the bento grid):** https://portfolio-site-qasim-1db5.vercel.app/
+  Auto-deploys on push to `main`; Vercel can take several minutes to publish.
+- **Repo:** https://github.com/qasimtaha5253-maker/portfolio-site — branch `main`
+- **Old version:** the pinned-chapter scrollytelling site is tagged `pinned-chapter-version`
+  (the vanilla-JS original is `vanilla-js-version`).
 - **Local:** `C:\Users\qasim\Documents\portfolio-site` (moved off OneDrive — don't move it back;
   OneDrive syncing `node_modules` caused file locks)
 
-**The bento grid is the new direction, not an experiment under review.** main/the pinned-chapter
-version is superseded. `bento-layout` hasn't been merged to main yet — that's still ahead of us,
-once remaining content (see §7) is in and the user is happy with it. Until then, main stays live
-and untouched; all work happens on `bento-layout`.
+`bento-layout` was fast-forward merged into `main` on 2026-09-18 at the user's request; it is
+now just an alias of `main`'s history. Work directly on `main`, or on a branch for anything
+risky (a pushed branch gets its own Vercel preview URL).
 
 ## 2. How the user works
 
@@ -85,9 +78,6 @@ src/components/
   sections/                    Intro (canvas), About, ContactLinks
   ui/helix-chrono-matrix.tsx   user-supplied intro canvas, modified
   visuals/                     ModelLayer (3D), EmbedLayer (iframe)
-  Chapter.tsx, ProjectCard.tsx  DEAD CODE — unused pinned-chapter/card components, not imported
-                                 anywhere. Delete these and their site.css rules as a first task
-                                 (see §8) — kept only because deleting them wasn't this session's job.
 src/hooks/
   useMediaQuery.ts              useMotionAllowed (dev-only `?reduced-motion` flag)
   useSmoothScroll.ts            Lenis + GSAP ticker; now RETURNS a RefObject<Lenis|null> (see §7)
@@ -278,11 +268,16 @@ this same silent side effect anywhere else `all: unset` gets used.
 
 ## 8. Known issues / debts
 
-1. **`Chapter.tsx`, `ProjectCard.tsx` and their site.css rules are dead code** — not imported
-   anywhere, safe to delete. Do this as an early task on this branch; it wasn't done yet because
-   this session's focus was the new interaction, not cleanup.
-2. **`CLAUDE.md` describes the old pinned-chapter architecture** and needs a rewrite once the
-   bento direction is confirmed stable — see §0.
+1. **Cleaned up (2026-09-18):** the pinned-chapter code is gone — `Chapter.tsx`,
+   `ProjectCard.tsx`, `visuals/{index,types,PhotosVisual,PlaceholderVisual}`, `lib/progress.ts`,
+   the `visual` config field and ~400 lines of unused `site.css`. `CLAUDE.md` was rewritten for the
+   bento architecture the same day. `<main>` in `App.tsx` still gets `site` / `is-animated`
+   classes; nothing styles them any more (harmless, remove if you touch that file anyway).
+2. **The `gallery` photos on Small Fixtures & Tooling are never displayed.** The old grid card
+   showed them; the bento tile only uses `gallery` as cover candidates, so its four CAD/drawing
+   images (`shaft-puller-cad`, `shaft-puller-drawing`, `saw-fixture-cad`, `oil-fixture-cad`) are
+   invisible on the site. Decide with the user whether to show them (e.g. as extra steps, or a
+   gallery row in the expanded tile) or drop them.
 3. **Three photos are still low-resolution**, extracted from his PDF: `hydraulic-hand/
    part-drawing`, `reef-rover/collection-mechanism`, `coffee-cup-gripper/built-gripper`.
    (`conveyor-cart/shaft-assembly-render` was the fourth — resolved this session by the new
@@ -314,7 +309,6 @@ this same silent side effect anywhere else `all: unset` gets used.
 - **Scroll-scrubbed SolidWorks image sequences** (from the original brief): **decided against —
   he will not be doing this.** Don't suggest it or plan for it; 3D models/animations are the
   path for CAD visuals now, not image sequences.
-- **Delete the dead pinned-chapter code** (§8.1) and eventually **refresh CLAUDE.md** (§8.2) —
-  both housekeeping, do whenever convenient, not urgent.
-- **Merge `bento-layout` to main** once the above is in good enough shape and he's happy with it —
-  no timeline given, follow his lead.
+- **Decide what to do with the hidden `gallery` photos** (§8.2) — needs his call.
+- **Real-browser checks:** reduced-motion layout (§8.4) and a Lighthouse/mobile performance run
+  (§8.5). Neither has been done on the bento version.

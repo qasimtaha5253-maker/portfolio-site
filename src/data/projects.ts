@@ -17,7 +17,6 @@ export const projects: Project[] = [
     featured: true,
     summary:
       'A battery-electric, towable pre-cooler that chills strawberries to 1 °C right at the field.',
-    visual: { type: 'photos' },
     steps: [
       {
         label: 'The problem',
@@ -76,7 +75,6 @@ export const projects: Project[] = [
     context: 'Linamar · Co-op',
     featured: true,
     summary: 'A transfer cart that docks between production conveyors, cutting operator handling time by 70%.',
-    visual: { type: 'photos' },
     steps: [
       {
         label: 'The goal',
@@ -115,7 +113,6 @@ export const projects: Project[] = [
     context: 'Machine Design',
     featured: true,
     summary: 'A single-motor machine that grips a cup and moves it 20 cm up and 30 cm across.',
-    visual: { type: 'photos' },
     steps: [
       {
         label: 'The challenge',
