@@ -421,17 +421,30 @@ if (!window.__capture) {
 }
 
 /* ---------- centre the drawing in the frame ---------- */
-// The artwork doesn't fill the original viewBox evenly, which left it sitting
-// off-centre in the site's panel. Fit the viewBox to what's actually drawn.
+// The cart is what should look centred, but the labels sit mostly to the left
+// and the legend runs along the bottom, which pulls it off-centre. So: fit the
+// viewBox around everything, then grow whichever side is short until the cart
+// itself is in the middle.
 function fitViewBox() {
   const svg = $("s");
   svg.setAttribute("viewBox", "0 0 1760 1100");
-  const b = svg.getBBox();
+  const all = svg.getBBox();
+
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const id of ["L_back", "L_frame", "L_comp", "L_mech", "L_cav", "L_shell", "L_sec", "L_flow", "L_lid", "L_front"]) {
+    const g = $(id);
+    if (!g) continue;
+    const b = g.getBBox();
+    if (!b.width) continue;
+    x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width);
+    y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height);
+  }
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+
   const pad = 24;
-  svg.setAttribute(
-    "viewBox",
-    `${b.x - pad} ${b.y - pad} ${b.width + pad * 2} ${b.height + pad * 2}`
-  );
+  const halfW = Math.max(cx - all.x, all.x + all.width - cx) + pad;
+  const halfH = Math.max(cy - all.y, all.y + all.height - cy) + pad;
+  svg.setAttribute("viewBox", `${cx - halfW} ${cy - halfH} ${halfW * 2} ${halfH * 2}`);
 }
 fitViewBox();
 narrowQuery.addEventListener("change", fitViewBox);
