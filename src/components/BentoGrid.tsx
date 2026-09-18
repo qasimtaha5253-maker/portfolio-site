@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Flip } from 'gsap/Flip';
 import { useGSAP } from '@gsap/react';
+import type Lenis from 'lenis';
 import { cn } from '@/lib/utils';
 import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
@@ -23,13 +24,16 @@ interface BentoGridProps {
   projects: Project[];
   /** Reveal tiles on scroll (false when reduced motion is preferred). */
   animated: boolean;
+  /** The page's Lenis instance, so scroll corrections go through it instead
+   *  of fighting its own animated scroll position — see `animateChange`. */
+  lenisRef: RefObject<Lenis | null>;
 }
 
 /**
  * Every project as a tile in one grid, sized by `featured`. Tapping a tile
  * expands it in place to show its steps; the rest of the grid reflows below.
  */
-export function BentoGrid({ projects, animated }: BentoGridProps) {
+export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   // Heavy step visuals (3D model, embedded animation) wait for the expand
@@ -56,15 +60,32 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
    * height so pulling every tile out of flow (Flip's `absolute: true`)
    * doesn't collapse the container and jump everything below it, applies
    * `mutate`, then animates every tile from its old bounds to its new ones.
+   *
+   * `anchorId` keeps that tile's top edge fixed on screen across `mutate` —
+   * e.g. a tile above it closing would otherwise pull it (and the page)
+   * upward the instant the DOM updates, before the animation even starts.
    */
-  function animateChange(mutate: () => void, opts: { opening?: boolean; onDone?: () => void } = {}) {
+  function animateChange(
+    mutate: () => void,
+    opts: { opening?: boolean; anchorId?: string; onDone?: () => void } = {},
+  ) {
     const grid = gridRef.current;
     if (!grid) return;
+    const anchorEl = opts.anchorId ? document.getElementById(opts.anchorId) : null;
+    const anchorTopBefore = anchorEl?.getBoundingClientRect().top;
     const startHeight = grid.getBoundingClientRect().height;
     const state = Flip.getState(grid.querySelectorAll('.bento-tile'));
     gsap.set(grid, { height: startHeight });
     if (opts.opening) setContentReady(false);
     flushSync(mutate);
+    if (anchorEl && anchorTopBefore != null) {
+      const delta = anchorEl.getBoundingClientRect().top - anchorTopBefore;
+      if (delta) {
+        const lenis = lenisRef.current;
+        if (lenis) lenis.scrollTo(lenis.scroll + delta, { immediate: true });
+        else window.scrollBy(0, delta);
+      }
+    }
     Flip.from(state, {
       duration: 0.6,
       ease: 'power2.inOut',
@@ -85,17 +106,23 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
       return;
     }
     if (expanded === id) {
-      animateChange(() => setExpanded(null));
+      animateChange(() => setExpanded(null), { anchorId: id });
     } else if (expanded === null) {
-      animateChange(() => setExpanded(id), { opening: true });
+      animateChange(() => setExpanded(id), { opening: true, anchorId: id });
     } else {
       // Switching straight from one open tile to another: closing the old
       // one and opening the new one at the same time sends every tile
       // between them moving in different directions simultaneously, which
       // reads as the whole grid glitching rather than one clean motion — so
-      // fully close the old one first, then open the new one.
+      // fully close the old one first, then open the new one. Each phase is
+      // anchored to whichever tile is actually resizing in it (not always
+      // the new tile) — the old tile could be showing far down the page
+      // after a long expanded tile pushed it there, and trying to hold that
+      // distant tile still while a completely different tile collapses can
+      // demand a bigger scroll shift than the page has room for.
       animateChange(() => setExpanded(null), {
-        onDone: () => animateChange(() => setExpanded(id), { opening: true }),
+        anchorId: expanded,
+        onDone: () => animateChange(() => setExpanded(id), { opening: true, anchorId: id }),
       });
     }
   }
