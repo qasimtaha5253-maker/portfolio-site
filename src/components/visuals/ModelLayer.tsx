@@ -55,20 +55,23 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       renderer.domElement.style.display = 'block';
 
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 0.85;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
 
+      // Just enough reflection for the metal to read as metal — without it the
+      // aluminium renders black, with too much it looks like chrome.
       const pmrem = new THREE.PMREMGenerator(renderer);
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      scene.environmentIntensity = 0.35;
       pmrem.dispose();
 
-      scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 1.2));
-      const key = new THREE.DirectionalLight(0xffffff, 1.8);
+      scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 1));
+      const key = new THREE.DirectionalLight(0xffffff, 1.4);
       key.position.set(4, 6, 5);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xffc48a, 0.6);
+      const fill = new THREE.DirectionalLight(0xffc48a, 0.5);
       fill.position.set(-5, 1, -3);
       scene.add(fill);
 

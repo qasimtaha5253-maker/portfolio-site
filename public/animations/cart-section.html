@@ -8,8 +8,8 @@
   html,body { margin:0; background:transparent; }
   body { display:flex; justify-content:center; align-items:center; min-height:100vh; }
   svg { width:100%; max-width:1760px; height:auto; display:block; font-family:"Segoe UI", Arial, sans-serif; }
-  .lbl { font-size:44px; fill:#f2f3f5; }
-  .lead { stroke:#cbd2dc; stroke-width:2.4; fill:none; }
+  .lbl { font-size:44px; fill:#ffffff; }
+  .lead { stroke:#ffffff; stroke-width:2.4; fill:none; }
   .e { stroke:#3b4152; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
   /* The frame is only ~330px wide on a phone, so scale the type up there. */
   @media (max-width: 560px) {
@@ -57,7 +57,7 @@
       <feGaussianBlur stdDeviation="0.12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0,0 L10,5 L0,10 z" fill="#cbd2dc"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/>
     </marker>
     <linearGradient id="lg" x1="0" x2="1">
       <stop offset="0" stop-color="hsl(212 85% 45%)"/><stop offset=".35" stop-color="hsl(272 87% 47%)"/>
@@ -75,7 +75,7 @@
   <g id="L_lid"></g>
   <g id="L_front"></g>
   <g id="L_lbl" class="lbl"></g>
-  <g class="legend" font-size="34" fill="#f2f3f5" transform="translate(70 1074)">
+  <g class="legend" font-size="34" fill="#ffffff" transform="translate(70 1074)">
     <rect x="0" y="-22" width="90" height="14" rx="7" fill="url(#lg)"/>
     <text x="106" y="0">Air: cold leaving coil, warmed by berries</text>
     <line x1="820" y1="-15" x2="872" y2="-15" stroke="#b91c1c" stroke-width="12"/><text x="886" y="0">Discharge</text>
@@ -419,6 +419,23 @@ if (!window.__capture) {
   if (reduce) render(1.3);
   else { const t0 = performance.now(); const loop = n => { render((n - t0)/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
 }
+
+/* ---------- centre the drawing in the frame ---------- */
+// The artwork doesn't fill the original viewBox evenly, which left it sitting
+// off-centre in the site's panel. Fit the viewBox to what's actually drawn.
+function fitViewBox() {
+  const svg = $("s");
+  svg.setAttribute("viewBox", "0 0 1760 1100");
+  const b = svg.getBBox();
+  const pad = 24;
+  svg.setAttribute(
+    "viewBox",
+    `${b.x - pad} ${b.y - pad} ${b.width + pad * 2} ${b.height + pad * 2}`
+  );
+}
+fitViewBox();
+narrowQuery.addEventListener("change", fitViewBox);
+addEventListener("resize", fitViewBox);
 </script>
 </body>
 </html>
