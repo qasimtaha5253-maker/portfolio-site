@@ -36,9 +36,7 @@ export const projects: Project[] = [
           'Ranked alternative concepts with weighted decision matrices.',
           'A why-why analysis showed the interim design fell short, so the team pivoted.',
         ],
-        model: { src: 'models/forced-air-cooler.glb', title: '3D model of the forced-air cooler concept' },
-        layout: 'split',
-        image: { src: 'concept-hc2rps', alt: 'HC2RPS concept: a refrigerated aluminium tray with strawberry indents, forced-air fan, evaporator coil and compressor in an insulated enclosure' },
+        image: { src: 'interim-concept', alt: 'Annotated interim concept: solar-lid cooling cart with evaporator coil, DC compressor, battery and insulated compartment' },
       },
       {
         label: 'How it works',
