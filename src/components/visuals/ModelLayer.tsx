@@ -79,8 +79,10 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       controls.enableDamping = true;
       controls.enablePan = false;
       controls.enableZoom = false;
-      // Mouse drag rotates; touch gestures are left to the page so it can scroll.
-      controls.touches = { ONE: null, TWO: null } as unknown as typeof controls.touches;
+      // Drag to rotate with a mouse or a finger. A swipe that starts on the
+      // model turns it instead of scrolling, so the page is scrolled from the
+      // text below it.
+      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
       controls.autoRotateSpeed = 1.2;
 
       const resize = () => {

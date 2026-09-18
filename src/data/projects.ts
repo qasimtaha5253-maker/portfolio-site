@@ -66,7 +66,10 @@ export const projects: Project[] = [
           '461 kg CO₂e/yr avoided (R-290 GWP of 3 vs 1,430 for R-134a).',
           'Met every design criterion; recommended for prototype fabrication.',
         ],
-        image: { src: 'final-design', alt: 'Final towable cooling cart design with overall dimensions' },
+        split: [
+          { model: { src: 'models/cooling-unit.glb', title: 'Rotatable 3D model of the cooling unit assembly' } },
+          { image: { src: 'final-design', alt: 'Final towable cooling cart design with overall dimensions' } },
+        ],
       },
     ],
   },
