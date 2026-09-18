@@ -1,5 +1,7 @@
 # Portfolio Site — Project Brief
 
+> See `handoff.md` for current state, session history, lessons learned and next steps.
+
 Personal engineering portfolio for a Mechanical Engineering co-op student at the
 University of Guelph. The user gives direction; Claude writes the code and explains
 anything the user must do on their end in plain terms.
@@ -95,12 +97,12 @@ and each carries forward until a later step changes it.
   runs in an iframe so its CSS/JS can't clash, added to the page only once its step is reached.
 - `model: { src: 'models/<file>.glb', title }` — public/models/. src/components/visuals/
   ModelLayer.tsx loads three.js + GLTFLoader + OrbitControls on demand (~187 KB gzip chunk,
-  not in the main bundle). Self-rotates, mouse drag orbits, touch gestures deliberately
-  disabled so phones keep scrolling; pauses off-screen; no self-rotation under reduced motion.
+  not in the main bundle). Self-rotates; drag rotates with mouse or finger; pauses when it isn't
+  the active step or is off-screen; no self-rotation under reduced motion.
 - `npm run model -- <in.glb> <out.glb>` cleans and quantizes an export (three reads
   quantized meshes natively — no decoder download). Keep source exports in content/models/.
-- Planned for the cooling unit: 3D model on step 1, cross-fading into Qasim's HTML animation
-  later in the chapter.
+- `split: [{ image } | { model }, ...]` — several visuals side by side in one row.
+- Cooling unit chapter: model → section animation → CFD plot + strawberry flat → model.
 
 ## Content decisions
 - Featured (pinned chapters): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are grid cards.
@@ -140,5 +142,7 @@ and each carries forward until a later step changes it.
 - Session 3 (cont.): transparent-render support (image script keeps alpha, writes
   src/transparent-photos.json; cut-outs get no white panel), bento-style stat tiles,
   and the embed + 3D model layers (both verified with throwaway test assets).
-- Not started yet: full visual design pass beyond the theme, image sequences, the real
-  cooling-unit .glb and HTML animation, remaining high-res photos.
+- Session 3 (cont.): real .glb and HTML animation wired into the cooling unit chapter;
+  concepts step removed at the user request; performance work (see handoff.md).
+- OPEN: the user dislikes the block-by-block pinned scroll and wants a different format.
+  Three prototypes were shown and deleted; no direction chosen yet. See handoff.md section 9.
