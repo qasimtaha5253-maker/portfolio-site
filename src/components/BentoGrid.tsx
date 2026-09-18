@@ -32,6 +32,10 @@ interface BentoGridProps {
 export function BentoGrid({ projects, animated }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Heavy step visuals (3D model, embedded animation) wait for the expand
+  // animation to finish before mounting, so loading them doesn't compete
+  // with it for frames — see `toggle`.
+  const [contentReady, setContentReady] = useState(true);
 
   useGSAP(
     () => {
@@ -53,11 +57,21 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
    * ones instead of letting the grid jump straight to the new layout.
    */
   function toggle(id: string) {
-    if (!animated || !gridRef.current) {
+    const grid = gridRef.current;
+    if (!animated || !grid) {
       setExpanded((current) => (current === id ? null : id));
       return;
     }
-    const state = Flip.getState(gridRef.current.querySelectorAll('.bento-tile'));
+    const opening = expanded !== id;
+    // Flip's `absolute: true` pulls every tile out of the grid for the
+    // animation, which otherwise lets the grid collapse to zero height for a
+    // frame and everything below it (the rest of the grid, the footer) jump
+    // — freeze the container at its current height and only let it go back
+    // to `auto` once the animation settles.
+    const startHeight = grid.getBoundingClientRect().height;
+    const state = Flip.getState(grid.querySelectorAll('.bento-tile'));
+    gsap.set(grid, { height: startHeight });
+    if (opening) setContentReady(false);
     flushSync(() => setExpanded((current) => (current === id ? null : id)));
     Flip.from(state, {
       duration: 0.6,
@@ -65,6 +79,10 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
       absolute: true,
       onEnter: (els) => gsap.fromTo(els, { opacity: 0 }, { opacity: 1, duration: 0.4, delay: 0.2 }),
       onLeave: (els) => gsap.to(els, { opacity: 0, duration: 0.15 }),
+      onComplete: () => {
+        gsap.set(grid, { clearProps: 'height' });
+        if (opening) setContentReady(true);
+      },
     });
   }
 
@@ -115,7 +133,9 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
                   <section className="bento-tile__step" key={step.label}>
                     <h4>{step.label}</h4>
                     <StepContent step={step} />
-                    <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
+                    {contentReady && (
+                      <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
+                    )}
                   </section>
                 ))}
               </div>
