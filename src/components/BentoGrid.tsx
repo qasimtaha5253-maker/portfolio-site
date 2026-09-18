@@ -52,19 +52,27 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
   );
 
   /**
-   * Runs one open or close as its own Flip transition: freezes the grid's
-   * height so pulling every tile out of flow (Flip's `absolute: true`)
-   * doesn't collapse the container and jump everything below it, applies
-   * `mutate`, then animates every tile from its old bounds to its new ones.
+   * Expanding a tile reflows every other tile in the grid, not just the one
+   * tapped — Flip animates all of them from their old bounds to their new
+   * ones instead of letting the grid jump straight to the new layout.
    */
-  function animateChange(mutate: () => void, opts: { opening?: boolean; onDone?: () => void } = {}) {
+  function toggle(id: string) {
     const grid = gridRef.current;
-    if (!grid) return;
+    if (!animated || !grid) {
+      setExpanded((current) => (current === id ? null : id));
+      return;
+    }
+    const opening = expanded !== id;
+    // Flip's `absolute: true` pulls every tile out of the grid for the
+    // animation, which otherwise lets the grid collapse to zero height for a
+    // frame and everything below it (the rest of the grid, the footer) jump
+    // — freeze the container at its current height and only let it go back
+    // to `auto` once the animation settles.
     const startHeight = grid.getBoundingClientRect().height;
     const state = Flip.getState(grid.querySelectorAll('.bento-tile'));
     gsap.set(grid, { height: startHeight });
-    if (opts.opening) setContentReady(false);
-    flushSync(mutate);
+    if (opening) setContentReady(false);
+    flushSync(() => setExpanded((current) => (current === id ? null : id)));
     Flip.from(state, {
       duration: 0.6,
       ease: 'power2.inOut',
@@ -73,31 +81,9 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
       onLeave: (els) => gsap.to(els, { opacity: 0, duration: 0.15 }),
       onComplete: () => {
         gsap.set(grid, { clearProps: 'height' });
-        if (opts.opening) setContentReady(true);
-        opts.onDone?.();
+        if (opening) setContentReady(true);
       },
     });
-  }
-
-  function toggle(id: string) {
-    if (!animated || !gridRef.current) {
-      setExpanded((current) => (current === id ? null : id));
-      return;
-    }
-    if (expanded === id) {
-      animateChange(() => setExpanded(null));
-    } else if (expanded === null) {
-      animateChange(() => setExpanded(id), { opening: true });
-    } else {
-      // Switching straight from one open tile to another: closing the old
-      // one and opening the new one at the same time sends every tile
-      // between them moving in different directions simultaneously, which
-      // reads as the whole grid glitching rather than one clean motion — so
-      // fully close the old one first, then open the new one.
-      animateChange(() => setExpanded(null), {
-        onDone: () => animateChange(() => setExpanded(id), { opening: true }),
-      });
-    }
   }
 
   return (
