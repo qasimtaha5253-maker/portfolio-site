@@ -51,10 +51,17 @@ export interface Step {
    */
   model?: StepModel;
   /**
-   * 'split' shows this step's `model` and `image` side by side in one row,
-   * for comparing two things. Without it the model alone is shown.
+   * Two or more visuals shown side by side in one row, e.g. a simulation
+   * result beside the part it was run on. Each entry is a photo or a model,
+   * and this takes precedence over the step's own `image`/`model`.
    */
-  layout?: 'split';
+  split?: SplitItem[];
+}
+
+/** One cell of a side-by-side step: a photo or a 3D model. */
+export interface SplitItem {
+  image?: ProjectImage;
+  model?: StepModel;
 }
 
 /**

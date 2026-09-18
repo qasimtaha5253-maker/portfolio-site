@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Photo } from '@/components/Photo';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
-import type { ProjectImage, StepEmbed, StepModel } from '@/data/types';
+import type { ProjectImage, SplitItem, StepEmbed, StepModel } from '@/data/types';
 import { ModelLayer } from './ModelLayer';
 import type { VisualProps } from './types';
 
@@ -14,7 +14,7 @@ type Layer =
   | { kind: 'image'; key: string; image: ProjectImage }
   | { kind: 'embed'; key: string; embed: StepEmbed }
   | { kind: 'model'; key: string; model: StepModel }
-  | { kind: 'split'; key: string; model: StepModel; image: ProjectImage };
+  | { kind: 'split'; key: string; items: SplitItem[] };
 
 /**
  * Shows what each step calls for — a photo, an HTML animation, a 3D model, or
@@ -37,8 +37,9 @@ export function PhotosVisual({ project, step }: VisualProps) {
     let current: Layer | undefined;
     for (const s of project.steps) {
       // Newest wins when a step sets more than one.
-      if (s.layout === 'split' && s.model && s.image) {
-        current = add({ kind: 'split', key: `split:${s.model.src}`, model: s.model, image: s.image });
+      if (s.split?.length) {
+        const key = 'split:' + s.split.map((i) => i.image?.src ?? i.model?.src).join('|');
+        current = add({ kind: 'split', key, items: s.split });
       } else if (s.model) {
         current = add({ kind: 'model', key: s.model.src, model: s.model });
       } else if (s.embed) {
@@ -94,16 +95,28 @@ export function PhotosVisual({ project, step }: VisualProps) {
           );
         }
 
-        // Model and photo side by side, for comparing two concepts.
+        // Several visuals in one row, e.g. a simulation beside the part it ran on.
         return (
-          <div key={layer.key} className={cn('photo-visual__split', isActive && 'is-active')}>
-            <ModelLayer model={layer.model} active={isActive} animated={animated} />
-            <Photo
-              projectId={project.id}
-              image={layer.image}
-              sizes={SPLIT_SIZES}
-              className="photo-visual__split-img"
-            />
+          <div
+            key={layer.key}
+            className={cn('photo-visual__split', isActive && 'is-active')}
+            style={{ gridTemplateColumns: `repeat(${layer.items.length}, minmax(0, 1fr))` }}
+          >
+            {layer.items.map((item, i) =>
+              item.model ? (
+                <ModelLayer key={item.model.src} model={item.model} active={isActive} animated={animated} />
+              ) : item.image ? (
+                <Photo
+                  key={item.image.src}
+                  projectId={project.id}
+                  image={item.image}
+                  sizes={SPLIT_SIZES}
+                  className="photo-visual__split-img"
+                />
+              ) : (
+                <div key={i} />
+              ),
+            )}
           </div>
         );
       })}

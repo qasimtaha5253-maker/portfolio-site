@@ -47,7 +47,10 @@ export const projects: Project[] = [
           'SolidWorks FEA on the structure, plus a 10-year cost and carbon model.',
           'Built-in margins: +43% battery runtime, +43% evaporator area, +23% compressor capacity.',
         ],
-        image: { src: 'flat-simulation', alt: 'Simulation contour plot on a vented strawberry flat' },
+        split: [
+          { image: { src: 'flat-simulation', alt: 'ANSYS CFD contour plot on a vented strawberry flat' } },
+          { image: { src: 'strawberry-flat', alt: 'CAD of the standard vented strawberry flat the simulation was run on, empty and loaded' } },
+        ],
       },
       {
         label: 'What it achieved',
