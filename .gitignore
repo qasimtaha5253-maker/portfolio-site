@@ -5,3 +5,6 @@ dist
 *.log
 .env*
 !.env.example
+
+# Raw CAD exports are huge; only the compressed public/models/*.glb is committed
+content/models/

@@ -27,6 +27,7 @@ export const projects: Project[] = [
           'Goal: cool fruit to 0–2 °C in the field, before it ever reaches cold storage.',
           'Off-grid, six vented flats, towable by one worker, keeps fruit dry, low-GWP refrigerant.',
         ],
+        model: { src: 'models/cooling-unit.glb', title: 'Rotatable 3D model of the cooling unit assembly' },
         image: { src: 'strawberry-flat', alt: 'CAD of a standard 16 × 12 × 4 in vented strawberry flat, empty and loaded' },
       },
       {
@@ -44,6 +45,7 @@ export const projects: Project[] = [
           'R-290 refrigeration cycle analysed on a P-h diagram; variable-speed compressor selected.',
           '48 V LiFePO₄ battery and inverter sized from a duty-cycle energy analysis.',
         ],
+        embed: { src: 'animations/cart-section.html', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
         image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
       },
       {

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mobile Harvest Buffer Cooling Unit: section view airflow</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html,body { margin:0; background:#ffffff; }
+  body { display:flex; justify-content:center; align-items:center; min-height:100vh; }
+  svg { width:100%; max-width:1760px; height:auto; display:block; font-family:"Segoe UI", Arial, sans-serif; }
+  .lbl { font-size:19px; fill:#1f2933; }
+  .lead { stroke:#1f2933; stroke-width:1.1; fill:none; }
+  .e { stroke:#3b4152; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+</style>
+</head>
+<body>
+<svg id="s" viewBox="0 0 1760 1100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- all pattern sizes are in inches (plane-group local units) -->
+    <pattern id="pir" width="0.9" height="0.9" patternUnits="userSpaceOnUse">
+      <rect width="0.9" height="0.9" fill="#efd58a"/>
+      <circle cx="0.25" cy="0.25" r="0.09" fill="#c59c42"/><circle cx="0.7" cy="0.62" r="0.07" fill="#d6b35d"/>
+    </pattern>
+    <pattern id="steel" width="0.6" height="0.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="0.6" height="0.6" fill="#6b7280"/><line x1="0" y1="0" x2="0" y2="0.6" stroke="#374151" stroke-width="0.15"/>
+    </pattern>
+    <pattern id="woodF" width="4" height="0.55" patternUnits="userSpaceOnUse">
+      <rect width="4" height="0.55" fill="#c98a4b"/><line x1="0" y1="0.5" x2="4" y2="0.5" stroke="#8a5424" stroke-width="0.08"/>
+    </pattern>
+    <pattern id="woodL" width="4" height="0.55" patternUnits="userSpaceOnUse">
+      <rect width="4" height="0.55" fill="#a86e36"/><line x1="0" y1="0.5" x2="4" y2="0.5" stroke="#6f4119" stroke-width="0.08"/>
+    </pattern>
+    <radialGradient id="berry" cx=".35" cy=".35" r=".7">
+      <stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#a8102a"/>
+    </radialGradient>
+    <pattern id="berries" width="0.95" height="0.95" patternUnits="userSpaceOnUse">
+      <rect width="0.95" height="0.95" fill="#2f6b3a"/>
+      <circle cx="0.47" cy="0.47" r="0.42" fill="url(#berry)"/>
+      <circle cx="0.36" cy="0.6" r="0.09" fill="#58a55c"/>
+    </pattern>
+    <pattern id="fins" width="0.35" height="1" patternUnits="userSpaceOnUse">
+      <rect width="0.35" height="1" fill="#c3ccd8"/><line x1="0.17" y1="0" x2="0.17" y2="1" stroke="#7b8797" stroke-width="0.07"/>
+    </pattern>
+    <pattern id="grille" width="1" height="0.7" patternUnits="userSpaceOnUse">
+      <rect width="1" height="0.7" fill="#c86a33"/><rect y="0.2" width="1" height="0.25" fill="#7a3614"/>
+    </pattern>
+    <linearGradient id="compG" x1="0" x2="1">
+      <stop offset="0" stop-color="#9aa1b1"/><stop offset=".4" stop-color="#e3e6ec"/><stop offset="1" stop-color="#7c8394"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%" filterUnits="objectBoundingBox">
+      <feGaussianBlur stdDeviation="0.12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f2933"/>
+    </marker>
+    <linearGradient id="lg" x1="0" x2="1">
+      <stop offset="0" stop-color="hsl(212 85% 45%)"/><stop offset=".35" stop-color="hsl(272 87% 47%)"/>
+      <stop offset=".7" stop-color="hsl(333 90% 50%)"/><stop offset="1" stop-color="hsl(25 92% 53%)"/>
+    </linearGradient>
+  </defs>
+  <g id="L_back"></g>
+  <g id="L_frame"></g>
+  <g id="L_comp"></g>
+  <g id="L_mech"></g>
+  <g id="L_cav"></g>
+  <g id="L_shell"></g>
+  <g id="L_sec"></g>
+  <g id="L_flow"></g>
+  <g id="L_lid"></g>
+  <g id="L_front"></g>
+  <g id="L_lbl" class="lbl"></g>
+  <g font-size="15" fill="#1f2933" transform="translate(520 1088)">
+    <rect x="0" y="-10" width="80" height="10" rx="5" fill="url(#lg)"/>
+    <text x="92" y="0">Air: cold leaving coil, warmed by berries</text>
+    <line x1="420" y1="-5" x2="452" y2="-5" stroke="#b91c1c" stroke-width="6"/><text x="460" y="0">Discharge</text>
+    <line x1="560" y1="-5" x2="592" y2="-5" stroke="#c2410c" stroke-width="6"/><text x="600" y="0">Liquid</text>
+    <line x1="675" y1="-5" x2="707" y2="-5" stroke="#1d4ed8" stroke-width="6"/><text x="715" y="0">Suction</text>
+  </g>
+</svg>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+/* ---------- projection (inches → px), matched to the SolidWorks view ---------- */
+const S = 13;
+const AX = [0.95*S, -0.22*S], AY = [-0.45*S, -0.38*S], AZ = [0, -S];
+const O = [822, 1000];
+const V = [-0.979, -2.066, 1];            // direction toward viewer
+const P = (x, y, z) => [O[0] + x*AX[0] + y*AY[0] + z*AZ[0], O[1] + x*AX[1] + y*AY[1] + z*AZ[1]];
+const pstr = pts => pts.map(p => P(...p).map(v => v.toFixed(2)).join(",")).join(" ");
+
+function face(pts, n, attrs, parent) {
+  if (n && n[0]*V[0] + n[1]*V[1] + n[2]*V[2] <= 1e-6) return;
+  return el("polygon", Object.assign({points: pstr(pts), class: "e"}, attrs), parent);
+}
+// axis-aligned box: draws the three visible faces (left, top, front)
+function box(x0, x1, y0, y1, z0, z1, c, parent) {
+  if (c.left)  face([[x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1]], null, {fill:c.left}, parent);
+  if (c.top)   face([[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]], null, {fill:c.top}, parent);
+  if (c.front) face([[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]], null, {fill:c.front}, parent);
+}
+// affine plane groups: local units are inches
+const mat = (a, b, o) => `matrix(${a[0]} ${a[1]} ${b[0]} ${b[1]} ${o[0]} ${o[1]})`;
+const planeXZ = (y, parent) => el("g", {transform: mat(AX, AZ, P(0, y, 0))}, parent);   // local (x, z)
+const planeXY = (z, parent) => el("g", {transform: mat(AX, AY, P(0, 0, z))}, parent);   // local (x, y)
+const planeYZ = (x, parent) => el("g", {transform: mat(AY, AZ, P(x, 0, 0))}, parent);   // local (y, z)
+const R = (g, x, y, w, h, a) => el("rect", Object.assign({x, y, width:w, height:h, class:"e"}, a), g);
+
+function hull(pts) {
+  pts = pts.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0]);
+  const lo = [], up = [];
+  for (const p of pts) { while (lo.length > 1 && cr(lo[lo.length-2], lo[lo.length-1], p) <= 0) lo.pop(); lo.push(p); }
+  for (const p of pts.slice().reverse()) { while (up.length > 1 && cr(up[up.length-2], up[up.length-1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+
+/* ---------- key dimensions (in) ---------- */
+const YC = 13.5;                 // section plane (mid-depth)
+const ZB = 16, ZT = 32.45;       // box bottom / top
+const WALL = 1.5;
+const XD0 = 32.5, XD1 = 34;      // insulated divider
+const XM1 = 44;                  // mech compartment right end
+const AXLE_Z = 8, WR = 8;
+const WHEELS_X = [-1, 45];
+const YW_F = [-5.35, -2.85], YW_B = [29.85, 32.35];
+
+/* ---------- wheels ---------- */
+function wheel(xc, yNear, yFar, parent) {
+  const pts = [];
+  for (let a = 0; a < 360; a += 6) {
+    const r = a*Math.PI/180;
+    for (const y of [yNear, yFar]) pts.push(P(xc + WR*Math.cos(r), y, AXLE_Z + WR*Math.sin(r)));
+  }
+  el("polygon", {points: hull(pts).map(p => p.join(",")).join(" "), fill:"#15171c"}, parent);
+  const g = planeXZ(yNear, parent);
+  el("circle", {cx:xc, cy:AXLE_Z, r:WR, fill:"#23262d"}, g);
+  el("circle", {cx:xc, cy:AXLE_Z, r:WR-0.6, fill:"none", stroke:"#3a3f49", "stroke-width":0.25}, g);
+  el("circle", {cx:xc, cy:AXLE_Z, r:4.9, fill:"#b9bec8", stroke:"#6b7280", "stroke-width":0.25}, g);
+  el("circle", {cx:xc, cy:AXLE_Z, r:3.6, fill:"#d9dce2"}, g);
+  el("circle", {cx:xc, cy:AXLE_Z, r:1.6, fill:"#8a909c"}, g);
+  for (let i = 0; i < 5; i++) { const r = i*72*Math.PI/180; el("circle", {cx:xc+2.4*Math.cos(r), cy:AXLE_Z+2.4*Math.sin(r), r:0.3, fill:"#555b66"}, g); }
+}
+WHEELS_X.forEach(x => wheel(x, YW_B[0], YW_B[1], $("L_back")));
+
+/* ---------- frame ---------- */
+const F = $("L_frame");
+const tube = {top:"#9aa0ad", left:"#6b717e", front:"#80868f"};
+WHEELS_X.forEach(x => {
+  box(x-0.5, x+0.5, YW_F[1], YW_B[0], AXLE_Z-0.5, AXLE_Z+0.5, tube, F);          // axle
+  [2.1, 24.9].forEach(y => box(x-0.6, x+0.6, y-0.6, y+0.6, AXLE_Z+0.5, 12.8, tube, F));
+});
+box(-2, 52, 24.3, 25.5, 12.8, 14, tube, F);                                      // back rail
+[-2, 21.4, 43.4, 50.8].forEach(x => box(x, x+1.2, 2.7, 24.3, 12.8, 14, tube, F)); // cross members
+box(-2, 52, 1.5, 2.7, 12.8, 14, tube, F);                                        // front rail
+[[1,25], [31,25], [42,25], [1,2.1], [31,2.1], [42,2.1]].forEach(([x,y]) => box(x-0.5, x+0.5, y-0.5, y+0.5, 14, ZB, tube, F));
+[[45.5,24.9],[50.5,24.9],[45.5,2.1],[50.5,2.1]].forEach(([x,y]) => box(x-0.4, x+0.4, y-0.4, y+0.4, 14, 16.8, tube, F));
+box(44.2, 52, 1.5, 25.5, 16.8, 17.5, {top:"#b3b8c3", left:"#7d8391", front:"#8e94a0"}, F);  // compressor deck
+
+/* ---------- compressor (sectioned half-cylinder) ---------- */
+const CX = 47.5, CR = 3.2, CZ0 = 17.5, CZ1 = 23.8;
+(function () {
+  const Cg = $("L_comp"), pts = [];
+  for (let a = 0; a <= 180; a += 6) {
+    const r = a*Math.PI/180;
+    pts.push(P(CX + CR*Math.cos(r), YC + CR*Math.sin(r), CZ0));
+    pts.push(P(CX + CR*Math.cos(r), YC + CR*Math.sin(r), CZ1));
+  }
+  el("polygon", {points: hull(pts).map(p => p.join(",")).join(" "), fill:"url(#compG)", class:"e"}, Cg);
+  const top = planeXY(CZ1, Cg);
+  el("path", {d:`M${CX-CR} ${YC} A${CR} ${CR} 0 0 1 ${CX+CR} ${YC} Z`, fill:"#c9cdd6", class:"e"}, top);
+  const g = planeXZ(YC, Cg);
+  el("path", {d:`M${CX-CR} ${CZ0} L${CX+CR} ${CZ0} L${CX+CR} ${CZ1} Q${CX+CR} ${CZ1+1.9} ${CX} ${CZ1+1.9} Q${CX-CR} ${CZ1+1.9} ${CX-CR} ${CZ1} Z`, fill:"url(#steel)", class:"e"}, g);
+  el("path", {d:`M${CX-CR+0.35} ${CZ0+0.35} L${CX+CR-0.35} ${CZ0+0.35} L${CX+CR-0.35} ${CZ1} Q${CX+CR-0.35} ${CZ1+1.5} ${CX} ${CZ1+1.5} Q${CX-CR+0.35} ${CZ1+1.5} ${CX-CR+0.35} ${CZ1} Z`, fill:"#2b303a"}, g);
+  el("rect", {x:CX-1.6, y:CZ0+0.9, width:3.2, height:2.8, fill:"#b45309"}, g);       // motor windings
+  el("rect", {x:CX-0.9, y:CZ0+4.1, width:1.8, height:1.6, fill:"#6b7280"}, g);       // scroll/pump
+})();
+
+/* ---------- mechanical compartment interior ---------- */
+const M = $("L_mech");
+R(planeYZ(43.7, M), YC, 16.3, 13.2, 15.85, {fill:"url(#grille)"});               // right wall inner face (grille)
+R(planeXZ(26.7, M), XD1, 16.3, 9.7, 15.85, {fill:"#d9602a"});                   // back inner face
+R(planeXY(16.3, M), XD1, YC, 9.7, 13.2, {fill:"#e2773f"});                      // floor
+// condenser fan (in YZ plane)
+const cfan = planeYZ(41.3, M);
+el("rect", {x:15.6, y:20.6, width:8.8, height:8.8, rx:0.8, fill:"#3f4450", class:"e"}, cfan);
+el("circle", {cx:20, cy:25, r:3.6, fill:"#1f232b"}, cfan);
+const cdBlades = el("g", {}, cfan);
+for (let i = 0; i < 4; i++) el("path", {d:"M20 25 q 1.2 2.6 0 3.4 q -1.2 -0.8 0 -3.4", fill:"#aeb4bf", transform:`rotate(${i*90} 20 25)`}, cdBlades);
+el("circle", {cx:20, cy:25, r:0.6, fill:"#d1d5db"}, cfan);
+// condenser coil
+box(42.3, 43.5, YC, 26.2, 19, 30, {top:"#8b93a1", left:"#6b7280"}, M);
+R(planeYZ(42.3, M), YC, 19, 12.7, 11, {fill:"url(#fins)", opacity:0.85});
+
+/* ---------- refrigerated cavity ---------- */
+const C = $("L_cav");
+const CAV = {x0: WALL, x1: XD0, z0: ZB + WALL, y1: 25.5};
+R(planeXZ(CAV.y1, C), CAV.x0, CAV.z0, CAV.x1 - CAV.x0, ZT - CAV.z0, {fill:"#c9dff0"});
+R(planeXY(CAV.z0, C), CAV.x0, YC, CAV.x1 - CAV.x0, CAV.y1 - YC, {fill:"#d6e7f4"});
+R(planeYZ(XD0, C), YC, CAV.z0, CAV.y1 - YC, ZT - CAV.z0, {fill:"#b9d3e8"});
+// evaporator coil (tubes run along y → cut shows tube ends)
+const COIL = [28, 30, 20, 31.5];
+box(COIL[0], COIL[1], YC, CAV.y1, COIL[2], COIL[3], {}, C);
+R(planeXY(COIL[3], C), COIL[0], YC, 2, CAV.y1 - YC, {fill:"url(#fins)"});
+R(planeYZ(COIL[0], C), YC, COIL[2], CAV.y1 - YC, COIL[3]-COIL[2], {fill:"url(#fins)", opacity:0.9});
+// fan housing
+const FH = [22.8, 27.8, 22, 30], FC = [25.3, 26];
+box(FH[0], FH[1], YC, 24.5, FH[2], FH[3], {top:"#d4d8df", left:"#9ea5b1"}, C);
+// return plate
+box(3.5, 28, YC, CAV.y1, 19.8, 20.0, {top:"#8a95a6", left:"#6b7280"}, C);
+// rack
+const LEVELS = [20.6, 24.5, 28.4];
+[4, 22.5].forEach(x => box(x-0.2, x+0.2, 25.1, 25.5, 20, 31.9, {top:"#64748b", left:"#556274", front:"#64748b"}, C));
+const TRAYS = [[13.5, 22.3], [4.3, 13.1]];
+LEVELS.forEach(b => {
+  box(4, 22.5, YC, CAV.y1, b-0.2, b, {top:"#8793a6", left:"#5c687a"}, C);
+  TRAYS.forEach(([x0, x1]) => {
+    R(planeYZ(x0, C), YC, b, 25 - YC, 2.2, {fill:"url(#woodL)"});
+    R(planeXY(b+2.2, C), x0, YC, x1-x0, 25 - YC, {fill:"url(#berries)"});
+  });
+});
+
+/* ---------- outer shell: left end + top rim ---------- */
+const SH = $("L_shell");
+R(planeYZ(0, SH), YC, ZB, 27 - YC, ZT - ZB, {fill:"#8f94a8"});
+el("polygon", {points:`0,${YC} ${WALL},${YC} ${WALL},${CAV.y1} ${XD0},${CAV.y1} ${XD0},${YC} ${XM1},${YC} ${XM1},27 0,27`, fill:"#c8cbd9", class:"e"}, planeXY(ZT, SH));
+
+/* ---------- section faces (y = 13.5) ---------- */
+const SE = planeXZ(YC, $("L_sec"));
+// insulated shell
+R(SE, 0, ZB, WALL, ZT-ZB, {fill:"url(#pir)"});
+R(SE, 0, ZB, XD1, WALL, {fill:"url(#pir)"});
+R(SE, XD0, CAV.z0, XD1-XD0, ZT-CAV.z0, {fill:"url(#pir)"});
+el("path", {d:`M0 ${ZT} L0 ${ZB} L${XM1} ${ZB} L${XM1} ${ZT} L${XD0} ${ZT} M${WALL} ${ZT} L0 ${ZT}`, fill:"none", stroke:"#3b4152", "stroke-width":0.3}, SE);
+// mech compartment sheet metal
+R(SE, XD1, ZB, XM1-XD1, 0.3, {fill:"url(#steel)"});
+R(SE, XM1-0.3, ZB, 0.3, ZT-ZB, {fill:"url(#steel)"});
+R(SE, XD1, ZT-0.3, XM1-XD1, 0.3, {fill:"url(#steel)"});
+// coil section: fins + tube ends
+R(SE, COIL[0], COIL[2], 2, COIL[3]-COIL[2], {fill:"url(#fins)"});
+for (let z = COIL[2]+0.7, i = 0; z < COIL[3]-0.4; z += 1.05, i++)
+  el("circle", {cx: COIL[0] + (i%2 ? 1.45 : 0.55), cy:z, r:0.32, fill:"#b45309", stroke:"#7c2d12", "stroke-width":0.08}, SE);
+// fan housing section + wheel
+R(SE, FH[0], FH[2], FH[1]-FH[0], FH[3]-FH[2], {fill:"#e5e7eb", rx:0.6});
+el("circle", {cx:FC[0], cy:FC[1], r:2.35, fill:"#9ca3af", stroke:"#374151", "stroke-width":0.12}, SE);
+const evBlades = el("g", {}, SE);
+for (let i = 0; i < 12; i++) el("path", {d:`M${FC[0]} ${FC[1]+0.7} q 0.9 0.5 1.5 1.5`, stroke:"#1f2933", "stroke-width":0.2, fill:"none", transform:`rotate(${i*30} ${FC[0]} ${FC[1]})`}, evBlades);
+el("circle", {cx:FC[0], cy:FC[1], r:0.45, fill:"#1f2933"}, SE);
+// return plate, shelves, trays, berries, front posts
+R(SE, 3.5, 19.8, 24.5, 0.2, {fill:"#4b5563"});
+LEVELS.forEach(b => {
+  R(SE, 4, b-0.2, 18.5, 0.2, {fill:"#4b5563"});
+  TRAYS.forEach(([x0, x1]) => {
+    R(SE, x0, b, x1-x0, 2.2, {fill:"url(#woodF)"});
+    for (let x = x0 + 0.45; x < x1 - 0.2; x += 0.9) {
+      el("circle", {cx:x, cy:b+2.45, r:0.42, fill:"url(#berry)"}, SE);
+      el("path", {d:`M${x-0.25} ${b+2.8} L${x} ${b+3.0} L${x+0.25} ${b+2.8}`, stroke:"#2f855a", "stroke-width":0.12, fill:"none"}, SE);
+    }
+  });
+});
+[4, 22.5].forEach(x => R(SE, x-0.2, 20, 0.4, 11.9, {fill:"#64748b"}));
+
+/* ---------- refrigerant lines, drier, airflow (section plane) ---------- */
+const FL = planeXZ(YC - 0.05, $("L_flow"));
+const pipes = [
+  {d:`M${CX-1.5} 25.4 L${CX-1.5} 26.4 L43.5 26.4`, c:"#b91c1c"},                               // discharge
+  {d:`M42.9 19 L42.9 17.9 L${COIL[0]+1} 17.9 L${COIL[0]+1} ${COIL[2]}`, c:"#c2410c"},        // liquid
+  {d:`M${COIL[0]+1} ${COIL[3]} L${COIL[0]+1} 32.05 L40 32.05 L40 22 L${CX-CR} 22`, c:"#1d4ed8"} // suction
+];
+pipes.forEach(p => el("path", {d:p.d, stroke:p.c, "stroke-width":0.55, fill:"none", "stroke-linejoin":"round"}, FL));
+const flowDash = el("g", {stroke:"#fff", "stroke-width":0.22, fill:"none", "stroke-dasharray":"0.8 1.2", opacity:0.8}, FL);
+pipes.forEach(p => el("path", {d:p.d}, flowDash));
+el("rect", {x:36, y:17.55, width:2.8, height:0.7, rx:0.35, fill:"#1f2933"}, FL);            // filter drier
+
+const guides = el("g", {fill:"none", stroke:"#6f95b3", "stroke-width":0.08, "stroke-dasharray":"0.3 0.6", opacity:0.6}, FL);
+const air = el("g", {filter:"url(#glow)"}, FL);
+const PERIOD = 8;
+const streams = [0, 1, 2].map(k => {
+  const zk = 31.2 - k*3.9, xd = 2.1 + k*0.5, zr = 18.4 + k*0.45, xu = 31.9 - k*0.5, zc = 27.5 - k*1.2;
+  const r = 0.6;
+  const d = `M30 ${zc} L28 ${zc} C27.2 ${zc} 27.2 ${FC[1]} 26.4 ${FC[1]} L24.3 ${FC[1]} C23.3 ${FC[1]} 23.3 ${zk} 22.3 ${zk} ` +
+    `L${xd+r} ${zk} C${xd} ${zk} ${xd} ${zk} ${xd} ${zk-r} L${xd} ${zr+r} C${xd} ${zr} ${xd} ${zr} ${xd+r} ${zr} ` +
+    `L${xu-r} ${zr} C${xu} ${zr} ${xu} ${zr} ${xu} ${zr+r} L${xu} ${zc-r} C${xu} ${zc} ${xu} ${zc} ${xu-r} ${zc} Z`;
+  const p = el("path", {d}, guides);
+  const L = p.getTotalLength();
+  let sC = 0, s1 = 0, s2 = 0;
+  for (let s = 0; s < L; s += 0.05) {
+    const q = p.getPointAtLength(s);
+    if (!sC && q.x <= 28) sC = s;
+    if (sC && !s1 && q.x <= 22.3) s1 = s;
+    if (s1 && !s2 && q.x <= xd + r) s2 = s;
+  }
+  const parts = [];
+  for (let i = 0; i < 20; i++) {
+    const trail = [];
+    for (let j = 0; j < 6; j++) trail.push(el("circle", {r: 0.42 - j*0.05, opacity: j ? 0.8 - j*0.13 : 1}, air));
+    parts.push({trail: trail.reverse().reverse(), phase: i/20});
+  }
+  // draw heads on top
+  parts.forEach(pt => pt.trail.slice().reverse().forEach(c => air.appendChild(c)));
+  return {p, L, sC, s1, s2, parts};
+});
+const lerp = (a, b, t) => a + (b - a)*t;
+function warmth(st, s) {
+  if (s < st.sC) return 0.9*(1 - s/st.sC);
+  if (s < st.s1) return 0;
+  if (s < st.s2) return (s - st.s1)/(st.s2 - st.s1);
+  return lerp(1, 0.9, (s - st.s2)/(st.L - st.s2));
+}
+const col = w => `hsl(${Math.round(lerp(212, 385, w)) % 360} ${Math.round(lerp(85, 92, w))}% ${Math.round(lerp(45, 53, w))}%)`;
+
+// warm exhaust arrows leaving the condenser end
+const ex = [];
+[28.2, 30.4].forEach((z, r) => { for (let i = 0; i < 3; i++)
+  ex.push({z, ph: i/3 + r*0.17, e: el("path", {d:"M0 0 L-1.3 0.75 L-1.3 0.28 L-2.8 0.28 L-2.8 -0.28 L-1.3 -0.28 L-1.3 -0.75 Z", fill:"#dc2626"}, FL)}); });
+
+/* ---------- lid (open, sectioned) ---------- */
+(function () {
+  const G = $("L_lid"), th = 50*Math.PI/180, co = Math.cos(th), si = Math.sin(th);
+  const LL = XD1, T = 1.6;
+  const W = (u, v, y) => [XD1 - u*co + v*si, y, ZT + u*si + v*co];
+  const nIn = [-si, 0, -co], nTip = [-co, 0, si];
+  face([W(0,0,YC), W(LL,0,YC), W(LL,0,27), W(0,0,27)], nIn, {fill:"#aeb2c4"}, G);
+  face([W(1.5,0.02,YC), W(LL-1.5,0.02,YC), W(LL-1.5,0.02,25.5), W(1.5,0.02,25.5)], nIn, {fill:"#bfc3d3"}, G);
+  face([W(LL,0,YC), W(LL,T,YC), W(LL,T,27), W(LL,0,27)], nTip, {fill:"#c9ccd9"}, G);
+  face([W(0,0,YC), W(LL,0,YC), W(LL,T,YC), W(0,T,YC)], null, {fill:"#8f94a8"}, G);
+  const lg = el("g", {transform:`rotate(-50 ${XD1} ${ZT})`}, planeXZ(YC, G));
+  el("rect", {x:0.15, y:ZT+0.2, width:LL-0.3, height:T-0.4, fill:"url(#pir)"}, lg);
+})();
+
+/* ---------- front: front wheels, handle, ghost of removed half ---------- */
+const FR = $("L_front");
+WHEELS_X.forEach(x => wheel(x, YW_F[0], YW_F[1], FR));
+(function () {
+  const line = (a, b, w, c) => el("line", {x1:P(...a)[0], y1:P(...a)[1], x2:P(...b)[0], y2:P(...b)[1], stroke:c, "stroke-width":w, "stroke-linecap":"round"}, FR);
+  line([-1, 13.5, 11.2], [-7, 13.5, 11.2], 12, "#5d6371");
+  line([-1, 13.5, 11.2], [-7, 13.5, 11.2], 4, "#8b919d");
+  el("circle", {cx:P(-7,13.5,11.2)[0], cy:P(-7,13.5,11.2)[1], r:9, fill:"#3f4450"}, FR);
+  line([-7, 13.5, 11.5], [-20, 17, 23], 14, "#4b505c");
+  line([-7, 13.5, 11.5], [-20, 17, 23], 5, "#7d838f");
+  line([-20, 13, 23], [-20, 21, 23], 10, "#3f4450");
+  // section plane edge
+  el("polyline", {points: pstr([[0,YC,ZB],[XM1,YC,ZB],[XM1,YC,ZT]]), stroke:"#1f2933", "stroke-width":2.2, fill:"none"}, FR);
+})();
+
+/* ---------- labels ---------- */
+function label(txt, tx, ty, anchor3, align) {
+  const g = $("L_lbl"), [ax, ay] = P(...anchor3);
+  const lines = txt.split("\n");
+  lines.forEach((l, i) => { const t = el("text", {x:tx, y:ty + i*20, "text-anchor": align || "start"}, g); t.textContent = l; });
+  const lx = align === "end" ? tx + 6 : align === "middle" ? tx : tx - 6;
+  const ly = ty + (lines.length - 1)*10 - 5;
+  el("path", {class:"lead", d:`M${lx} ${ly} L${ax} ${ay}`, "marker-end":"url(#ah)"}, g);
+}
+window.__labels = label;
+const LID_A = (() => { const th = 50*Math.PI/180; return [XD1 - 22*Math.cos(th), 20, ZT + 22*Math.sin(th)]; })();
+[
+  ["Lid", 470, 205, LID_A, "end"],
+  ["Strawberry flats (×6)", 470, 470, [8, YC, 30.6], "end"],
+  ["PIR insulation", 470, 565, [0.75, YC, 25], "end"],
+  ["Air return channel", 470, 655, [12, YC, 18.8], "end"],
+  ["Towing handle", 470, 830, [-16, 16, 20], "end"],
+  ["Evaporator coil", 1060, 150, [29, 20, 31.5], "start"],
+  ["Centrifugal fan", 1160, 205, [25.3, YC, 28.3], "start"],
+  ["Mechanical compartment", 1290, 262, [38, YC, 30.5], "start"],
+  ["Warm air exhaust", 1545, 385, [52.5, YC, 29.3], "start"],
+  ["Condenser and fan", 1545, 455, [42.9, YC, 27], "start"],
+  ["R-290 compressor", 1545, 545, [49.5, YC, 21], "start"],
+  ["Off-road wheels\n(Ø16 in)", 1545, 800, [45, -5.35, 13], "start"],
+  ["Insulated divider", 1080, 1010, [33.25, YC, 22], "middle"],
+  ["Filter drier", 1235, 965, [37.4, YC, 17.9], "middle"],
+  ["Steel frame", 1545, 650, [51.4, 13, 13.4], "start"],
+].forEach(a => label(...a));
+const cap = el("text", {x:40, y:60, "font-size":22, "font-weight":600, fill:"#1f2933"}, $("L_lbl")); cap.textContent = "Section at mid-depth (front half removed)";
+
+
+/* ---------- render ---------- */
+function render(t) {
+  const u = (t % PERIOD)/PERIOD;
+  evBlades.setAttribute("transform", `rotate(${-u*3600} ${FC[0]} ${FC[1]})`);
+  cdBlades.setAttribute("transform", `rotate(${u*4320} 20 25)`);
+  flowDash.setAttribute("stroke-dashoffset", -u*8);
+  streams.forEach(st => st.parts.forEach(pt => {
+    const base = ((u + pt.phase) % 1)*st.L;
+    pt.trail.forEach((c, j) => {
+      const s = (base - j*0.45 + st.L) % st.L;
+      const q = st.p.getPointAtLength(s);
+      c.setAttribute("cx", q.x); c.setAttribute("cy", q.y);
+      c.setAttribute("fill", col(warmth(st, s)));
+    });
+  }));
+  ex.forEach(o => {
+    const v = (u*4 + o.ph) % 1;
+    o.e.setAttribute("transform", `translate(${45.2 + v*9} ${o.z})`);
+    o.e.setAttribute("opacity", Math.min(1, v*4)*(1 - v));
+  });
+}
+window.render = render;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!window.__capture) {
+  if (reduce) render(1.3);
+  else { const t0 = performance.now(); const loop = n => { render((n - t0)/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+}
+</script>
+</body>
+</html>

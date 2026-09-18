@@ -34,10 +34,12 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
     let cleanup = () => {};
 
     (async () => {
-      const [THREE, { GLTFLoader }, { OrbitControls }] = await Promise.all([
+      const [THREE, { GLTFLoader }, { OrbitControls }, { MeshoptDecoder }] = await Promise.all([
         import('three'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/controls/OrbitControls.js'),
+        // Models are meshopt-compressed by `npm run model`.
+        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
       ]);
       if (disposed) return;
 
@@ -98,7 +100,7 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       });
       visibility.observe(host);
 
-      new GLTFLoader().load(
+      new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
         `${base}${model.src}`,
         (gltf) => {
           if (disposed) return;

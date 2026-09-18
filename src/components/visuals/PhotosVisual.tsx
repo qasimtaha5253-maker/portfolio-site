@@ -68,7 +68,6 @@ export function PhotosVisual({ project, step }: VisualProps) {
             key={embed.src}
             src={`${base}${embed.src}`}
             title={embed.title}
-            loading="lazy"
             scrolling="no"
             className={cn(
               'photo-visual__frame',
