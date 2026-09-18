@@ -85,12 +85,37 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
       controls.autoRotateSpeed = 1.2;
 
+      // Set once the model is loaded: half its width/height/depth.
+      let extent = new THREE.Vector3(1, 1, 1);
+
+      /**
+       * Pull the camera back just far enough for the model to fill the panel,
+       * keeping whichever direction the visitor has turned it to. Recomputed on
+       * resize, since a narrow panel needs more distance than a wide one.
+       */
+      const frameModel = () => {
+        const vFov = (camera.fov * Math.PI) / 180;
+        // The model turns, so use its widest horizontal reach, not just x.
+        const halfWidth = Math.hypot(extent.x, extent.z);
+        const forHeight = extent.y / Math.tan(vFov / 2);
+        const forWidth = halfWidth / (Math.tan(vFov / 2) * camera.aspect);
+        const distance = Math.max(forHeight, forWidth) * 1.06; // a little breathing room
+        const direction = camera.position.clone().normalize();
+        if (direction.lengthSq() === 0) direction.set(0.75, 0.45, 0.95).normalize();
+        camera.position.copy(direction.multiplyScalar(distance));
+        camera.near = distance / 100;
+        camera.far = distance * 10;
+        camera.updateProjectionMatrix();
+        controls.update();
+      };
+
       const resize = () => {
         const { clientWidth: w, clientHeight: h } = host;
         if (!w || !h) return;
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
+        if (loaded) frameModel();
       };
       const observer = new ResizeObserver(resize);
       observer.observe(host);
@@ -122,22 +147,39 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
           // Centre the model and pull the camera back far enough to frame it.
           const box = new THREE.Box3().setFromObject(gltf.scene);
           const size = box.getSize(new THREE.Vector3());
-          const centre = box.getCenter(new THREE.Vector3());
+
+          // Centre on the bulk of the model rather than the middle of its
+          // bounding box, so a long thin part (the towing handle) doesn't drag
+          // the body off to one side. Each mesh counts for its own volume.
+          const centre = new THREE.Vector3();
+          let weight = 0;
+          const partBox = new THREE.Box3();
+          const partSize = new THREE.Vector3();
+          const partCentre = new THREE.Vector3();
+          gltf.scene.traverse((obj) => {
+            if (!(obj as { isMesh?: boolean }).isMesh) return;
+            partBox.setFromObject(obj);
+            partBox.getSize(partSize);
+            partBox.getCenter(partCentre);
+            const volume = partSize.x * partSize.y * partSize.z;
+            if (!volume) return;
+            centre.addScaledVector(partCentre, volume);
+            weight += volume;
+          });
+          if (weight) centre.divideScalar(weight);
+          else box.getCenter(centre);
+
           gltf.scene.position.sub(centre);
           scene.add(gltf.scene);
 
-          const radius = Math.max(size.x, size.y, size.z) * 0.5 || 1;
-          const distance = radius / Math.sin((camera.fov * Math.PI) / 360);
-          camera.position.set(distance * 0.75, distance * 0.45, distance * 0.95);
-          camera.near = distance / 100;
-          camera.far = distance * 10;
-          camera.updateProjectionMatrix();
+          extent = size.multiplyScalar(0.5);
+          camera.position.set(0.75, 0.45, 0.95);
           controls.target.set(0, 0, 0);
-          controls.update();
 
-          resize();
-          setStatus('ready');
           loaded = true;
+          resize(); // sizes the canvas, then frames the model for that shape
+          frameModel();
+          setStatus('ready');
           draw();
         },
         undefined,
