@@ -727,11 +727,11 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   /* minmax, not a fixed length: a collapsed tile has no content height of its
-     own (its photo/caption are all absolutely positioned), so 13rem sets its
+     own (its photo/caption are all absolutely positioned), so 9.5rem sets its
      size — but an expanded tile's steps flow normally below the photo and
-     must be able to grow the row past 13rem instead of getting clipped. */
-  grid-auto-rows: minmax(13rem, auto);
-  gap: 1rem;
+     must be able to grow the row past 9.5rem instead of getting clipped. */
+  grid-auto-rows: minmax(9.5rem, auto);
+  gap: 0.75rem;
 }
 
 .bento-tile {
@@ -784,35 +784,36 @@
 .bento-tile__caption {
   position: absolute;
   left: 0;
-  right: 3rem;
+  right: 2.4rem;
   bottom: 0;
-  padding: 1rem 1.1rem;
+  padding: 0.7rem 0.85rem;
 }
 
 .bento-tile__context {
   font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--muted);
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.2rem;
 }
 
 .bento-tile__title {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   line-height: 1.25;
   margin: 0;
   color: var(--fg);
+  transition: font-size 0.3s ease;
 }
 
 .bento-tile--large .bento-tile__title {
-  font-size: 1.3rem;
+  font-size: 1.1rem;
 }
 
 .bento-tile__summary {
-  margin: 0.4rem 0 0;
+  margin: 0.35rem 0 0;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -821,10 +822,10 @@
 
 .bento-tile__toggle {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2rem;
-  height: 2rem;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: 999px;
   background: rgba(9, 10, 15, 0.65);
   border: 1px solid var(--line);
@@ -832,7 +833,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   line-height: 1;
   pointer-events: none;
 }
@@ -842,10 +843,31 @@
   grid-row: auto;
 }
 
+/* Expanded: the cover photo fades out and the title becomes the tile's own
+   heading instead of a caption floating over a photo. */
 .bento-tile--expanded .bento-tile__hit {
   position: relative;
-  height: 42vh;
-  min-height: 260px;
+  height: auto;
+  min-height: 0;
+  padding: 1.5rem 1.5rem 1rem;
+  cursor: pointer;
+}
+
+.bento-tile--expanded .bento-tile__photo,
+.bento-tile--expanded .bento-tile__scrim {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.bento-tile--expanded .bento-tile__caption {
+  position: static;
+  padding: 0;
+}
+
+.bento-tile--expanded .bento-tile__title {
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  line-height: 1.15;
 }
 
 .bento-tile__detail {
@@ -920,7 +942,7 @@
 
 @media (max-width: 560px) {
   .bento-grid {
-    grid-auto-rows: minmax(15rem, auto);
+    grid-auto-rows: minmax(11rem, auto);
   }
   .bento-tile--large {
     grid-row: span 2;
