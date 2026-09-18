@@ -102,10 +102,14 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
       controls.autoRotateSpeed = 1.2;
 
-      // Set once the model is loaded: how far it reaches from the point it
-      // spins around. Measured from that point, not from the middle of the
-      // bounding box, since centring on the model's bulk leaves it lopsided —
-      // the towing handle swings out much further than the body.
+      // Set once the model is loaded: how far the camera needs to sit back to
+      // fit the model. reachXZ is measured from the spin centre (not the
+      // bounding box's middle), since centring on the model's bulk leaves it
+      // lopsided — the towing handle swings out much further than the body,
+      // and that full swing radius has to fit regardless of rotation. reachY
+      // has no such swing (turning around the vertical axis doesn't change a
+      // point's height), so it's measured from the true vertical midpoint —
+      // see where it's computed, below.
       let reachXZ = 1;
       let reachY = 1;
 
@@ -120,9 +124,9 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
         const forHeight = reachY / Math.tan(vFov / 2);
         const forWidth = reachXZ / (Math.tan(vFov / 2) * camera.aspect);
         const distance = Math.max(forHeight, forWidth) * 1.12; // breathing room
-        const direction = camera.position.clone().normalize();
+        const direction = camera.position.clone().sub(controls.target).normalize();
         if (direction.lengthSq() === 0) direction.set(0.75, 0.45, 0.95).normalize();
-        camera.position.copy(direction.multiplyScalar(distance));
+        camera.position.copy(direction.multiplyScalar(distance).add(controls.target));
         camera.near = distance / 100;
         camera.far = distance * 10;
         camera.updateProjectionMatrix();
@@ -208,12 +212,21 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
             Math.max(Math.abs(shifted.min.x), Math.abs(shifted.max.x)),
             Math.max(Math.abs(shifted.min.z), Math.abs(shifted.max.z)),
           );
-          reachY = Math.max(Math.abs(shifted.min.y), Math.abs(shifted.max.y));
+          // Vertically, unlike XZ, there's no swing-radius concern — turning
+          // around the (vertical) Y axis never changes a point's Y coordinate,
+          // so looking at the true vertical midpoint instead of the spin
+          // centre doesn't make the model swing off-centre as it rotates. Parts
+          // that reach further one way than the other (e.g. legs reaching
+          // further down than a frame reaches up) previously got framed
+          // symmetrically around the spin centre — sized to fit the larger
+          // side, leaving slack on the smaller one instead of using it.
+          const centreY = (shifted.min.y + shifted.max.y) / 2;
+          reachY = (shifted.max.y - shifted.min.y) / 2;
           if (!reachXZ) reachXZ = size.x * 0.5 || 1;
           if (!reachY) reachY = size.y * 0.5 || 1;
 
           camera.position.set(0.75, 0.45, 0.95);
-          controls.target.set(0, 0, 0);
+          controls.target.set(0, centreY, 0);
 
           loaded = true;
           resize(); // sizes the canvas, then frames the model for that shape
