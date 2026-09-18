@@ -39,6 +39,16 @@ interface BentoGridProps {
 export function BentoGrid({ projects, animated }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Heavy step visuals (3D model, embedded animation) wait for the expand
+  // animation to finish before mounting, so loading them doesn't compete
+  // with it for frames — see `toggle` and the detail's onAnimationComplete.
+  const [contentReady, setContentReady] = useState(true);
+
+  function toggle(id: string) {
+    const opening = expanded !== id;
+    if (opening) setContentReady(false);
+    setExpanded(opening ? id : null);
+  }
 
   useGSAP(
     () => {
@@ -75,7 +85,7 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
               type="button"
               className="bento-tile__hit"
               aria-expanded={isExpanded}
-              onClick={() => setExpanded(isExpanded ? null : project.id)}
+              onClick={() => toggle(project.id)}
             >
               {cover && (
                 <Photo
@@ -107,13 +117,22 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
                   exit={animated ? { height: 0, opacity: 0 } : { display: 'none' }}
                   transition={animated ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
                   style={{ overflow: 'hidden' }}
+                  onAnimationComplete={() => {
+                    if (isExpanded) setContentReady(true);
+                  }}
                 >
                   {project.summary && <p className="bento-tile__summary bento-tile__summary--detail">{project.summary}</p>}
                   {project.steps.map((step) => (
                     <section className="bento-tile__step" key={step.label}>
                       <h4>{step.label}</h4>
                       <StepContent step={step} />
-                      <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
+                      <StepVisual
+                        projectId={project.id}
+                        step={step}
+                        animated={animated}
+                        coverSrc={cover?.src}
+                        ready={contentReady}
+                      />
                     </section>
                   ))}
                 </motion.div>
