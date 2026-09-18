@@ -225,8 +225,13 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
           if (!reachXZ) reachXZ = size.x * 0.5 || 1;
           if (!reachY) reachY = size.y * 0.5 || 1;
 
-          camera.position.set(0.75, 0.45, 0.95);
+          // frameModel() derives its viewing angle from camera.position minus
+          // controls.target, so the camera has to be seeded *offset by* the
+          // target — otherwise, for any model with a non-zero centreY, that
+          // first direction comes out skewed (not just re-based), tilting the
+          // angle itself rather than only shifting what it's centred on.
           controls.target.set(0, centreY, 0);
+          camera.position.set(0.75, 0.45, 0.95).add(controls.target);
 
           loaded = true;
           resize(); // sizes the canvas, then frames the model for that shape
