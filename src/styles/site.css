@@ -883,28 +883,15 @@
   border-radius: 8px;
   background: var(--photo-bg);
   object-fit: contain;
-  animation: step-visual-in 0.4s ease both;
 }
 
-/* A step's own model, animation or split view, inline below its text. It
-   mounts a little after the tile finishes expanding (see BentoGrid's
-   `contentReady`), so it fades in rather than popping in abruptly. */
+/* A step's own model, animation or split view, inline below its text. */
 .step-visual {
   margin-top: 0.9rem;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
-  animation: step-visual-in 0.4s ease both;
-}
-
-@keyframes step-visual-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 .step-visual--split {
