@@ -2,44 +2,32 @@ import { projects } from '@/data/projects';
 import { cn } from '@/lib/utils';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
-import { Chapter } from '@/components/Chapter';
-import { ProjectCard } from '@/components/ProjectCard';
+import { BentoGrid } from '@/components/BentoGrid';
 import { Intro } from '@/components/sections/Intro';
 import { About } from '@/components/sections/About';
 import { ContactLinks } from '@/components/sections/ContactLinks';
 
-const featured = projects.filter((p) => p.featured);
-const others = projects.filter((p) => !p.featured);
-
 export default function App() {
-  // Reduced motion: native scrolling and a plain stacked layout.
+  // Reduced motion: no tile reveal animation, everything shown at once.
   const animated = useMotionAllowed();
   useSmoothScroll(animated);
 
   return (
-    // `is-animated` switches the CSS to the pinned layout (see styles/site.css).
     <main className={cn('site', animated && 'is-animated')}>
       <Intro />
       <About />
 
-      <div id="chapters">
-        {featured.map((project, i) => (
-          <Chapter key={project.id} project={project} index={i} animated={animated} />
-        ))}
-      </div>
-
-      {others.length > 0 && (
-        <section className="more" id="more-projects" aria-labelledby="more-projects-title">
-          <h2 className="more__title" id="more-projects-title">
-            More projects
+      <section className="bento-section" id="work" aria-labelledby="work-title">
+        <header className="bento-section__header">
+          <p className="bento-section__eyebrow">Projects</p>
+          <h2 className="bento-section__title" id="work-title">
+            What I&apos;ve built
           </h2>
-          <div className="more__grid">
-            {others.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        </section>
-      )}
+          <p className="bento-section__hint">Tap a project to see how it works.</p>
+        </header>
+
+        <BentoGrid projects={projects} animated={animated} />
+      </section>
 
       <footer className="footer" id="contact">
         <h2 className="footer__title">Get in touch</h2>

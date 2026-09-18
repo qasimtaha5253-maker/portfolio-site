@@ -3,9 +3,9 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { cn } from '@/lib/utils';
-import { Photo } from '@/components/Photo';
-import { StepContent } from '@/components/StepContent';
 import type { Project, ProjectImage } from '@/data/types';
+import { Photo } from './Photo';
+import { StepContent } from './StepContent';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -18,9 +18,14 @@ function coverImage(project: Project): ProjectImage | undefined {
 
 interface BentoGridProps {
   projects: Project[];
+  /** Reveal tiles on scroll (false when reduced motion is preferred). */
   animated: boolean;
 }
 
+/**
+ * Every project as a tile in one grid, sized by `featured`. Tapping a tile
+ * expands it in place to show its steps; the rest of the grid reflows below.
+ */
 export function BentoGrid({ projects, animated }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);

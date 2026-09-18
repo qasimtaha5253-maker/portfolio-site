@@ -10,15 +10,6 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, './src'),
     },
   },
-  build: {
-    rollupOptions: {
-      input: {
-        main: path.resolve(import.meta.dirname, 'index.html'),
-        // Throwaway layout preview; safe to drop once a direction is chosen.
-        altBento: path.resolve(import.meta.dirname, 'alt-bento.html'),
-      },
-    },
-  },
   server: {
     // Listen on all network interfaces so a phone on the same Wi-Fi can connect.
     host: true,
