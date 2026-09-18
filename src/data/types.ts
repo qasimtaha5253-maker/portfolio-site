@@ -50,6 +50,11 @@ export interface Step {
    * whatever the next step shows.
    */
   model?: StepModel;
+  /**
+   * 'split' shows this step's `model` and `image` side by side in one row,
+   * for comparing two things. Without it the model alone is shown.
+   */
+  layout?: 'split';
 }
 
 /**
