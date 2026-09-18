@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -10,6 +11,14 @@ import { StepVisual } from './StepVisual';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
+// Framer Motion's layout animation is what powers the "card expands into a
+// detail view" pattern on 21st.dev (their Morphing Dialog / Expanding Cards
+// components). It's built for exactly this: elements stay in normal document
+// flow while resizing (unlike a manual FLIP with `position: absolute`), so
+// the browser's own scroll position naturally keeps up instead of needing to
+// be corrected by hand.
+const EXPAND_TRANSITION = { type: 'spring', stiffness: 500, damping: 42, mass: 0.7 } as const;
+
 function coverImage(project: Project): ProjectImage | undefined {
   const images = [...project.steps.map((s) => s.image), ...(project.gallery ?? [])].filter(
     (img): img is ProjectImage => Boolean(img),
@@ -19,7 +28,7 @@ function coverImage(project: Project): ProjectImage | undefined {
 
 interface BentoGridProps {
   projects: Project[];
-  /** Reveal tiles on scroll (false when reduced motion is preferred). */
+  /** Reveal tiles on scroll and animate the expand transition (false when reduced motion is preferred). */
   animated: boolean;
 }
 
@@ -51,9 +60,11 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
         const cover = coverImage(project);
         const isExpanded = expanded === project.id;
         return (
-          <article
+          <motion.article
             key={project.id}
             id={project.id}
+            layout={animated}
+            transition={animated ? EXPAND_TRANSITION : { duration: 0 }}
             className={cn(
               'bento-tile',
               project.featured && 'bento-tile--large',
@@ -85,19 +96,28 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
               </span>
             </button>
 
-            {isExpanded && (
-              <div className="bento-tile__detail">
-                {project.summary && <p className="bento-tile__summary bento-tile__summary--detail">{project.summary}</p>}
-                {project.steps.map((step) => (
-                  <section className="bento-tile__step" key={step.label}>
-                    <h4>{step.label}</h4>
-                    <StepContent step={step} />
-                    <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
-                  </section>
-                ))}
-              </div>
-            )}
-          </article>
+            <AnimatePresence initial={false}>
+              {isExpanded && (
+                <motion.div
+                  className="bento-tile__detail"
+                  initial={animated ? { height: 0, opacity: 0 } : false}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={animated ? { height: 0, opacity: 0 } : { display: 'none' }}
+                  transition={animated ? { duration: 0.35, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  {project.summary && <p className="bento-tile__summary bento-tile__summary--detail">{project.summary}</p>}
+                  {project.steps.map((step) => (
+                    <section className="bento-tile__step" key={step.label}>
+                      <h4>{step.label}</h4>
+                      <StepContent step={step} />
+                      <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
+                    </section>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.article>
         );
       })}
     </div>
