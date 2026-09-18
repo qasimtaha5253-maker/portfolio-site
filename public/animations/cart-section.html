@@ -5,12 +5,18 @@
 <title>Mobile Harvest Buffer Cooling Unit: section view airflow</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  html,body { margin:0; background:#ffffff; }
+  html,body { margin:0; background:transparent; }
   body { display:flex; justify-content:center; align-items:center; min-height:100vh; }
   svg { width:100%; max-width:1760px; height:auto; display:block; font-family:"Segoe UI", Arial, sans-serif; }
-  .lbl { font-size:19px; fill:#1f2933; }
-  .lead { stroke:#1f2933; stroke-width:1.1; fill:none; }
+  .lbl { font-size:44px; fill:#f2f3f5; }
+  .lead { stroke:#cbd2dc; stroke-width:2.4; fill:none; }
   .e { stroke:#3b4152; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+  /* The frame is only ~330px wide on a phone, so scale the type up there. */
+  @media (max-width: 560px) {
+    .lbl { font-size:66px; }
+    .legend { font-size:50px; }
+    .lead { stroke-width:3.4; }
+  }
 </style>
 </head>
 <body>
@@ -51,7 +57,7 @@
       <feGaussianBlur stdDeviation="0.12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M0,0 L10,5 L0,10 z" fill="#1f2933"/>
+      <path d="M0,0 L10,5 L0,10 z" fill="#cbd2dc"/>
     </marker>
     <linearGradient id="lg" x1="0" x2="1">
       <stop offset="0" stop-color="hsl(212 85% 45%)"/><stop offset=".35" stop-color="hsl(272 87% 47%)"/>
@@ -69,12 +75,12 @@
   <g id="L_lid"></g>
   <g id="L_front"></g>
   <g id="L_lbl" class="lbl"></g>
-  <g font-size="15" fill="#1f2933" transform="translate(520 1088)">
-    <rect x="0" y="-10" width="80" height="10" rx="5" fill="url(#lg)"/>
-    <text x="92" y="0">Air: cold leaving coil, warmed by berries</text>
-    <line x1="420" y1="-5" x2="452" y2="-5" stroke="#b91c1c" stroke-width="6"/><text x="460" y="0">Discharge</text>
-    <line x1="560" y1="-5" x2="592" y2="-5" stroke="#c2410c" stroke-width="6"/><text x="600" y="0">Liquid</text>
-    <line x1="675" y1="-5" x2="707" y2="-5" stroke="#1d4ed8" stroke-width="6"/><text x="715" y="0">Suction</text>
+  <g class="legend" font-size="34" fill="#f2f3f5" transform="translate(70 1074)">
+    <rect x="0" y="-22" width="90" height="14" rx="7" fill="url(#lg)"/>
+    <text x="106" y="0">Air: cold leaving coil, warmed by berries</text>
+    <line x1="820" y1="-15" x2="872" y2="-15" stroke="#b91c1c" stroke-width="12"/><text x="886" y="0">Discharge</text>
+    <line x1="1090" y1="-15" x2="1142" y2="-15" stroke="#c2410c" stroke-width="12"/><text x="1156" y="0">Liquid</text>
+    <line x1="1310" y1="-15" x2="1362" y2="-15" stroke="#1d4ed8" stroke-width="12"/><text x="1376" y="0">Suction</text>
   </g>
 </svg>
 
@@ -346,34 +352,44 @@ WHEELS_X.forEach(x => wheel(x, YW_F[0], YW_F[1], FR));
 })();
 
 /* ---------- labels ---------- */
+// Leader lines leave from whichever side of the text faces the part.
 function label(txt, tx, ty, anchor3, align) {
   const g = $("L_lbl"), [ax, ay] = P(...anchor3);
   const lines = txt.split("\n");
-  lines.forEach((l, i) => { const t = el("text", {x:tx, y:ty + i*20, "text-anchor": align || "start"}, g); t.textContent = l; });
-  const lx = align === "end" ? tx + 6 : align === "middle" ? tx : tx - 6;
-  const ly = ty + (lines.length - 1)*10 - 5;
+  let width = 0;
+  lines.forEach((l, i) => {
+    const t = el("text", {x: tx, y: ty + i*48, "text-anchor": align || "start"}, g);
+    t.textContent = l;
+    width = Math.max(width, t.getComputedTextLength());
+  });
+  const left = align === "end" ? tx - width : align === "middle" ? tx - width/2 : tx;
+  const right = left + width;
+  const lx = ax < left ? left - 10 : right + 10;
+  const ly = ty + (lines.length - 1)*24 - 12;
   el("path", {class:"lead", d:`M${lx} ${ly} L${ax} ${ay}`, "marker-end":"url(#ah)"}, g);
 }
-window.__labels = label;
-const LID_A = (() => { const th = 50*Math.PI/180; return [XD1 - 22*Math.cos(th), 20, ZT + 22*Math.sin(th)]; })();
-[
-  ["Lid", 470, 205, LID_A, "end"],
-  ["Strawberry flats (×6)", 470, 470, [8, YC, 30.6], "end"],
-  ["PIR insulation", 470, 565, [0.75, YC, 25], "end"],
-  ["Air return channel", 470, 655, [12, YC, 18.8], "end"],
-  ["Towing handle", 470, 830, [-16, 16, 20], "end"],
-  ["Evaporator coil", 1060, 150, [29, 20, 31.5], "start"],
-  ["Centrifugal fan", 1160, 205, [25.3, YC, 28.3], "start"],
-  ["Mechanical compartment", 1290, 262, [38, YC, 30.5], "start"],
-  ["Warm air exhaust", 1545, 385, [52.5, YC, 29.3], "start"],
-  ["Condenser and fan", 1545, 455, [42.9, YC, 27], "start"],
-  ["R-290 compressor", 1545, 545, [49.5, YC, 21], "start"],
-  ["Off-road wheels\n(Ø16 in)", 1545, 800, [45, -5.35, 13], "start"],
-  ["Insulated divider", 1080, 1010, [33.25, YC, 22], "middle"],
-  ["Filter drier", 1235, 965, [37.4, YC, 17.9], "middle"],
-  ["Steel frame", 1545, 650, [51.4, 13, 13.4], "start"],
-].forEach(a => label(...a));
-const cap = el("text", {x:40, y:60, "font-size":22, "font-weight":600, fill:"#1f2933"}, $("L_lbl")); cap.textContent = "Section at mid-depth (front half removed)";
+
+// Phone panels are much narrower, so the type is larger and needs its own places.
+const WIDE = [
+  ["Air return channel", 430, 700, [12, YC, 18.8], "end"],
+  ["Evaporator", 1180, 170, [29, 20, 31.5], "start"],
+  ["Warm air exhaust", 1360, 400, [52.5, YC, 29.3], "start"],
+  ["Condenser and fan", 1360, 520, [42.9, YC, 27], "start"],
+];
+const NARROW = [
+  ["Air return channel", 545, 660, [12, YC, 18.8], "end"],
+  ["Evaporator", 1100, 180, [29, 20, 31.5], "start"],
+  ["Warm air exhaust", 1740, 390, [52.5, YC, 29.3], "end"],
+  ["Condenser and fan", 1740, 520, [42.9, YC, 27], "end"],
+];
+const narrowQuery = matchMedia("(max-width: 560px)");
+function placeLabels() {
+  const g = $("L_lbl");
+  while (g.firstChild) g.removeChild(g.firstChild);
+  (narrowQuery.matches ? NARROW : WIDE).forEach(a => label(...a));
+}
+placeLabels();
+narrowQuery.addEventListener("change", placeLabels);
 
 
 /* ---------- render ---------- */

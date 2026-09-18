@@ -34,12 +34,15 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
     let cleanup = () => {};
 
     (async () => {
-      const [THREE, { GLTFLoader }, { OrbitControls }, { MeshoptDecoder }] = await Promise.all([
+      const [THREE, { GLTFLoader }, { OrbitControls }, { MeshoptDecoder }, { RoomEnvironment }] = await Promise.all([
         import('three'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
         import('three/examples/jsm/controls/OrbitControls.js'),
         // Models are meshopt-compressed by `npm run model`.
         import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+        // Metals show reflections, not colour: without an environment to
+        // reflect, the aluminium parts of a CAD export render black.
+        import('three/examples/jsm/environments/RoomEnvironment.js'),
       ]);
       if (disposed) return;
 
@@ -51,14 +54,21 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       renderer.domElement.style.height = '100%';
       renderer.domElement.style.display = 'block';
 
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
 
-      scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 2.2));
-      const key = new THREE.DirectionalLight(0xffffff, 2.4);
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      pmrem.dispose();
+
+      scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 1.2));
+      const key = new THREE.DirectionalLight(0xffffff, 1.8);
       key.position.set(4, 6, 5);
       scene.add(key);
-      const fill = new THREE.DirectionalLight(0xffc48a, 0.8);
+      const fill = new THREE.DirectionalLight(0xffc48a, 0.6);
       fill.position.set(-5, 1, -3);
       scene.add(fill);
 
