@@ -90,21 +90,24 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
       controls.autoRotateSpeed = 1.2;
 
-      // Set once the model is loaded: half its width/height/depth.
-      let extent = new THREE.Vector3(1, 1, 1);
+      // Set once the model is loaded: how far it reaches from the point it
+      // spins around. Measured from that point, not from the middle of the
+      // bounding box, since centring on the model's bulk leaves it lopsided —
+      // the towing handle swings out much further than the body.
+      let reachXZ = 1;
+      let reachY = 1;
 
       /**
-       * Pull the camera back just far enough for the model to fill the panel,
-       * keeping whichever direction the visitor has turned it to. Recomputed on
-       * resize, since a narrow panel needs more distance than a wide one.
+       * Pull the camera back far enough that the model stays inside the panel
+       * at every angle it turns through, keeping whichever direction the
+       * visitor has turned it to. Recomputed on resize, since a narrow panel
+       * needs more distance than a wide one.
        */
       const frameModel = () => {
         const vFov = (camera.fov * Math.PI) / 180;
-        // The model turns, so use its widest horizontal reach, not just x.
-        const halfWidth = Math.hypot(extent.x, extent.z);
-        const forHeight = extent.y / Math.tan(vFov / 2);
-        const forWidth = halfWidth / (Math.tan(vFov / 2) * camera.aspect);
-        const distance = Math.max(forHeight, forWidth) * 1.06; // a little breathing room
+        const forHeight = reachY / Math.tan(vFov / 2);
+        const forWidth = reachXZ / (Math.tan(vFov / 2) * camera.aspect);
+        const distance = Math.max(forHeight, forWidth) * 1.12; // breathing room
         const direction = camera.position.clone().normalize();
         if (direction.lengthSq() === 0) direction.set(0.75, 0.45, 0.95).normalize();
         camera.position.copy(direction.multiplyScalar(distance));
@@ -184,7 +187,16 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
           gltf.scene.position.sub(centre);
           scene.add(gltf.scene);
 
-          extent = size.multiplyScalar(0.5);
+          // Reach from the spin axis, measured after the shift above.
+          const shifted = box.clone().translate(centre.clone().negate());
+          reachXZ = Math.hypot(
+            Math.max(Math.abs(shifted.min.x), Math.abs(shifted.max.x)),
+            Math.max(Math.abs(shifted.min.z), Math.abs(shifted.max.z)),
+          );
+          reachY = Math.max(Math.abs(shifted.min.y), Math.abs(shifted.max.y));
+          if (!reachXZ) reachXZ = size.x * 0.5 || 1;
+          if (!reachY) reachY = size.y * 0.5 || 1;
+
           camera.position.set(0.75, 0.45, 0.95);
           controls.target.set(0, 0, 0);
 
