@@ -3,12 +3,12 @@ import { cn } from '@/lib/utils';
 import { Photo } from '@/components/Photo';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import type { ProjectImage, SplitItem, StepEmbed, StepModel } from '@/data/types';
+import { EmbedLayer } from './EmbedLayer';
 import { ModelLayer } from './ModelLayer';
 import type { VisualProps } from './types';
 
 const SIZES = '(min-width: 1100px) 55vw, (min-width: 768px) and (orientation: landscape) 55vw, 100vw';
 const SPLIT_SIZES = '(min-width: 1100px) 28vw, (min-width: 768px) and (orientation: landscape) 28vw, 50vw';
-const base = import.meta.env.BASE_URL;
 
 type Layer =
   | { kind: 'image'; key: string; image: ProjectImage }
@@ -78,15 +78,7 @@ export function PhotosVisual({ project, step }: VisualProps) {
         if (!reached.current.has(layer.key)) return null;
 
         if (layer.kind === 'embed') {
-          return (
-            <iframe
-              key={layer.key}
-              src={`${base}${layer.embed.src}`}
-              title={layer.embed.title}
-              scrolling="no"
-              className={cn('photo-visual__frame', isActive && 'is-active')}
-            />
-          );
+          return <EmbedLayer key={layer.key} embed={layer.embed} active={isActive} />;
         }
 
         if (layer.kind === 'model') {

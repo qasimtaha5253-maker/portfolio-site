@@ -307,8 +307,22 @@ const streams = [0, 1, 2].map(k => {
   }
   // draw heads on top
   parts.forEach(pt => pt.trail.slice().reverse().forEach(c => air.appendChild(c)));
-  return {p, L, sC, s1, s2, parts};
+  // Sample the path once. Asking the browser for a point on a path is slow, and
+  // there are 360 of these to move every frame; a lookup table is ~free.
+  const STEPS = 900;
+  const px = new Float32Array(STEPS + 1), py = new Float32Array(STEPS + 1);
+  for (let i = 0; i <= STEPS; i++) {
+    const q = p.getPointAtLength((i / STEPS) * L);
+    px[i] = q.x; py[i] = q.y;
+  }
+  return {p, L, sC, s1, s2, parts, px, py, STEPS};
 });
+/** Point at distance `s` along a stream, from its lookup table. */
+function pointAt(st, s) {
+  let i = Math.round((s / st.L) * st.STEPS);
+  if (i < 0) i = 0; else if (i > st.STEPS) i = st.STEPS;
+  return {x: st.px[i], y: st.py[i]};
+}
 const lerp = (a, b, t) => a + (b - a)*t;
 function warmth(st, s) {
   if (s < st.sC) return 0.9*(1 - s/st.sC);
@@ -403,9 +417,11 @@ function render(t) {
     const base = ((u + pt.phase) % 1)*st.L;
     pt.trail.forEach((c, j) => {
       const s = (base - j*0.45 + st.L) % st.L;
-      const q = st.p.getPointAtLength(s);
+      const q = pointAt(st, s);
       c.setAttribute("cx", q.x); c.setAttribute("cy", q.y);
-      c.setAttribute("fill", col(warmth(st, s)));
+      const fill = col(warmth(st, s));
+      // Re-setting the same colour still costs style work, so only write changes.
+      if (c.__fill !== fill) { c.setAttribute("fill", fill); c.__fill = fill; }
     });
   }));
   ex.forEach(o => {
@@ -416,9 +432,35 @@ function render(t) {
 }
 window.render = render;
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * The page pauses this while the drawing isn't the step on screen — otherwise
+ * it keeps animating (and costs frames) behind the other visuals.
+ */
+let paused = false;
+let frame = 0;
+let started = 0;
+let elapsed = 0;
+function loop(now) {
+  elapsed = (now - started) / 1000;
+  render(elapsed);
+  frame = requestAnimationFrame(loop);
+}
+function start() {
+  if (frame || paused || reduce) return;
+  started = performance.now() - elapsed * 1000; // carry on where it left off
+  frame = requestAnimationFrame(loop);
+}
+window.__setPaused = (value) => {
+  paused = !!value;
+  window.__paused = paused; // readable for checks
+  if (paused) { cancelAnimationFrame(frame); frame = 0; }
+  else start();
+};
+
 if (!window.__capture) {
   if (reduce) render(1.3);
-  else { const t0 = performance.now(); const loop = n => { render((n - t0)/1000); requestAnimationFrame(loop); }; requestAnimationFrame(loop); }
+  else start();
 }
 
 /* ---------- centre the drawing in the frame ---------- */

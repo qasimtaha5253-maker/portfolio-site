@@ -25,6 +25,11 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
   // Kept in a ref so the draw loop can read it without re-running the effect.
   const state = useRef({ active, animated });
   state.current = { active, animated };
+  // Restarts the loop when this becomes the visible step again.
+  const resume = useRef<() => void>(() => {});
+  useEffect(() => {
+    if (active) resume.current();
+  }, [active]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -124,8 +129,10 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       let onScreen = true;
       let loaded = false;
       const draw = () => {
-        if (!onScreen) {
-          frame = 0; // stop drawing while scrolled away
+        // Stop drawing while scrolled away, or while another visual is showing:
+        // the last frame stays on the canvas, which is faded out anyway.
+        if (!onScreen || !state.current.active) {
+          frame = 0;
           return;
         }
         controls.autoRotate = state.current.animated && state.current.active;
@@ -134,9 +141,14 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
         frame = requestAnimationFrame(draw);
       };
 
+      const restart = () => {
+        if (onScreen && loaded && !frame && state.current.active) draw();
+      };
+      resume.current = restart;
+
       const visibility = new IntersectionObserver(([entry]) => {
         onScreen = entry.isIntersecting;
-        if (onScreen && loaded && !frame) draw();
+        restart();
       });
       visibility.observe(host);
 
