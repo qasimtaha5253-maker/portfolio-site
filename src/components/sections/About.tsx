@@ -1,9 +1,14 @@
+import { useMotionAllowed } from '@/hooks/useMediaQuery';
+import { useScrollFade } from '@/hooks/useScrollFade';
 import { ContactLinks } from './ContactLinks';
 
 export function About() {
+  const animated = useMotionAllowed();
+  const ref = useScrollFade<HTMLDivElement>({ enabled: animated, direction: 'in' });
+
   return (
     <section className="hero" id="about" aria-labelledby="about-title">
-      <div className="hero__inner">
+      <div className="hero__inner" ref={ref}>
         <p className="hero__eyebrow">Mechanical Engineering Co-op · University of Guelph</p>
         <h2 className="hero__title" id="about-title">
           About me

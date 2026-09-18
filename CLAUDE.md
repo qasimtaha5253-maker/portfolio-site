@@ -35,8 +35,9 @@ anything the user must do on their end in plain terms.
   `src/components/ui/` (the shadcn default, imported as `@/components/ui/...`);
   `cn()` helper in `src/lib/utils.ts`; icons from `lucide-react`.
 - `npx shadcn@latest add <component>` works; it may add theme variables to `src/index.css`.
-- Tailwind `dark:` follows the system colour scheme (Tailwind default). Don't add a
-  class-based dark variant unless the site gets a theme toggle.
+- The site is ALWAYS dark: `<html class="dark">` in index.html, and index.css defines
+  `@custom-variant dark` so Tailwind's `dark:` follows that class, not the system setting.
+  The intro canvas reads the same class. Shadcn components should work unchanged.
 
 ## Code layout
 - `index.html` — shell with `#root`; `src/main.tsx` mounts `src/App.tsx`
@@ -56,12 +57,21 @@ anything the user must do on their end in plain terms.
   `sequence`, `model` later), registered in `index.ts`. Props: `{ project, step, progress }`
   where `progress` is a subscribe-able store (`src/lib/progress.ts`) for per-frame visuals.
 - `src/hooks/` — `useMediaQuery`/`useMotionAllowed` (dev-only `?reduced-motion` URL flag
-  previews the reduced-motion layout), `useSmoothScroll` (Lenis + GSAP ticker)
+  previews the reduced-motion layout), `useSmoothScroll` (Lenis + GSAP ticker),
+  `useScrollFade` (scroll-scrubbed opacity; the intro fades out as About fades in)
 - `src/styles/site.css` — site styles in `@layer base/components` (so Tailwind utilities
   win). Side-by-side layout applies at
   `(min-width: 768px) and (orientation: landscape), (min-width: 1100px)`; everything else
   (phones, portrait tablets) uses the stacked visual-on-top layout. Tailwind's preflight
   resets lists/headings/links, so site.css sets bullets, heading weight and link underline.
+
+## Theme
+- Always dark, matching the intro: `--bg #090a0f`, `--surface #14161f` (cards, stat boxes),
+  `--fg #f2f3f5`, `--muted #9aa0ad`, `--accent #fb923c` (orange), `--navy #3b5cc4`.
+- `--photo-bg #ffffff`: photo panels stay white so white-background CAD renders look right.
+- Small labels (eyebrow, project index, card context, stat labels) use `--font-mono`
+  uppercase, echoing the intro type.
+- Intro gradient stops live in `src/components/sections/Intro.tsx`.
 
 ## Photos
 - Source photos: `content/photos/<project-id>/<name>.(jpg|png|...)`
@@ -106,4 +116,9 @@ anything the user must do on their end in plain terms.
   React + TypeScript + Tailwind + shadcn structure. Re-verified layout at the same sizes,
   every chapter step (pin, text, dot, photo), reduced-motion layout, all 111 photo URLs.
   JS bundle is ~139 KB gzip (was ~58 KB before React).
-- Not started yet: visual design pass, image sequences, Three.js model, remaining high-res photos.
+- Session 3 (2026-09-17): time-based intro animation (same speed on any refresh rate);
+  always-dark theme matching the intro; intro cross-fades into About on scroll.
+  Re-verified fit at 360x740, 375x667, 768x1024, 1280x720 (mono labels made the cooling
+  unit stats taller, so mobile stat spacing was tightened).
+- Not started yet: full visual design pass beyond the theme, image sequences, Three.js model,
+  remaining high-res photos.

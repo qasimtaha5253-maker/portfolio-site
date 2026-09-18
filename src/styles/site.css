@@ -8,16 +8,20 @@
 
 @layer base {
   :root {
-    --bg: #f4f4f1;
-    --surface: #ffffff;
-    --fg: #151515;
-    --muted: #5f5f5f;
-    --line: #deded8;
-    --accent: #b4441f;
+    /* Always dark, matching the intro canvas and its navy-to-orange spiral. */
+    --bg: #090a0f;
+    --surface: #14161f; /* cards, stat boxes */
+    --photo-bg: #ffffff; /* photo panels stay white so CAD renders look right */
+    --fg: #f2f3f5;
+    --muted: #9aa0ad;
+    --line: rgba(255, 255, 255, 0.12);
+    --accent: #fb923c; /* orange end of the intro gradient */
+    --navy: #3b5cc4; /* navy end of the intro gradient */
     --radius: 12px;
     --gutter: clamp(16px, 4vw, 48px);
     --step-fade: 0.45s;
-    color-scheme: light;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+    color-scheme: dark;
   }
 
   body {
@@ -46,26 +50,19 @@
 /* ---------- Intro (opening animation) ---------- */
 
 .intro {
-  --intro-muted: #5f5f5f;
   position: relative;
   height: 100vh;
   height: 100svh;
   min-height: 420px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .intro {
-    --intro-muted: #a3a3a3;
-  }
-}
-
 .intro__role,
 .intro__cue {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--intro-muted);
+  color: var(--muted);
 }
 
 .intro__role {
@@ -97,6 +94,9 @@
 }
 
 .hero__eyebrow {
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -152,6 +152,7 @@
 }
 
 .chapter__index {
+  font-family: var(--font-mono);
   color: var(--muted);
   font-size: 0.8rem;
   letter-spacing: 0.06em;
@@ -229,7 +230,7 @@
   width: 100%;
   max-height: 60vh;
   object-fit: contain;
-  background: var(--surface);
+  background: var(--photo-bg);
   border-radius: var(--radius);
 }
 
@@ -263,7 +264,10 @@
 }
 
 .stats__label {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
@@ -347,7 +351,7 @@
   }
 
   .chapter__text {
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .chapter__index {
@@ -373,19 +377,20 @@
 
   .stats {
     grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
-    gap: 0.35rem;
+    gap: 0.3rem;
   }
 
   .stats__item {
-    padding: 0.2rem 0.45rem;
+    padding: 0.15rem 0.4rem;
   }
 
   .stats__value {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .stats__label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
   }
 }
 
@@ -395,7 +400,7 @@
   width: 100%;
   height: 100%;
   display: grid;
-  background: var(--surface);
+  background: var(--photo-bg);
   border-radius: var(--radius);
   overflow: hidden;
 }
@@ -498,6 +503,9 @@
 }
 
 .card__context {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--muted);
   font-size: 0.85rem;
 }
@@ -539,6 +547,7 @@
   width: 100%;
   aspect-ratio: 1;
   object-fit: contain;
+  background: var(--photo-bg);
   border: 1px solid var(--line);
   border-radius: 8px;
 }
