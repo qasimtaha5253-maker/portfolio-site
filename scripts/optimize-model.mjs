@@ -15,7 +15,7 @@
  */
 import fs from 'node:fs/promises';
 import { NodeIO } from '@gltf-transform/core';
-import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { ALL_EXTENSIONS, KHRDracoMeshCompression } from '@gltf-transform/extensions';
 import {
   dedup,
   prune,
@@ -28,15 +28,22 @@ import {
   meshopt,
 } from '@gltf-transform/functions';
 import { MeshoptSimplifier, MeshoptEncoder } from 'meshoptimizer';
+import draco3d from 'draco3dgltf';
 import sharp from 'sharp';
 
 const args = process.argv.slice(2);
 const [input, output] = args.filter((a) => !a.startsWith('--'));
 const ratioArg = args.indexOf('--ratio');
 const ratio = ratioArg === -1 ? 0.2 : Number(args[ratioArg + 1]);
+// Some sources report a broken (e.g. zero-height) size for a texture that
+// gltf-transform's own lightweight header reader can't parse correctly —
+// textureCompress then asks sharp to resize *to* that broken size and
+// crashes. `--no-resize` skips resizing (still converts to webp) as a
+// workaround for those files.
+const resize = args.includes('--no-resize') ? undefined : [1024, 1024];
 
 if (!input || !output) {
-  console.error('Usage: npm run model -- <input.glb> <output.glb> [--ratio 0.2]');
+  console.error('Usage: npm run model -- <input.glb> <output.glb> [--ratio 0.2] [--no-resize]');
   process.exit(1);
 }
 
@@ -45,9 +52,24 @@ await MeshoptEncoder.ready;
 
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
   'meshopt.encoder': MeshoptEncoder,
+  // Some exports (e.g. re-exported/re-compressed sources, unlike a plain
+  // SolidWorks export) arrive Draco-compressed — a decoder is only needed to
+  // read those; the output is always re-encoded with meshopt, not Draco.
+  'draco3d.decoder': await draco3d.createDecoderModule(),
 });
 
 const document = await io.read(input);
+
+// A Draco-compressed source is fully decoded into plain geometry on read —
+// Draco is just a wire format, not something the document needs afterward.
+// Drop the extension so the writer re-encodes with meshopt (below) instead
+// of trying to re-compress with Draco, which needs an encoder module we
+// don't otherwise use.
+document
+  .getRoot()
+  .listExtensionsUsed()
+  .filter((ext) => ext instanceof KHRDracoMeshCompression)
+  .forEach((ext) => ext.dispose());
 
 const count = (doc) => {
   let tris = 0;
@@ -62,6 +84,34 @@ const count = (doc) => {
 
 const trisBefore = count(document);
 
+// Some exports mislabel a texture's MIME type — a couple of aluminum normal
+// maps in a real conveyor-cart export turned out to be raw DDS data tagged
+// as image/png, which neither gltf-transform's own size reader nor sharp
+// can parse (DDS isn't a texture format the web can use anyway). Rather than
+// crash, drop any texture whose actual bytes don't match its declared type
+// and unassign it from whatever material slot pointed to it — the model
+// keeps its geometry and base colors, just without that one detail map.
+const MAGIC = {
+  'image/png': [0x89, 0x50, 0x4e, 0x47],
+  'image/jpeg': [0xff, 0xd8, 0xff],
+  'image/webp': [0x52, 0x49, 0x46, 0x46], // 'RIFF'
+};
+for (const texture of document.getRoot().listTextures()) {
+  const bytes = texture.getImage();
+  const magic = MAGIC[texture.getMimeType()];
+  if (!bytes || !magic || magic.every((b, i) => bytes[i] === b)) continue;
+  console.warn(
+    `Dropping "${texture.getName() || texture.getURI() || '(unnamed)'}": ` +
+      `declared as ${texture.getMimeType()} but its bytes don't match (likely a mislabeled/unsupported format).`,
+  );
+  for (const material of document.getRoot().listMaterials()) {
+    for (const slot of ['BaseColor', 'Normal', 'MetallicRoughness', 'Emissive', 'Occlusion']) {
+      if (material[`get${slot}Texture`]?.() === texture) material[`set${slot}Texture`](null);
+    }
+  }
+  texture.dispose();
+}
+
 await document.transform(
   prune({ keepAttributes: false, keepLeaves: false }),
   dedup(),
@@ -69,7 +119,7 @@ await document.transform(
   resample(),
   weld(),
   simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.002 }),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [1024, 1024] }),
+  textureCompress({ encoder: sharp, targetFormat: 'webp', resize }),
   prune(),
   quantize(),
   meshopt({ encoder: MeshoptEncoder, level: 'high' }),

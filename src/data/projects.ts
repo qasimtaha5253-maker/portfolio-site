@@ -90,6 +90,7 @@ export const projects: Project[] = [
           'Measured the existing conveyors on the floor for dimensions, materials and compatibility.',
           'Produced detailed SolidWorks drawings with ASME Y14.5 GD&T.',
         ],
+        model: { src: 'models/conveyor-cart.glb', title: 'Rotatable 3D model of the conveyor transfer cart' },
         image: { src: 'shaft-assembly-render', alt: 'Render of the cart frame with drive shaft and mounting plate' },
       },
       {
