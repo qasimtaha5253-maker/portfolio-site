@@ -8,7 +8,8 @@
   /* Matches the site background: an embedded page falls back to white otherwise. */
   html,body { margin:0; background:#090a0f; }
   body { display:flex; justify-content:center; align-items:center; min-height:100vh; }
-  svg { width:100%; max-width:1760px; height:auto; display:block; font-family:"Segoe UI", Arial, sans-serif; }
+  /* Matches the site body font exactly (site.css), not just a lookalike stack. */
+  svg { width:100%; max-width:1760px; height:auto; display:block; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
   .lbl { font-size:44px; fill:#ffffff; }
   .lead { stroke:#ffffff; stroke-width:2.4; fill:none; }
   .e { stroke:#3b4152; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke; }

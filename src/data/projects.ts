@@ -37,7 +37,7 @@ export const projects: Project[] = [
           'R-290 refrigeration cycle analysed on a P-h diagram; variable-speed compressor selected.',
           '48 V LiFePO₄ battery and inverter sized from a duty-cycle energy analysis.',
         ],
-        embed: { src: 'animations/cart-section.html?v=5', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
+        embed: { src: 'animations/cart-section.html?v=6', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
         image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
       },
       {
