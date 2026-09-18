@@ -28,6 +28,15 @@ interface StepVisualProps {
   animated: boolean;
   /** The tile's own cover photo; a step whose only visual repeats it renders nothing. */
   coverSrc?: string;
+  /**
+   * Delay mounting the actual model/animation until the expand animation
+   * settles, so loading them doesn't compete with it for frames. The sized
+   * wrapper still renders immediately (empty) either way — if it didn't, the
+   * tile would be measured too short while collapsed, animate to that wrong
+   * (too-short) height, then jump again once the visual mounted and the real
+   * height arrived.
+   */
+  ready: boolean;
 }
 
 /**
@@ -36,7 +45,7 @@ interface StepVisualProps {
  * crossfade in). Split rows, models and animations only appear with motion
  * allowed; reduced motion always falls back to the step's plain photo.
  */
-export function StepVisual({ projectId, step, animated, coverSrc }: StepVisualProps) {
+export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepVisualProps) {
   const [ref, onScreen] = useOnScreen<HTMLDivElement>();
 
   if (!animated) {
@@ -53,7 +62,11 @@ export function StepVisual({ projectId, step, animated, coverSrc }: StepVisualPr
       >
         {step.split.map((item, i) =>
           item.model ? (
-            <ModelLayer key={item.model.src} model={item.model} active={onScreen} animated={animated} />
+            ready ? (
+              <ModelLayer key={item.model.src} model={item.model} active={onScreen} animated={animated} />
+            ) : (
+              <div key={item.model.src} />
+            )
           ) : item.image ? (
             <Photo
               key={item.image.src}
@@ -73,7 +86,7 @@ export function StepVisual({ projectId, step, animated, coverSrc }: StepVisualPr
   if (step.model) {
     return (
       <div className="step-visual" ref={ref}>
-        <ModelLayer model={step.model} active={onScreen} animated={animated} />
+        {ready && <ModelLayer model={step.model} active={onScreen} animated={animated} />}
       </div>
     );
   }
@@ -81,7 +94,7 @@ export function StepVisual({ projectId, step, animated, coverSrc }: StepVisualPr
   if (step.embed) {
     return (
       <div className="step-visual" ref={ref}>
-        <EmbedLayer embed={step.embed} active={onScreen} />
+        {ready && <EmbedLayer embed={step.embed} active={onScreen} />}
       </div>
     );
   }

@@ -133,9 +133,13 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
                   <section className="bento-tile__step" key={step.label}>
                     <h4>{step.label}</h4>
                     <StepContent step={step} />
-                    {contentReady && (
-                      <StepVisual projectId={project.id} step={step} animated={animated} coverSrc={cover?.src} />
-                    )}
+                    <StepVisual
+                      projectId={project.id}
+                      step={step}
+                      animated={animated}
+                      coverSrc={cover?.src}
+                      ready={contentReady}
+                    />
                   </section>
                 ))}
               </div>
