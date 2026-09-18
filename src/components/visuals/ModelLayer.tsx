@@ -10,26 +10,34 @@ interface ModelLayerProps {
   active: boolean;
   /** Reduced motion: no self-rotation. */
   animated: boolean;
+  /** Self-rotate only while this is true (still gated by `animated`/`active`).
+   *  Defaults on, matching the step-visual usage; the bento tile cover turns
+   *  this on only while hovered. */
+  spin?: boolean;
+  /** Drag-to-rotate with a mouse or finger. Off for the bento tile cover, so
+   *  a tap there opens the project instead of being read as a rotate-drag. */
+  interactive?: boolean;
 }
 
 /**
  * Real-time .glb viewer. Three.js and the loaders are imported on demand, so
  * the 3D code only reaches visitors who scroll to this step.
  *
- * The model turns slowly by itself and can be dragged with a mouse. Touch
- * dragging is deliberately off, so scrolling the page always works on a phone.
+ * The model turns slowly by itself and can be dragged with a mouse or a
+ * finger, unless `interactive` is off.
  */
-export function ModelLayer({ model, active, animated }: ModelLayerProps) {
+export function ModelLayer({ model, active, animated, spin = true, interactive = true }: ModelLayerProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   // Kept in a ref so the draw loop can read it without re-running the effect.
-  const state = useRef({ active, animated });
-  state.current = { active, animated };
-  // Restarts the loop when this becomes the visible step again.
+  const state = useRef({ active, animated, spin });
+  state.current = { active, animated, spin };
+  // Restarts the loop when this becomes the visible step again, or when
+  // hovering turns spin back on after it stopped drawing while static.
   const resume = useRef<() => void>(() => {});
   useEffect(() => {
-    if (active) resume.current();
-  }, [active]);
+    if (active && spin) resume.current();
+  }, [active, spin]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -81,9 +89,13 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
       scene.add(fill);
 
       const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
+      // Damping smooths user drag input, which the bento tile cover doesn't
+      // take (interactive: false there) — off, so its hover-triggered spin
+      // starts and stops cleanly instead of decelerating for a few frames.
+      controls.enableDamping = interactive;
       controls.enablePan = false;
       controls.enableZoom = false;
+      controls.enableRotate = interactive;
       // Drag to rotate with a mouse or a finger. A swipe that starts on the
       // model turns it instead of scrolling, so the page is scrolled from the
       // text below it.
@@ -138,10 +150,13 @@ export function ModelLayer({ model, active, animated }: ModelLayerProps) {
           frame = 0;
           return;
         }
-        controls.autoRotate = state.current.animated && state.current.active;
+        controls.autoRotate = state.current.animated && state.current.active && state.current.spin;
         controls.update();
         renderer.render(scene, camera);
-        frame = requestAnimationFrame(draw);
+        // While static (not spinning), one rendered frame reflects the
+        // current state fully — no need to keep drawing every frame until
+        // something (hover) asks it to spin again.
+        frame = controls.autoRotate ? requestAnimationFrame(draw) : 0;
       };
 
       const restart = () => {

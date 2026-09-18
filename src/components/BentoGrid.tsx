@@ -9,6 +9,8 @@ import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
 import { StepContent } from './StepContent';
 import { StepVisual } from './StepVisual';
+import { ModelLayer } from './visuals/ModelLayer';
+import type { StepModel } from '@/data/types';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -25,6 +27,12 @@ function coverImage(project: Project): ProjectImage | undefined {
     (img): img is ProjectImage => Boolean(img),
   );
   return images.find((img) => img.src === project.cover) ?? images[0];
+}
+
+/** A project with a model on one of its steps shows that model as its tile
+ *  cover (rotating on hover) instead of a plain photo. */
+function coverModel(project: Project): StepModel | undefined {
+  return project.steps.find((s) => s.model)?.model;
 }
 
 interface BentoGridProps {
@@ -57,6 +65,8 @@ function documentTop(el: HTMLElement) {
 export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Which tile's cover model (if it has one) should be spinning right now.
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   // Heavy step visuals (3D model, embedded animation) wait for the expand
   // animation to finish before mounting, so loading them doesn't compete
   // with it for frames — see `toggle` and the detail's onAnimationComplete.
@@ -128,6 +138,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
     <div className="bento-grid" ref={gridRef}>
       {projects.map((project) => {
         const cover = coverImage(project);
+        const model = coverModel(project);
         const isExpanded = expanded === project.id;
         return (
           <motion.article
@@ -146,14 +157,28 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               className="bento-tile__hit"
               aria-expanded={isExpanded}
               onClick={() => toggle(project.id)}
+              onMouseEnter={() => model && setHoveredId(project.id)}
+              onMouseLeave={() => setHoveredId((current) => (current === project.id ? null : current))}
             >
-              {cover && (
-                <Photo
-                  projectId={project.id}
-                  image={cover}
-                  sizes="(min-width: 1100px) 45vw, (min-width: 700px) 45vw, 100vw"
-                  className="bento-tile__photo"
-                />
+              {model ? (
+                <div className="bento-tile__model">
+                  <ModelLayer
+                    model={model}
+                    active
+                    animated={animated}
+                    spin={hoveredId === project.id}
+                    interactive={false}
+                  />
+                </div>
+              ) : (
+                cover && (
+                  <Photo
+                    projectId={project.id}
+                    image={cover}
+                    sizes="(min-width: 1100px) 45vw, (min-width: 700px) 45vw, 100vw"
+                    className="bento-tile__photo"
+                  />
+                )
               )}
               <div className="bento-tile__scrim" />
               <div className="bento-tile__caption">
