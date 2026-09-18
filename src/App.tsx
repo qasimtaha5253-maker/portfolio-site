@@ -10,7 +10,7 @@ import { ContactLinks } from '@/components/sections/ContactLinks';
 export default function App() {
   // Reduced motion: no tile reveal animation, everything shown at once.
   const animated = useMotionAllowed();
-  useSmoothScroll(animated);
+  const lenisRef = useSmoothScroll(animated);
 
   return (
     <main className={cn('site', animated && 'is-animated')}>
@@ -26,7 +26,7 @@ export default function App() {
           <p className="bento-section__hint">Tap a project to see how it works.</p>
         </header>
 
-        <BentoGrid projects={projects} animated={animated} />
+        <BentoGrid projects={projects} animated={animated} lenisRef={lenisRef} />
       </section>
 
       <footer className="footer" id="contact">

@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import type Lenis from 'lenis';
 import { cn } from '@/lib/utils';
 import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
@@ -30,13 +31,30 @@ interface BentoGridProps {
   projects: Project[];
   /** Reveal tiles on scroll and animate the expand transition (false when reduced motion is preferred). */
   animated: boolean;
+  /** The page's Lenis instance, so scrolling to an opened tile goes through
+   *  it instead of fighting its own animated scroll position. */
+  lenisRef: RefObject<Lenis | null>;
+}
+
+/** An element's distance from the top of the document, ignoring any CSS
+ *  `transform` — unlike `getBoundingClientRect`, this stays correct even
+ *  while Framer Motion's layout animation is still visually easing the tile
+ *  toward this (already-final) position. */
+function documentTop(el: HTMLElement) {
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node) {
+    top += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return top;
 }
 
 /**
  * Every project as a tile in one grid, sized by `featured`. Tapping a tile
  * expands it in place to show its steps; the rest of the grid reflows below.
  */
-export function BentoGrid({ projects, animated }: BentoGridProps) {
+export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   // Heavy step visuals (3D model, embedded animation) wait for the expand
@@ -49,6 +67,48 @@ export function BentoGrid({ projects, animated }: BentoGridProps) {
     if (opening) setContentReady(false);
     setExpanded(opening ? id : null);
   }
+
+  // Opening a tile — especially switching straight from one open tile to
+  // another — reflows everything around it: a tile above collapsing pulls
+  // the page up, the new one growing pushes it back down. Left alone, that
+  // reads as the page glitching. Instead, actively lock the scroll onto
+  // wherever the opening tile currently sits, every frame, for as long as
+  // the layout is still moving.
+  //
+  // A single one-shot scroll (measure once, animate there) isn't enough:
+  // when switching tiles, the *previous* tile is still mid-exit-animation
+  // (AnimatePresence keeps it mounted, animating its height down over 0.35s)
+  // at the moment this effect first runs, so a single measurement targets
+  // where the new tile is *right now* — with the old one still tall — not
+  // where it ends up once that collapse finishes. Re-measuring every frame
+  // means the scroll target itself moves smoothly in step with the real
+  // layout, however long that takes, instead of committing to a stale guess.
+  useEffect(() => {
+    if (!animated || !expanded) return;
+    const lenis = lenisRef.current;
+    const el = document.getElementById(expanded);
+    if (!lenis || !el) return;
+
+    let frame = 0;
+    let lastTarget = -1;
+    let stableFrames = 0;
+    const start = performance.now();
+
+    function tick(now: number) {
+      const target = Math.max(0, documentTop(el!) - 20);
+      lenis!.scrollTo(target, { immediate: true });
+      stableFrames = Math.abs(target - lastTarget) < 0.5 ? stableFrames + 1 : 0;
+      lastTarget = target;
+      // Stop once the target holds still for a few frames (everything has
+      // settled), or after a safety cap in case it never quite does.
+      if (stableFrames < 6 && now - start < 1400) {
+        frame = requestAnimationFrame(tick);
+      }
+    }
+    frame = requestAnimationFrame(tick);
+
+    return () => cancelAnimationFrame(frame);
+  }, [expanded, animated, lenisRef]);
 
   useGSAP(
     () => {
