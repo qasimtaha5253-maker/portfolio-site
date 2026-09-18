@@ -30,8 +30,19 @@ async function isStale(src, outputs) {
   return false;
 }
 
+/** True when the image really has see-through pixels (not just an alpha channel). */
+async function isTransparent(src) {
+  const image = sharp(src, { limitInputPixels: false });
+  const { hasAlpha } = await image.metadata();
+  if (!hasAlpha) return false;
+  const { channels } = await image.stats();
+  return channels.length === 4 && channels[3].min < 250;
+}
+
 let converted = 0;
 let skipped = 0;
+/** Photo keys ("<project>/<name>") that keep transparency; read by src/components/Photo.tsx. */
+const transparent = [];
 
 for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
   if (!project.isDirectory()) continue;
@@ -65,6 +76,9 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
     const src = path.join(srcDir, file);
     const outputs = IMAGE_WIDTHS.map((w) => path.join(outDir, `${name}-${w}.webp`));
 
+    // Transparent renders sit straight on the page; opaque ones get a panel.
+    if (await isTransparent(src)) transparent.push(`${project.name}/${name}`);
+
     if (!(await isStale(src, outputs))) {
       skipped++;
       continue;
@@ -72,9 +86,9 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
 
     for (const [i, width] of IMAGE_WIDTHS.entries()) {
       // No pixel limit: SolidWorks renders can be exported at huge resolutions.
+      // Transparency is kept (WebP supports it), so cut-out renders stay cut out.
       await sharp(src, { limitInputPixels: false })
         .rotate() // respect phone-camera orientation
-        .flatten({ background: '#ffffff' }) // transparent renders -> white
         .resize({ width, withoutEnlargement: true })
         .webp({ quality: 80 })
         .toFile(outputs[i]);
@@ -84,4 +98,6 @@ for (const project of await fs.readdir(SRC, { withFileTypes: true })) {
   }
 }
 
-console.log(`Images: ${converted} converted, ${skipped} unchanged.`);
+await fs.writeFile('src/transparent-photos.json', JSON.stringify(transparent.sort(), null, 2) + '\n');
+
+console.log(`Images: ${converted} converted, ${skipped} unchanged, ${transparent.length} transparent.`);
