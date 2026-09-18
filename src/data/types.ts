@@ -22,6 +22,13 @@ export interface StepModel {
   src: string;
   /** Described for screen readers, e.g. '3D model of the cooling unit assembly'. */
   title: string;
+  /**
+   * Extra room around the model, as a multiplier on the camera distance (default 1;
+   * 1.2 pulls the camera back 20%). The framing fits the model's height and swing
+   * radius, but a wide, low model seen from above can still have its near edge
+   * cropped at some angles as it spins — raise this for those.
+   */
+  margin?: number;
 }
 
 export interface Stat {

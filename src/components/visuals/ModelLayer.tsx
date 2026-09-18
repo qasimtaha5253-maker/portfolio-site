@@ -123,7 +123,8 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
         const vFov = (camera.fov * Math.PI) / 180;
         const forHeight = reachY / Math.tan(vFov / 2);
         const forWidth = reachXZ / (Math.tan(vFov / 2) * camera.aspect);
-        const distance = Math.max(forHeight, forWidth) * 1.12; // breathing room
+        // Breathing room; `model.margin` adds more for a model that needs it.
+        const distance = Math.max(forHeight, forWidth) * 1.12 * (model.margin ?? 1);
         const direction = camera.position.clone().sub(controls.target).normalize();
         if (direction.lengthSq() === 0) direction.set(0.75, 0.45, 0.95).normalize();
         camera.position.copy(direction.multiplyScalar(distance).add(controls.target));
@@ -139,7 +140,13 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
-        if (loaded) frameModel();
+        if (loaded) {
+          frameModel();
+          // Resizing wipes the canvas, and a still (not spinning) model
+          // isn't redrawn every frame — so draw it once now, or a cover
+          // model stays blank after its tile is expanded and closed again.
+          resume.current();
+        }
       };
       const observer = new ResizeObserver(resize);
       observer.observe(host);

@@ -119,6 +119,7 @@ export const projects: Project[] = [
         body:
           'Design and build a machine that grips a coffee cup and moves it 20 cm vertically and 30 cm horizontally onto a platform — using only one motor.',
         image: { src: 'gripper-cad', alt: 'SolidWorks model of the wooden gripper frame with pulleys and motor' },
+        model: { src: 'models/coffee-cup-gripper.glb', title: '3D model of the coffee cup gripper', margin: 1.25 },
       },
       {
         label: 'How it works',

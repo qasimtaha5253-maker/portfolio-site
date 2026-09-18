@@ -117,12 +117,19 @@ rotatable 3D model (`model`), or several side by side (`split`).
 - Cooling unit (showpiece): model → section animation → CFD plot + strawberry flat → model.
   Conveyor cart has a model on its "Reverse engineering the line" step.
 - Camera framing in `ModelLayer` is symmetric horizontally but centred on the model's true
-  vertical midpoint; always seed `camera.position` as `fixedDirection.add(target)`.
+  vertical midpoint; always seed `camera.position` as `fixedDirection.add(target)`. It fits the
+  model's height and swing radius but not the camera's downward tilt, so a wide, low model can get
+  its near edge cropped as it spins: give that model a `margin` in its config (multiplier on camera
+  distance; the gripper uses 1.25). Don't "fix" this globally — an exact fit zooms every existing
+  model out 30–40% (tried and reverted).
+- A resize wipes the WebGL canvas, so `ModelLayer` redraws once after every resize (otherwise a
+  still cover model is blank after its tile is expanded and closed).
 
 ## Content decisions
 - Featured (large tiles): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are
   standard tiles.
-- Coffee Cup Gripper is photo-only for now; the user will send a model/animation when he makes one.
+- Coffee Cup Gripper has its 3D model on its first step and as its tile cover; the user may add an
+  animation later.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
 - Contact on the public site: LinkedIn + email only (no phone number). The email
   (`qtaha@uoguelph.ca`) will be replaced before he graduates; not urgent.

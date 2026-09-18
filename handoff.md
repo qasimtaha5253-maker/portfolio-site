@@ -130,9 +130,13 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   flat split → 3D model again + stats. Has a cover model (hover-spins on its tile).
 - **Conveyor Cart** — got a real 3D model this session (step 2, "Reverse engineering the line"),
   replacing what had been a plain (low-res) photo there. Also picked up a cover model automatically.
-- **Coffee Cup Gripper** — still photo-only. **He'll send a model/animation for this when he makes
-  one** — don't build a placeholder or ask again, just wire it in when it arrives (see §5 of the
-  old process: add to the right step in `projects.ts`, run `npm run model`, done).
+- **Coffee Cup Gripper** — got its real 3D model (2026-09-18) on the first step ("The challenge",
+  shown under the text, after the first point); it is also the tile's cover model. The source
+  export was 5 MB / 925k triangles → 0.7 MB / 97k after `npm run model` (one unreadable,
+  mislabeled texture was dropped, same quirk as the conveyor cart). Its config has `margin: 1.25`
+  (see §7, "3D model framing"). The step's `gripper-cad` photo is kept as the reduced-motion
+  fallback. If he meant the model to go under the *second* step ("How it works") instead, move
+  the `model:` line in `projects.ts`. He may still add an animation later.
 - The other 7 projects are smaller tiles, photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
@@ -215,6 +219,18 @@ of using it — looked like "the model is too low, cut off at the bottom, space 
   non-zero vertical offset — not just the Cooling Unit's cover but its whole apparent orientation
   changed. **Always seed `camera.position` as `fixedDirection.add(target)`**, never as the raw
   fixed vector alone, whenever `target` might be non-zero.
+
+**Two more `ModelLayer` findings from adding the coffee cup gripper (2026-09-18)**
+- *Cropped bottom on a wide, low model.* The framing only fits the model's height and swing
+  radius, not the camera's downward tilt, so the gripper's near base corner projected below the
+  canvas at some spin angles. A strict fit (every part's box corners × every spin angle, with
+  perspective) was tried: it wants 30–40% more distance for **all three** models, which would
+  visibly shrink the covers he already approved, so it was reverted. Instead `StepModel` has an
+  optional `margin` (multiplier on camera distance); the gripper uses 1.25. Use it for any future
+  wide/low model that crops.
+- *Blank cover after a tile was expanded and closed.* Resizing a WebGL canvas clears it, and a
+  still (not spinning) model is only drawn once, so the cover stayed blank until hovered.
+  `resize()` now triggers one redraw. This affected every cover model, not just the gripper.
 
 **Model compression script (`scripts/optimize-model.mjs`) — two real fixes for a non-SolidWorks source**
 The conveyor cart's uploaded `.glb` wasn't a plain SolidWorks export like the Cooling Unit's, and
@@ -299,8 +315,8 @@ this same silent side effect anywhere else `all: unset` gets used.
 
 ## 9. What's actually next (not open questions — these are decided, just not done)
 
-- **Coffee Cup Gripper model/animation:** he'll send it when he makes one. Wire it in the same way
-  Conveyor Cart's was done this session (§7's model-script section covers likely gotchas).
+- **Coffee Cup Gripper animation (optional):** the 3D model is in (§5). If he later makes an
+  animation, wire it in the same way as the others.
 - **Remaining low-res photos:** he'll send replacements as the site gets finalized (see §8.3).
 - **Custom domain:** deliberately the **final** step, once everything else is done. Don't raise it
   early.
