@@ -10,15 +10,9 @@
   body { display:flex; justify-content:center; align-items:center; min-height:100vh; }
   /* Matches the site body font exactly (site.css), not just a lookalike stack. */
   svg { width:100%; max-width:1760px; height:auto; display:block; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
-  .lbl { font-size:44px; fill:#ffffff; }
-  .lead { stroke:#ffffff; stroke-width:2.4; fill:none; }
+  .lbl { font-size:27px; font-weight:700; fill:#ffffff; }
+  .lead { stroke:#ffffff; stroke-width:1.8; fill:none; }
   .e { stroke:#3b4152; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
-  /* The frame is only ~330px wide on a phone, so scale the type up there. */
-  @media (max-width: 560px) {
-    .lbl { font-size:66px; }
-    .legend { font-size:50px; }
-    .lead { stroke-width:3.4; }
-  }
 </style>
 </head>
 <body>
@@ -77,12 +71,12 @@
   <g id="L_lid"></g>
   <g id="L_front"></g>
   <g id="L_lbl" class="lbl"></g>
-  <g class="legend" font-size="34" fill="#ffffff" transform="translate(70 1074)">
-    <rect x="0" y="-22" width="90" height="14" rx="7" fill="url(#lg)"/>
-    <text x="106" y="0">Air: cold leaving coil, warmed by berries</text>
-    <line x1="820" y1="-15" x2="872" y2="-15" stroke="#b91c1c" stroke-width="12"/><text x="886" y="0">Discharge</text>
-    <line x1="1090" y1="-15" x2="1142" y2="-15" stroke="#c2410c" stroke-width="12"/><text x="1156" y="0">Liquid</text>
-    <line x1="1310" y1="-15" x2="1362" y2="-15" stroke="#1d4ed8" stroke-width="12"/><text x="1376" y="0">Suction</text>
+  <g font-size="15" fill="#ffffff" transform="translate(494 1080)">
+    <rect x="0" y="-10" width="80" height="10" rx="5" fill="url(#lg)"/>
+    <text x="92" y="0">Air: cold leaving coil, warmed by berries</text>
+    <line x1="420" y1="-5" x2="452" y2="-5" stroke="#b91c1c" stroke-width="6"/><text x="460" y="0">Discharge</text>
+    <line x1="560" y1="-5" x2="592" y2="-5" stroke="#c2410c" stroke-width="6"/><text x="600" y="0">Liquid</text>
+    <line x1="675" y1="-5" x2="707" y2="-5" stroke="#1d4ed8" stroke-width="6"/><text x="715" y="0">Suction</text>
   </g>
 </svg>
 
@@ -94,7 +88,7 @@ function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); f
 /* ---------- projection (inches → px), matched to the SolidWorks view ---------- */
 const S = 13;
 const AX = [0.95*S, -0.22*S], AY = [-0.45*S, -0.38*S], AZ = [0, -S];
-const O = [822, 1000];
+const O = [691, 944];
 const V = [-0.979, -2.066, 1];            // direction toward viewer
 const P = (x, y, z) => [O[0] + x*AX[0] + y*AY[0] + z*AZ[0], O[1] + x*AX[1] + y*AY[1] + z*AZ[1]];
 const pstr = pts => pts.map(p => P(...p).map(v => v.toFixed(2)).join(",")).join(" ");
@@ -368,45 +362,22 @@ WHEELS_X.forEach(x => wheel(x, YW_F[0], YW_F[1], FR));
 })();
 
 /* ---------- labels ---------- */
-// Leader lines leave from whichever side of the text faces the part.
 function label(txt, tx, ty, anchor3, align) {
   const g = $("L_lbl"), [ax, ay] = P(...anchor3);
   const lines = txt.split("\n");
-  let width = 0;
-  lines.forEach((l, i) => {
-    const t = el("text", {x: tx, y: ty + i*48, "text-anchor": align || "start"}, g);
-    t.textContent = l;
-    width = Math.max(width, t.getComputedTextLength());
-  });
-  const left = align === "end" ? tx - width : align === "middle" ? tx - width/2 : tx;
-  const right = left + width;
-  const lx = ax < left ? left - 10 : right + 10;
-  const ly = ty + (lines.length - 1)*24 - 12;
+  lines.forEach((l, i) => { const t = el("text", {x:tx, y:ty + i*32, "text-anchor": align || "start"}, g); t.textContent = l; });
+  const lx = align === "end" ? tx + 6 : align === "middle" ? tx : tx - 6;
+  const ly = ty + (lines.length - 1)*10 - 5;
   el("path", {class:"lead", d:`M${lx} ${ly} L${ax} ${ay}`, "marker-end":"url(#ah)"}, g);
 }
-
-// Phone panels are much narrower, so the type is larger and needs its own places.
-const WIDE = [
-  ["Air return channel", 430, 700, [12, YC, 18.8], "end"],
-  ["Evaporator", 1180, 170, [29, 20, 31.5], "start"],
-  ["Warm air exhaust", 1430, 300, [52.5, YC, 29.3], "start"],
-  ["Condenser and fan", 1430, 560, [42.9, YC, 27], "start"],
-];
-const NARROW = [
-  ["Air return channel", 545, 660, [12, YC, 18.8], "end"],
-  ["Evaporator", 1100, 180, [29, 20, 31.5], "start"],
-  ["Warm air exhaust", 1750, 280, [52.5, YC, 29.3], "end"],
-  ["Condenser and fan", 1750, 580, [42.9, YC, 27], "end"],
-];
-const narrowQuery = matchMedia("(max-width: 560px)");
-function placeLabels() {
-  const g = $("L_lbl");
-  while (g.firstChild) g.removeChild(g.firstChild);
-  (narrowQuery.matches ? NARROW : WIDE).forEach(a => label(...a));
-}
-placeLabels();
-narrowQuery.addEventListener("change", placeLabels);
-
+window.__labels = label;
+[
+  ["PIR Insulation", 339, 509, [0.75, YC, 25], "end"],
+  ["Air Return Channel", 339, 599, [12, YC, 18.8], "end"],
+  ["Evaporator Coil", 929, 96, [29, 20, 31.5], "start"],
+  ["Warm Air Exhaust", 1414, 329, [52.5, YC, 29.3], "start"],
+  ["Condenser and Fan", 1414, 399, [42.9, YC, 27], "start"],
+].forEach(a => label(...a));
 
 /* ---------- render ---------- */
 function render(t) {
@@ -463,36 +434,6 @@ if (!window.__capture) {
   if (reduce) render(1.3);
   else start();
 }
-
-/* ---------- centre the drawing in the frame ---------- */
-// The cart is what should look centred, but the labels sit mostly to the left
-// and the legend runs along the bottom, which pulls it off-centre. So: fit the
-// viewBox around everything, then grow whichever side is short until the cart
-// itself is in the middle.
-function fitViewBox() {
-  const svg = $("s");
-  svg.setAttribute("viewBox", "0 0 1760 1100");
-  const all = svg.getBBox();
-
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  for (const id of ["L_back", "L_frame", "L_comp", "L_mech", "L_cav", "L_shell", "L_sec", "L_flow", "L_lid", "L_front"]) {
-    const g = $(id);
-    if (!g) continue;
-    const b = g.getBBox();
-    if (!b.width) continue;
-    x0 = Math.min(x0, b.x); x1 = Math.max(x1, b.x + b.width);
-    y0 = Math.min(y0, b.y); y1 = Math.max(y1, b.y + b.height);
-  }
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-
-  const pad = 24;
-  const halfW = Math.max(cx - all.x, all.x + all.width - cx) + pad;
-  const halfH = Math.max(cy - all.y, all.y + all.height - cy) + pad;
-  svg.setAttribute("viewBox", `${cx - halfW} ${cy - halfH} ${halfW * 2} ${halfH * 2}`);
-}
-fitViewBox();
-narrowQuery.addEventListener("change", fitViewBox);
-addEventListener("resize", fitViewBox);
 </script>
 </body>
 </html>
