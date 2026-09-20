@@ -57,7 +57,11 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
     return (
       <div
         className="step-visual step-visual--split"
-        style={{ gridTemplateColumns: `repeat(${step.split.length}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${step.split.length}, minmax(0, 1fr))`,
+          // A row of models wants roughly square cells; the 4:3 default suits photos.
+          aspectRatio: step.split.every((item) => item.model) ? `${step.split.length * 0.9} / 1` : undefined,
+        }}
         ref={ref}
       >
         {step.split.map((item, i) =>

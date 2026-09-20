@@ -14,8 +14,9 @@ anything the user must do on their end in plain terms (he is not a web developer
   (two rows tall). Tapping a tile expands it in place to show its steps (Introduction -> How it
   works -> What it achieved, or whatever the project needs), each with its own photo, 3D model,
   HTML animation or side-by-side split. Tapping again, or another tile, collapses it.
-- A project with a 3D model shows that live, rotatable model as its tile cover: still until
-  hovered, spinning while hovered.
+- A project with a 3D model shows that live model as its tile cover: still until hovered,
+  spinning while hovered. If its first model step is a `split` row of models, all of them sit
+  side by side on the cover (Small Fixtures & Tooling has three).
 - Data-driven: each project is defined in one config file (title, steps, images, models,
   animations), so adding a project never requires touching component code.
 - Respect `prefers-reduced-motion`: no tile reveal or expand animation, and every step falls
@@ -130,6 +131,9 @@ rotatable 3D model (`model`), or several side by side (`split`).
   standard tiles.
 - Coffee Cup Gripper has its 3D model on its first step and as its tile cover; the user may add an
   animation later.
+- Small Fixtures & Tooling has three 3D models (shaft tool, saw fixture, oiling fixture) as a row
+  on its first step and side by side on its cover. Six WebGL canvases are live on the page at
+  load, so measure phone performance before adding more cover models.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
 - Contact on the public site: LinkedIn + email only (no phone number). The email
   (`qtaha@uoguelph.ca`) will be replaced before he graduates; not urgent.

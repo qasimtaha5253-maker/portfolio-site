@@ -394,6 +394,16 @@
   height: 100%;
 }
 
+/* Several cover models side by side, one canvas each. */
+.bento-tile__model--row {
+  display: flex;
+}
+
+.bento-tile__model--row .model-layer {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 .bento-tile__scrim {
   position: absolute;
   inset: 0;
@@ -571,6 +581,11 @@
   display: grid;
   gap: 0.5rem;
   background: transparent;
+}
+
+/* Each model gets its own cell (its base rule pins it to cell 1/1). */
+.step-visual--split .model-layer {
+  grid-area: auto;
 }
 
 .step-visual--split .photo-visual__split-img {

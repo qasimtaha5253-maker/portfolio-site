@@ -29,10 +29,17 @@ function coverImage(project: Project): ProjectImage | undefined {
   return images.find((img) => img.src === project.cover) ?? images[0];
 }
 
-/** A project with a model on one of its steps shows that model as its tile
- *  cover (rotating on hover) instead of a plain photo. */
-function coverModel(project: Project): StepModel | undefined {
-  return project.steps.find((s) => s.model)?.model;
+/** A project with a model on one of its steps shows it as its tile cover
+ *  (rotating on hover) instead of a plain photo. Uses the first step with a
+ *  model: all the models of a `split` row, or the step's single `model`
+ *  (same priority as StepVisual). Several models sit side by side. */
+function coverModels(project: Project): StepModel[] {
+  for (const step of project.steps) {
+    const inSplit = step.split?.flatMap((item) => (item.model ? [item.model] : [])) ?? [];
+    if (inSplit.length) return inSplit;
+    if (step.model) return [step.model];
+  }
+  return [];
 }
 
 interface BentoGridProps {
@@ -138,7 +145,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
     <div className="bento-grid" ref={gridRef}>
       {projects.map((project) => {
         const cover = coverImage(project);
-        const model = coverModel(project);
+        const models = coverModels(project);
         const isExpanded = expanded === project.id;
         return (
           <motion.article
@@ -157,18 +164,21 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               className="bento-tile__hit"
               aria-expanded={isExpanded}
               onClick={() => toggle(project.id)}
-              onMouseEnter={() => model && setHoveredId(project.id)}
+              onMouseEnter={() => models.length > 0 && setHoveredId(project.id)}
               onMouseLeave={() => setHoveredId((current) => (current === project.id ? null : current))}
             >
-              {model ? (
-                <div className="bento-tile__model">
-                  <ModelLayer
-                    model={model}
-                    active
-                    animated={animated}
-                    spin={hoveredId === project.id}
-                    interactive={false}
-                  />
+              {models.length > 0 ? (
+                <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row')}>
+                  {models.map((model) => (
+                    <ModelLayer
+                      key={model.src}
+                      model={model}
+                      active
+                      animated={animated}
+                      spin={hoveredId === project.id}
+                      interactive={false}
+                    />
+                  ))}
                 </div>
               ) : (
                 cover && (

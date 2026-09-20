@@ -137,7 +137,15 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   (see §7, "3D model framing"). The step's `gripper-cad` photo is kept as the reduced-motion
   fallback. If he meant the model to go under the *second* step ("How it works") instead, move
   the `model:` line in `projects.ts`. He may still add an animation later.
-- The other 7 projects are smaller tiles, photo-only.
+- **Small Fixtures & Tooling** — got three 3D models (2026-09-19): shaft removal tool
+  (`shaft-adapter.glb`), saw-cut fixture (`gear-cutting-fixture.glb`, from his
+  `RDM_Gear_Cutting_Fixture`) and oiling fixture (`oiling-assembly.glb`, from
+  `Speed_Sensor_Oiling_Assembly`). They are a `split` row of three models on the first step
+  ("Shaft removal tool", under its bullets), and the same three sit side by side as the tile's
+  cover, all spinning together on hover. Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this
+  replaces the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now
+  only shows under reduced motion. The saw-cut and oiling steps keep their photos.
+- The other 6 projects are smaller tiles, photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
 
@@ -305,9 +313,14 @@ this same silent side effect anywhere else `all: unset` gets used.
    session.
 5. **No Lighthouse/field performance run** has been done on the bento grid version. The always-
    mounted cover models (see §4) are a new, not-yet-measured cost on top of the existing 3D chunk
-   and image weight.
-6. `split` supports N items and mixed photo/model; only the 2-photo case is currently used
-   (Cooling Unit's CFD step).
+   and image weight. There are now **six live WebGL canvases on the page at load** (cooling unit,
+   conveyor cart, gripper, and the three fixtures), plus more while a tile is open. Browsers cap
+   active WebGL contexts (~16), and phones are the worry — measure before adding more cover models.
+6. `split` supports N items and mixed photo/model: Cooling Unit's CFD step is a 2-photo row and
+   Small Fixtures' first step is a 3-model row (a row of only models gets a wider box,
+   `0.9 × count : 1`, in `StepVisual`; `.step-visual--split .model-layer` resets `grid-area` so
+   models don't stack). A tile cover shows all models of its first model/split step
+   (`coverModels()` in `BentoGrid.tsx`).
 7. The conveyor-cart photo `handle-installed` is converted but unused.
 8. The `motion` package added ~30 KB gzip to the main bundle; not code-split, since the expand
    interaction is core to every page view (unlike the 3D/GLTF chunk, which only loads once a model
