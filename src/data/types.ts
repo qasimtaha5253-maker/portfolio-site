@@ -54,9 +54,17 @@ export interface Step {
   /**
    * Two or more visuals shown side by side in one row, e.g. a simulation
    * result beside the part it was run on. Each entry is a photo or a model.
-   * Priority when a step sets several: `split` > `model` > `embed` > `image`.
+   * Priority when a step sets several: `split` > `stack` > `model` > `embed` > `image`.
    */
   split?: SplitItem[];
+  /**
+   * Two or more visuals shown one under another, each at full size (the same
+   * size a single `model` or `image` gets) — for when a row would make them
+   * too small. Each entry is a photo or a model. Also the tile cover, where
+   * the models sit side by side. Priority: `split` > `stack` > `model` >
+   * `embed` > `image`.
+   */
+  stack?: SplitItem[];
 }
 
 /** One cell of a side-by-side step: a photo or a 3D model. */
@@ -71,7 +79,7 @@ export interface Project {
   title: string;
   /** Where it was done, e.g. "Linamar · Co-op". */
   context?: string;
-  /** true: large tile (two grid rows). false: standard tile. */
+  /** Not used by the grid at the moment: every tile is the same (large) size. */
   featured: boolean;
   /** One or two sentences, shown on the tile. */
   summary?: string;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Photo } from './Photo';
 import { EmbedLayer } from './visuals/EmbedLayer';
 import { ModelLayer } from './visuals/ModelLayer';
-import type { Step } from '@/data/types';
+import type { Step, StepModel } from '@/data/types';
 
 const SIZES = '(min-width: 768px) 40rem, 100vw';
 const SPLIT_SIZES = '(min-width: 768px) 20rem, 50vw';
@@ -19,6 +19,17 @@ function useOnScreen<T extends Element>() {
     return () => observer.disconnect();
   }, []);
   return [ref, onScreen] as const;
+}
+
+/** One full-size model box (same size as a step's single model). Its own
+ *  component so each model in a stack tracks whether it is on screen. */
+function ModelBox({ model, animated, ready }: { model: StepModel; animated: boolean; ready: boolean }) {
+  const [ref, onScreen] = useOnScreen<HTMLDivElement>();
+  return (
+    <div className="step-visual" ref={ref}>
+      {ready && <ModelLayer model={model} active={onScreen} animated={animated} />}
+    </div>
+  );
 }
 
 interface StepVisualProps {
@@ -84,6 +95,28 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
           ),
         )}
       </div>
+    );
+  }
+
+  if (step.stack?.length) {
+    return (
+      <>
+        {step.stack.map((item, i) =>
+          item.model ? (
+            <ModelBox key={item.model.src} model={item.model} animated={animated} ready={ready} />
+          ) : item.image ? (
+            <Photo
+              key={item.image.src}
+              projectId={projectId}
+              image={item.image}
+              sizes={SIZES}
+              className="step-visual__img"
+            />
+          ) : (
+            <div key={i} />
+          ),
+        )}
+      </>
     );
   }
 

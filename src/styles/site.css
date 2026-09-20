@@ -333,8 +333,9 @@
 
 .bento-tile {
   position: relative;
+  /* Every tile is the same size: two columns wide, two rows tall. */
   grid-column: span 2;
-  grid-row: span 1;
+  grid-row: span 2;
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--surface);
@@ -346,11 +347,6 @@
 .bento-tile:not(.bento-tile--expanded):has(.bento-tile__hit:focus-visible) {
   border-color: rgba(251, 146, 60, 0.4);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
-}
-
-.bento-tile--large {
-  grid-column: span 2;
-  grid-row: span 2;
 }
 
 .bento-tile__hit {
@@ -394,7 +390,11 @@
   height: 100%;
 }
 
-/* Several cover models side by side, one canvas each. */
+/* Several cover models side by side, one canvas each. Each canvas is wider
+   than its third of the tile and overlaps its neighbours (the negative side
+   margins; the centres stay put): the canvases are transparent, and a model is
+   far narrower than the circle it needs room to spin in, so this lets each one
+   be drawn bigger than a strict third of the width would allow. */
 .bento-tile__model--row {
   display: flex;
 }
@@ -402,6 +402,7 @@
 .bento-tile__model--row .model-layer {
   flex: 1 1 0;
   min-width: 0;
+  margin: 0 -6%;
 }
 
 .bento-tile__scrim {
@@ -446,15 +447,11 @@
 }
 
 .bento-tile__title {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   line-height: 1.25;
   margin: 0;
   color: var(--fg);
   transition: font-size 0.3s ease;
-}
-
-.bento-tile--large .bento-tile__title {
-  font-size: 1.1rem;
 }
 
 .bento-tile__summary {
@@ -600,8 +597,7 @@
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .bento-tile,
-  .bento-tile--large {
+  .bento-tile {
     grid-column: span 2;
   }
 }
@@ -609,9 +605,6 @@
 @media (max-width: 560px) {
   .bento-grid {
     grid-auto-rows: minmax(11rem, auto);
-  }
-  .bento-tile--large {
-    grid-row: span 2;
   }
 }
 

@@ -10,13 +10,13 @@ anything the user must do on their end in plain terms (he is not a web developer
 ## Concept
 - Single-page portfolio: Intro (animated canvas) -> About -> a bento grid of projects -> footer.
   Must work well on mobile and desktop.
-- **Bento grid:** every project is a tile in one grid; `featured` projects get a larger tile
-  (two rows tall). Tapping a tile expands it in place to show its steps (Introduction -> How it
+- **Bento grid:** every project is a same-sized tile (two columns × two rows) in one grid.
+  Tapping a tile expands it in place to show its steps (Introduction -> How it
   works -> What it achieved, or whatever the project needs), each with its own photo, 3D model,
   HTML animation or side-by-side split. Tapping again, or another tile, collapses it.
 - A project with a 3D model shows that live model as its tile cover: still until hovered,
-  spinning while hovered. If its first model step is a `split` row of models, all of them sit
-  side by side on the cover (Small Fixtures & Tooling has three).
+  spinning while hovered. If its first model step is a `split` or `stack` of models, all of them
+  sit side by side on the cover (Small Fixtures & Tooling has three).
 - Data-driven: each project is defined in one config file (title, steps, images, models,
   animations), so adding a project never requires touching component code.
 - Respect `prefers-reduced-motion`: no tile reveal or expand animation, and every step falls
@@ -52,7 +52,7 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `index.html` — shell with `#root`; `src/main.tsx` mounts `src/App.tsx`.
 - `src/App.tsx` — page order: Intro, About, BentoGrid (`#work`), footer (`#contact`).
 - `src/data/projects.ts` — **the only file to edit to add/change projects**; field docs and
-  types in `src/data/types.ts`. `featured: true` → large tile; `false` → standard tile.
+  types in `src/data/types.ts`. `featured` is currently unused (all tiles are the same size).
 - `src/components/BentoGrid.tsx` — the whole grid: tiles, expand/collapse (Framer Motion),
   scroll-follow to the opening tile (Lenis, re-measured every frame), scroll-reveal (GSAP),
   cover model + hover-to-spin, deferred mounting of heavy visuals until the expand settles.
@@ -114,7 +114,9 @@ rotatable 3D model (`model`), or several side by side (`split`).
   export (three reads quantized meshes natively — no decoder download). It handles
   Draco-compressed sources and drops textures whose bytes don't match their declared MIME type.
   Keep source exports in `content/models/` (gitignored).
-- `split: [{ image } | { model }, ...]` — several visuals side by side in one row.
+- `split: [{ image } | { model }, ...]` — several visuals side by side in one row (small).
+  `stack: [...]` — several visuals one under another, each full size (Small Fixtures uses it).
+  Priority: `split` > `stack` > `model` > `embed` > `image`.
 - Cooling unit (showpiece): model → section animation → CFD plot + strawberry flat → model.
   Conveyor cart has a model on its "Reverse engineering the line" step.
 - Camera framing in `ModelLayer` is symmetric horizontally but centred on the model's true
@@ -127,12 +129,11 @@ rotatable 3D model (`model`), or several side by side (`split`).
   still cover model is blank after its tile is expanded and closed).
 
 ## Content decisions
-- Featured (large tiles): Cooling Unit, Conveyor Cart, Coffee Cup Gripper. The other 7 are
-  standard tiles.
+- All tiles are the same size (the Cooling Unit's), set at the user's request 2026-09-20.
 - Coffee Cup Gripper has its 3D model on its first step and as its tile cover; the user may add an
   animation later.
-- Small Fixtures & Tooling has three 3D models (shaft tool, saw fixture, oiling fixture) as a row
-  on its first step and side by side on its cover. Six WebGL canvases are live on the page at
+- Small Fixtures & Tooling has three 3D models (shaft tool, saw fixture, oiling fixture) stacked
+  full size on its first step and side by side on its cover. Six WebGL canvases are live on the page at
   load, so measure phone performance before adding more cover models.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
 - Contact on the public site: LinkedIn + email only (no phone number). The email

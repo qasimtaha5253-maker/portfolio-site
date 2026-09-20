@@ -31,12 +31,14 @@ function coverImage(project: Project): ProjectImage | undefined {
 
 /** A project with a model on one of its steps shows it as its tile cover
  *  (rotating on hover) instead of a plain photo. Uses the first step with a
- *  model: all the models of a `split` row, or the step's single `model`
- *  (same priority as StepVisual). Several models sit side by side. */
+ *  model: all the models of a `split` row or `stack`, or the step's single
+ *  `model` (same priority as StepVisual). Several models sit side by side. */
 function coverModels(project: Project): StepModel[] {
   for (const step of project.steps) {
-    const inSplit = step.split?.flatMap((item) => (item.model ? [item.model] : [])) ?? [];
-    if (inSplit.length) return inSplit;
+    for (const items of [step.split, step.stack]) {
+      const models = items?.flatMap((item) => (item.model ? [item.model] : [])) ?? [];
+      if (models.length) return models;
+    }
     if (step.model) return [step.model];
   }
   return [];
@@ -66,7 +68,7 @@ function documentTop(el: HTMLElement) {
 }
 
 /**
- * Every project as a tile in one grid, sized by `featured`. Tapping a tile
+ * Every project as a same-sized tile in one grid. Tapping a tile
  * expands it in place to show its steps; the rest of the grid reflows below.
  */
 export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
@@ -155,7 +157,6 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
             transition={animated ? EXPAND_TRANSITION : { duration: 0 }}
             className={cn(
               'bento-tile',
-              project.featured && 'bento-tile--large',
               isExpanded && 'bento-tile--expanded',
             )}
           >
@@ -172,7 +173,10 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                   {models.map((model) => (
                     <ModelLayer
                       key={model.src}
-                      model={model}
+                      // A row of models wants each as big as it can be, and its tall,
+                      // narrow canvases don't crop the way a step's wide box does, so the
+                      // extra `margin` set for the step view is left out here.
+                      model={models.length > 1 ? { ...model, margin: undefined } : model}
                       active
                       animated={animated}
                       spin={hoveredId === project.id}

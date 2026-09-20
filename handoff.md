@@ -91,8 +91,10 @@ scripts/optimize-model.mjs     model compression — see §7 for two real fixes 
 
 ### How a tile works (`BentoGrid.tsx`)
 
-- Every project is a tile, `grid-column: span 2`; `featured` projects also get `grid-row: span 2`
-  (bigger tile). Tapping one sets `expanded` (a single `string | null`) and it grows in place;
+- Every project is the same size tile: `grid-column: span 2`, `grid-row: span 2` (the size the
+  featured tiles used to have; changed 2026-09-20 at his request). The `featured` field in
+  `projects.ts` is therefore **unused by the grid** — kept in case he wants size tiers back.
+  Tapping one sets `expanded` (a single `string | null`) and it grows in place;
   tapping it again, or tapping a different tile, collapses/switches.
 - **Expand/collapse animation is Framer Motion (`motion` package), not GSAP.** `motion.article`
   with `layout` animates each tile's size/position; `AnimatePresence` + a `motion.div` with
@@ -125,7 +127,8 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
 
 ## 5. Current content state
 
-- **Featured (large tiles):** Cooling Unit, Conveyor Cart, Coffee Cup Gripper.
+- **All tiles are the same (large) size** since 2026-09-20. Marked `featured` (no longer affects
+  size): Cooling Unit, Conveyor Cart, Coffee Cup Gripper.
 - **Cooling Unit** — 4 steps, showpiece: 3D model → HTML section animation → CFD plot + strawberry
   flat split → 3D model again + stats. Has a cover model (hover-spins on its tile).
 - **Conveyor Cart** — got a real 3D model this session (step 2, "Reverse engineering the line"),
@@ -140,12 +143,19 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
 - **Small Fixtures & Tooling** — got three 3D models (2026-09-19): shaft removal tool
   (`shaft-adapter.glb`), saw-cut fixture (`gear-cutting-fixture.glb`, from his
   `RDM_Gear_Cutting_Fixture`) and oiling fixture (`oiling-assembly.glb`, from
-  `Speed_Sensor_Oiling_Assembly`). They are a `split` row of three models on the first step
-  ("Shaft removal tool", under its bullets), and the same three sit side by side as the tile's
-  cover, all spinning together on hover. Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this
-  replaces the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now
-  only shows under reduced motion. The saw-cut and oiling steps keep their photos.
-- The other 6 projects are smaller tiles, photo-only.
+  `Speed_Sensor_Oiling_Assembly`). On the first step ("Shaft removal tool", under its bullets)
+  they are a `stack`: three full-size boxes (672×504, same as the other projects' models) one
+  under another. A row of three at that size can't fit (~890 px of room), and a first attempt
+  as a `split` row (2026-09-19) looked too small to him. On the tile cover the same three sit
+  side by side, all spinning together on hover; each cover canvas is wider than a third of the
+  tile and overlaps its neighbours (`.bento-tile__model--row`) so they draw big, and the cover
+  ignores the models' `margin` (tall, narrow canvases don't crop). The saw fixture (`margin: 1.25`)
+  and oiling fixture (`margin: 1.35`) need a margin in the step view — a wide, low model gets its
+  near edge cropped otherwise. Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
+  the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now only shows
+  under reduced motion. The saw-cut and oiling steps keep their photos. If he'd rather have each
+  model under its own step (shaft / saw / oiling), move each into that step as a plain `model`.
+- The other 6 projects are photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
 
@@ -316,11 +326,13 @@ this same silent side effect anywhere else `all: unset` gets used.
    and image weight. There are now **six live WebGL canvases on the page at load** (cooling unit,
    conveyor cart, gripper, and the three fixtures), plus more while a tile is open. Browsers cap
    active WebGL contexts (~16), and phones are the worry — measure before adding more cover models.
-6. `split` supports N items and mixed photo/model: Cooling Unit's CFD step is a 2-photo row and
-   Small Fixtures' first step is a 3-model row (a row of only models gets a wider box,
-   `0.9 × count : 1`, in `StepVisual`; `.step-visual--split .model-layer` resets `grid-area` so
-   models don't stack). A tile cover shows all models of its first model/split step
-   (`coverModels()` in `BentoGrid.tsx`).
+6. `split` (visuals in one row) supports N items and mixed photo/model; only Cooling Unit's 2-photo
+   CFD step uses it now (a row of only models gets a wider box, `0.9 × count : 1`, in
+   `StepVisual`; `.step-visual--split .model-layer` resets `grid-area` so models don't stack).
+   `stack` (visuals one under another, each full size) is what Small Fixtures uses. A tile cover
+   shows all models of its first model/split/stack step (`coverModels()` in `BentoGrid.tsx`).
+   Observed, not caused by this work: on a phone (DPR 2) every model box is 294×455 rather than
+   4:3 — taller than on desktop. All model boxes behave the same, so nothing looks inconsistent.
 7. The conveyor-cart photo `handle-installed` is converted but unused.
 8. The `motion` package added ~30 KB gzip to the main bundle; not code-split, since the expand
    interaction is core to every page view (unlike the 3D/GLTF chunk, which only loads once a model

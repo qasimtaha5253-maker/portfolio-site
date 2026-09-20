@@ -191,11 +191,12 @@ export const projects: Project[] = [
           'Detailed SolidWorks drawings with GD&T.',
         ],
         image: { src: 'shaft-puller-photo', alt: 'Shaft removal tool fitted to a splined shaft' },
-        // The three tools side by side; also the tile's cover.
-        split: [
+        // The three tools, each full size, one under another; on the tile's
+        // cover they sit side by side.
+        stack: [
           { model: { src: 'models/shaft-adapter.glb', title: '3D model of the shaft removal tool' } },
-          { model: { src: 'models/gear-cutting-fixture.glb', title: '3D model of the saw-cut fixture' } },
-          { model: { src: 'models/oiling-assembly.glb', title: '3D model of the oiling fixture' } },
+          { model: { src: 'models/gear-cutting-fixture.glb', title: '3D model of the saw-cut fixture', margin: 1.25 } },
+          { model: { src: 'models/oiling-assembly.glb', title: '3D model of the oiling fixture', margin: 1.35 } },
         ],
       },
       {
