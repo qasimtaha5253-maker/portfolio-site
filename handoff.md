@@ -71,7 +71,7 @@ src/main.tsx → src/App.tsx     Intro, About, BentoGrid, footer
 src/data/projects.ts           THE content file — all copy, photos, models, animations
 src/data/types.ts              field docs for the above
 src/components/
-  BentoGrid.tsx                the whole grid: tiles, expand/collapse, scroll-follow, hover-spin
+  BentoGrid.tsx                the whole grid: tiles, expand/collapse, scroll-follow, self-spinning covers
   StepVisual.tsx                a step's own visual inside an expanded tile (model/embed/split/photo)
   Photo.tsx                    responsive WebP <img>, adds `is-transparent` from a generated list
   StepContent.tsx              body / stats / bullets
@@ -106,10 +106,16 @@ scripts/optimize-model.mjs     model compression — see §7 for two real fixes 
   the page glitching. `BentoGrid` now actively scrolls to and locks onto whichever tile is
   opening, every frame, via Lenis — see §7, this needed real debugging to get right (a one-shot
   scroll consistently landed in the wrong place).
-- **Cover model / hover-to-spin:** a project whose first model-bearing step has a `.model` shows
-  that live, rotatable model as its tile cover (instead of a plain photo), static until hovered,
-  spinning while hovered. Fully data-driven via `coverModel()` (mirrors `coverImage()`) — no
-  per-project code. See `ModelLayer`'s `spin`/`interactive` props in §7.
+- **Cover models:** a project whose first model-bearing step has a `model` (or a `split`/`stack`
+  of models) shows those live models as its tile cover (instead of a plain photo). They **turn on
+  their own** — changed 2026-09-20 at his request; before that they were still until hovered
+  (the `spin`/hover plumbing is removed). Each cover `ModelLayer` gets `active={!isExpanded}`, so a
+  cover stops drawing while its tile is open (it's hidden then), and `ModelLayer` also stops
+  while a canvas is scrolled off-screen (IntersectionObserver). Under reduced motion they stay
+  still. Fully data-driven via `coverModels()` — no per-project code. `interactive={false}` on
+  covers, so a tap opens the tile instead of rotating.
+  **Cost:** every visible cover is now a continuous 60 fps WebGL render (up to ~5–6 at once on a
+  desktop screen, fewer on a phone where tiles fill the screen). Not measured on a real phone.
 - **Deferred heavy visuals:** opening a tile with a 3D model/embedded animation used to visibly lag
   (loading them competed with the expand animation for frames). `StepVisual`'s `ready` prop defers
   mounting the actual `ModelLayer`/`EmbedLayer` until the expand animation's `onAnimationComplete`
@@ -130,7 +136,7 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
 - **All tiles are the same (large) size** since 2026-09-20. Marked `featured` (no longer affects
   size): Cooling Unit, Conveyor Cart, Coffee Cup Gripper.
 - **Cooling Unit** — 4 steps, showpiece: 3D model → HTML section animation → CFD plot + strawberry
-  flat split → 3D model again + stats. Has a cover model (hover-spins on its tile).
+  flat split → 3D model again + stats. Has a cover model (spins on its tile).
 - **Conveyor Cart** — got a real 3D model this session (step 2, "Reverse engineering the line"),
   replacing what had been a plain (low-res) photo there. Also picked up a cover model automatically.
 - **Coffee Cup Gripper** — got its real 3D model (2026-09-18) on the first step ("The challenge",
@@ -147,13 +153,14 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   they are a `stack`: three full-size boxes (672×504, same as the other projects' models) one
   under another. A row of three at that size can't fit (~890 px of room), and a first attempt
   as a `split` row (2026-09-19) looked too small to him. On the tile cover the same three sit
-  side by side, all spinning together on hover; each cover canvas is wider than a third of the
+  side by side, all spinning together on their own; each cover canvas is wider than a third of the
   tile and overlaps its neighbours (`.bento-tile__model--row`) so they draw big, and the cover
   ignores the models' `margin` (tall, narrow canvases don't crop). The saw fixture (`margin: 1.25`)
   and oiling fixture (`margin: 1.35`) need a margin in the step view — a wide, low model gets its
-  near edge cropped otherwise. All three have `brightness: 0.7` (he asked for lower lighting on
-  2026-09-20; their pale grey parts were washing out to white; the value is a multiplier on the
-  shared 0.68 exposure and applies to the cover as well — nudge it if he wants darker/lighter).
+  near edge cropped otherwise. All three have `brightness: 0.5` (he asked for lower lighting on
+  2026-09-20, then "lower more" — 0.7 → 0.5; their pale grey parts were washing out to white; the
+  value is a multiplier on the shared 0.68 exposure and applies to the cover as well — nudge it if
+  he wants darker/lighter).
   `shaft-adapter.glb` was replaced by a newer export from him on 2026-09-20 (the upper puller
   block now shows the interlocking notch). Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
   the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now only shows

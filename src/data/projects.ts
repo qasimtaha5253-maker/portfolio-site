@@ -194,9 +194,9 @@ export const projects: Project[] = [
         // The three tools, each full size, one under another; on the tile's
         // cover they sit side by side.
         stack: [
-          { model: { src: 'models/shaft-adapter.glb', title: '3D model of the shaft removal tool', brightness: 0.7 } },
-          { model: { src: 'models/gear-cutting-fixture.glb', title: '3D model of the saw-cut fixture', margin: 1.25, brightness: 0.7 } },
-          { model: { src: 'models/oiling-assembly.glb', title: '3D model of the oiling fixture', margin: 1.35, brightness: 0.7 } },
+          { model: { src: 'models/shaft-adapter.glb', title: '3D model of the shaft removal tool', brightness: 0.5 } },
+          { model: { src: 'models/gear-cutting-fixture.glb', title: '3D model of the saw-cut fixture', margin: 1.25, brightness: 0.5 } },
+          { model: { src: 'models/oiling-assembly.glb', title: '3D model of the oiling fixture', margin: 1.35, brightness: 0.5 } },
         ],
       },
       {

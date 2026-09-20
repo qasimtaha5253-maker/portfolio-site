@@ -74,8 +74,6 @@ function documentTop(el: HTMLElement) {
 export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
-  // Which tile's cover model (if it has one) should be spinning right now.
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
   // Heavy step visuals (3D model, embedded animation) wait for the expand
   // animation to finish before mounting, so loading them doesn't compete
   // with it for frames — see `toggle` and the detail's onAnimationComplete.
@@ -165,8 +163,6 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               className="bento-tile__hit"
               aria-expanded={isExpanded}
               onClick={() => toggle(project.id)}
-              onMouseEnter={() => models.length > 0 && setHoveredId(project.id)}
-              onMouseLeave={() => setHoveredId((current) => (current === project.id ? null : current))}
             >
               {models.length > 0 ? (
                 <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row')}>
@@ -177,9 +173,10 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                       // narrow canvases don't crop the way a step's wide box does, so the
                       // extra `margin` set for the step view is left out here.
                       model={models.length > 1 ? { ...model, margin: undefined } : model}
-                      active
+                      // Cover models turn on their own (not just on hover). They stop
+                      // drawing while the tile is open, since the cover is hidden then.
+                      active={!isExpanded}
                       animated={animated}
-                      spin={hoveredId === project.id}
                       interactive={false}
                     />
                   ))}

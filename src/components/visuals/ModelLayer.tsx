@@ -10,10 +10,6 @@ interface ModelLayerProps {
   active: boolean;
   /** Reduced motion: no self-rotation. */
   animated: boolean;
-  /** Self-rotate only while this is true (still gated by `animated`/`active`).
-   *  Defaults on, matching the step-visual usage; the bento tile cover turns
-   *  this on only while hovered. */
-  spin?: boolean;
   /** Drag-to-rotate with a mouse or finger. Off for the bento tile cover, so
    *  a tap there opens the project instead of being read as a rotate-drag. */
   interactive?: boolean;
@@ -26,18 +22,17 @@ interface ModelLayerProps {
  * The model turns slowly by itself and can be dragged with a mouse or a
  * finger, unless `interactive` is off.
  */
-export function ModelLayer({ model, active, animated, spin = true, interactive = true }: ModelLayerProps) {
+export function ModelLayer({ model, active, animated, interactive = true }: ModelLayerProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   // Kept in a ref so the draw loop can read it without re-running the effect.
-  const state = useRef({ active, animated, spin });
-  state.current = { active, animated, spin };
-  // Restarts the loop when this becomes the visible step again, or when
-  // hovering turns spin back on after it stopped drawing while static.
+  const state = useRef({ active, animated });
+  state.current = { active, animated };
+  // Restarts the loop when this becomes the visible step again.
   const resume = useRef<() => void>(() => {});
   useEffect(() => {
-    if (active && spin) resume.current();
-  }, [active, spin]);
+    if (active) resume.current();
+  }, [active]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -92,8 +87,8 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
 
       const controls = new OrbitControls(camera, renderer.domElement);
       // Damping smooths user drag input, which the bento tile cover doesn't
-      // take (interactive: false there) — off, so its hover-triggered spin
-      // starts and stops cleanly instead of decelerating for a few frames.
+      // take (interactive: false there) — off, so its spin stops cleanly (when
+      // the tile opens) instead of decelerating for a few frames.
       controls.enableDamping = interactive;
       controls.enablePan = false;
       controls.enableZoom = false;
@@ -163,12 +158,12 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
           frame = 0;
           return;
         }
-        controls.autoRotate = state.current.animated && state.current.active && state.current.spin;
+        controls.autoRotate = state.current.animated && state.current.active;
         controls.update();
         renderer.render(scene, camera);
-        // While static (not spinning), one rendered frame reflects the
-        // current state fully — no need to keep drawing every frame until
-        // something (hover) asks it to spin again.
+        // Under reduced motion the model doesn't spin, so one rendered frame
+        // reflects the current state fully — no need to keep drawing every
+        // frame (a drag or resize draws again).
         frame = controls.autoRotate ? requestAnimationFrame(draw) : 0;
       };
 

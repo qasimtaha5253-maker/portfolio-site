@@ -14,8 +14,9 @@ anything the user must do on their end in plain terms (he is not a web developer
   Tapping a tile expands it in place to show its steps (Introduction -> How it
   works -> What it achieved, or whatever the project needs), each with its own photo, 3D model,
   HTML animation or side-by-side split. Tapping again, or another tile, collapses it.
-- A project with a 3D model shows that live model as its tile cover: still until hovered,
-  spinning while hovered. If its first model step is a `split` or `stack` of models, all of them
+- A project with a 3D model shows that live model as its tile cover, turning on its own (no hover
+  needed; paused while the tile is open or scrolled off-screen, and still under reduced motion).
+  If its first model step is a `split` or `stack` of models, all of them
   sit side by side on the cover (Small Fixtures & Tooling has three).
 - Data-driven: each project is defined in one config file (title, steps, images, models,
   animations), so adding a project never requires touching component code.
@@ -55,7 +56,7 @@ anything the user must do on their end in plain terms (he is not a web developer
   types in `src/data/types.ts`. `featured` is currently unused (all tiles are the same size).
 - `src/components/BentoGrid.tsx` — the whole grid: tiles, expand/collapse (Framer Motion),
   scroll-follow to the opening tile (Lenis, re-measured every frame), scroll-reveal (GSAP),
-  cover model + hover-to-spin, deferred mounting of heavy visuals until the expand settles.
+  cover models that spin on their own, deferred mounting of heavy visuals until the expand settles.
 - `src/components/StepVisual.tsx` — a step's own visual inside an expanded tile. Priority when
   a step sets several: `split` > `model` > `embed` > `image`. Reduced motion: always `image`.
 - `src/components/StepContent.tsx` — body / stats / bullets. `Photo.tsx` — responsive lazy WebP
@@ -127,7 +128,7 @@ rotatable 3D model (`model`), or several side by side (`split`).
   model out 30–40% (tried and reverted).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
-  models use 0.7). Applies to the cover too, unlike `margin`.
+  models use 0.5). Applies to the cover too, unlike `margin`.
 - A resize wipes the WebGL canvas, so `ModelLayer` redraws once after every resize (otherwise a
   still cover model is blank after its tile is expanded and closed).
 
