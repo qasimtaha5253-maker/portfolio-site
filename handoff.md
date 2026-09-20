@@ -151,7 +151,11 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   tile and overlaps its neighbours (`.bento-tile__model--row`) so they draw big, and the cover
   ignores the models' `margin` (tall, narrow canvases don't crop). The saw fixture (`margin: 1.25`)
   and oiling fixture (`margin: 1.35`) need a margin in the step view — a wide, low model gets its
-  near edge cropped otherwise. Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
+  near edge cropped otherwise. All three have `brightness: 0.7` (he asked for lower lighting on
+  2026-09-20; their pale grey parts were washing out to white; the value is a multiplier on the
+  shared 0.68 exposure and applies to the cover as well — nudge it if he wants darker/lighter).
+  `shaft-adapter.glb` was replaced by a newer export from him on 2026-09-20 (the upper puller
+  block now shows the interlocking notch). Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
   the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now only shows
   under reduced motion. The saw-cut and oiling steps keep their photos. If he'd rather have each
   model under its own step (shaft / saw / oiling), move each into that step as a plain `model`.

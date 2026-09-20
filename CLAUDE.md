@@ -125,6 +125,9 @@ rotatable 3D model (`model`), or several side by side (`split`).
   its near edge cropped as it spins: give that model a `margin` in its config (multiplier on camera
   distance; the gripper uses 1.25). Don't "fix" this globally — an exact fit zooms every existing
   model out 30–40% (tried and reverted).
+- Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
+  white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
+  models use 0.7). Applies to the cover too, unlike `margin`.
 - A resize wipes the WebGL canvas, so `ModelLayer` redraws once after every resize (otherwise a
   still cover model is blank after its tile is expanded and closed).
 

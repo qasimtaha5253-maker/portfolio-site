@@ -29,6 +29,12 @@ export interface StepModel {
    * cropped at some angles as it spins — raise this for those.
    */
   margin?: number;
+  /**
+   * How bright this model is lit, as a multiplier (default 1; 0.8 is 20% dimmer).
+   * The lighting is shared by every model, so use this for one whose pale parts
+   * wash out to white.
+   */
+  brightness?: number;
 }
 
 export interface Stat {

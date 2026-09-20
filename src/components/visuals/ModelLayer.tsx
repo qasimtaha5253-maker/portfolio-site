@@ -68,7 +68,9 @@ export function ModelLayer({ model, active, animated, spin = true, interactive =
       renderer.domElement.style.display = 'block';
 
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.68;
+      // `model.brightness` scales this for a model that renders too bright
+      // (pale parts wash out to white).
+      renderer.toneMappingExposure = 0.68 * (model.brightness ?? 1);
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 1000);
