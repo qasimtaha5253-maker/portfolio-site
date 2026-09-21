@@ -109,8 +109,9 @@ rotatable 3D model (`model`), or several side by side (`split`).
   serve the cached copy. `cart-section.html` is user-authored in his own tool; see handoff.md §7
   before touching it (background must be `--surface`, and two helper hooks must stay).
 - `model: { src: 'models/<file>.glb', title }` — public/models/. `ModelLayer.tsx` loads
-  three.js + GLTFLoader + OrbitControls on demand. Self-rotates; drag rotates with mouse or
-  finger; pauses when off-screen; no self-rotation under reduced motion.
+  three.js + GLTFLoader + OrbitControls on demand. Self-rotates (12°/s, time-based so it's the
+  same on any refresh rate — always pass elapsed time to `controls.update()`); drag rotates with
+  mouse or finger; pauses when off-screen; no self-rotation under reduced motion.
 - `npm run model -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize]` cleans and quantizes an
   export (three reads quantized meshes natively — no decoder download). It handles
   Draco-compressed sources and drops textures whose bytes don't match their declared MIME type.

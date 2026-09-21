@@ -98,7 +98,10 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       // model turns it instead of scrolling, so the page is scrolled from the
       // text below it.
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
-      controls.autoRotateSpeed = 1.2;
+      // 2 = one full turn every 30 s. The draw loop passes real elapsed time to
+      // controls.update(), so this is the same on a 144 Hz monitor as on a 60 Hz
+      // phone (without it OrbitControls turns a fixed step per frame).
+      controls.autoRotateSpeed = 2;
 
       // Set once the model is loaded: how far the camera needs to sit back to
       // fit the model. reachXZ is measured from the spin centre (not the
@@ -129,7 +132,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         camera.near = distance / 100;
         camera.far = distance * 10;
         camera.updateProjectionMatrix();
-        controls.update();
+        controls.update(0); // 0 s elapsed: re-frame without nudging the auto-rotation
       };
 
       const resize = () => {
@@ -155,23 +158,30 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       // The model's built-in animation (`model.animation`), once loaded; null
       // for a plain model and under reduced motion.
       let anim: ModelAnimation | null = null;
+      let lastDraw = 0; // when the previous frame was drawn (0 = the loop was idle)
       const draw = () => {
         // Stop drawing while scrolled away, or while another visual is showing:
         // the last frame stays on the canvas, which is faded out anyway.
         if (!onScreen || !state.current.active) {
           frame = 0;
+          lastDraw = 0;
           anim?.setPlaying(false);
           return;
         }
         anim?.setPlaying(true);
         controls.autoRotate = state.current.animated && state.current.active;
-        controls.update();
+        // Real elapsed time, so the spin is the same speed at any frame rate. Capped so a
+        // hiccup (or the first frame after being idle) can't make it jump.
+        const now = performance.now();
+        const elapsed = lastDraw ? Math.min((now - lastDraw) / 1000, 0.1) : 0;
+        controls.update(elapsed);
         renderer.render(scene, camera);
         // Under reduced motion the model doesn't spin, so one rendered frame
         // reflects the current state fully — no need to keep drawing every
         // frame (a drag or resize draws again). A model with its own
         // animation needs every frame drawn while that plays.
         frame = controls.autoRotate || anim ? requestAnimationFrame(draw) : 0;
+        lastDraw = frame ? now : 0;
       };
 
       const restart = () => {

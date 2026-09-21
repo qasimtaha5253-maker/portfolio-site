@@ -269,6 +269,17 @@ once the model is in, creates a paused GSAP timeline (plain timeline, **no Scrol
 plays it only while the model is on screen/visible (`draw()` calls `setPlaying`); every frame is
 drawn while it plays. Not created under reduced motion (the model just sits in its start pose).
 OrbitControls / auto-rotate are untouched, so visitors can still rotate it freely mid-animation.
+
+**Auto-rotate speed is time-based (2026-09-21).** He reported models spinning fast on his monitor
+and slow on his phone. Cause: OrbitControls' `autoRotate` turns a fixed step **per call** to
+`update()` unless you pass the elapsed seconds, so speed scaled with the screen's refresh rate
+(a 144 Hz monitor spun 2.4× a 60 Hz phone). `ModelLayer.draw()` now passes real elapsed time
+(capped at 0.1 s so a hiccup can't jump), and `autoRotateSpeed` is 2 = **12°/s, one turn per 30 s**
+(it was 1.2 per-frame, which is 7.2°/s at 60 Hz). Checked by driving the installed OrbitControls at
+30/60/144 fps: all give exactly 12°/s (the old way gave 6/12/28.8 at that speed). `frameModel()`
+calls `controls.update(0)` so re-framing doesn't nudge the spin. To change the pace, change
+`autoRotateSpeed` (one number). The GSAP animation was already time-based. Any other per-frame
+animation would have the same problem — use elapsed time.
 - **PTU gear-cutting fixture:** the source is a static SolidWorks export (kept in
   `content/models/ptu-gear-cutting-fixture.glb`, compressed with `npm run model`). Nodes after
   export/three's name-sanitising: `Fixture^new_assembly` (never moves), `Moving_Group^new_assembly`
@@ -284,8 +295,14 @@ OrbitControls / auto-rotate are untouched, so visitors can still rotate it freel
   warns in the console if the shaft isn't ~118 mm along Z (wrong units/axis).
 - **Timeline (11 s, then 0.5 s pause, repeat):** cutter down 33 mm (1.5 s) / hold 0.5 s / up
   (1.5 s) → group slides 59.108814 mm left (1.5 s) then turns 75.09° CCW (1 s) → cutter down
-  35.79 mm / hold / up → group slides back and turns back together (1.5 s). `power2.inOut` on every
-  move.
+  35.79 mm / hold / up → group slides back to the right (1.5 s) **while turning counter-clockwise
+  the rest of the way round, 75.09° → 360°** (284.91°), so it ends in the start pose (360° ≡ 0°;
+  an `onRepeat` callback resets the angle to an explicit 0 each lap). `power2.inOut` on every move.
+  **Changed 2026-09-21 at his request:** the spec originally said "rotates back" (an unwind, which
+  is clockwise from the front); he watched it and asked for counter-clockwise whenever it moves
+  right, which is only the return move. Left = −X, so the first slide (left) then 75.09° CCW turn
+  are unchanged. If he later says the rotation looks backwards, check which *view* he's looking at:
+  the model auto-rotates, so left/right/clockwise flip with the viewing angle.
 - **Verifying it (dev server only):** `await window.__gearCuttingTest()` in the console runs one
   small move of each part and returns the measured world-space deltas (cutter −5 mm Y, part −5 mm
   X, +15° about +Z). `window.__gearCuttingTimeline` / `__gearCuttingParts` expose the timeline and
