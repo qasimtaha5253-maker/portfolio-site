@@ -147,8 +147,9 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   fallback. If he meant the model to go under the *second* step ("How it works") instead, move
   the `model:` line in `projects.ts`. He may still add an animation later.
 - **Small Fixtures & Tooling** — got three 3D models (2026-09-19): shaft removal tool
-  (`shaft-adapter.glb`), saw-cut fixture (`gear-cutting-fixture.glb`, from his
-  `RDM_Gear_Cutting_Fixture`) and oiling fixture (`oiling-assembly.glb`, from
+  (`shaft-adapter.glb`), saw-cut fixture (**animated**, `ptu-gear-cutting-fixture.glb` — replaced
+  the earlier static `gear-cutting-fixture.glb` on 2026-09-21; see §7 "Model animations") and
+  oiling fixture (`oiling-assembly.glb`, from
   `Speed_Sensor_Oiling_Assembly`). On the first step ("Shaft removal tool", under its bullets)
   they are a `stack`: three full-size boxes (672×504, same as the other projects' models) one
   under another. A row of three at that size can't fit (~890 px of room), and a first attempt
@@ -260,6 +261,38 @@ of using it — looked like "the model is too low, cut off at the bottom, space 
 - *Blank cover after a tile was expanded and closed.* Resizing a WebGL canvas clears it, and a
   still (not spinning) model is only drawn once, so the cover stayed blank until hovered.
   `resize()` now triggers one redraw. This affected every cover model, not just the gripper.
+
+**Model animations (`src/components/visuals/modelAnimations.ts`, added 2026-09-21)**
+A model can carry a looping animation of its own moving parts: `animation: 'ptu-gear-cutting'` on
+the `StepModel` in `projects.ts`. `ModelLayer` loads `modelAnimations.ts` lazily (~0.8 kB gzip)
+once the model is in, creates a paused GSAP timeline (plain timeline, **no ScrollTrigger**), and
+plays it only while the model is on screen/visible (`draw()` calls `setPlaying`); every frame is
+drawn while it plays. Not created under reduced motion (the model just sits in its start pose).
+OrbitControls / auto-rotate are untouched, so visitors can still rotate it freely mid-animation.
+- **PTU gear-cutting fixture:** the source is a static SolidWorks export (kept in
+  `content/models/ptu-gear-cutting-fixture.glb`, compressed with `npm run model`). Nodes after
+  export/three's name-sanitising: `Fixture^new_assembly` (never moves), `Moving_Group^new_assembly`
+  (ring gear weldment, `Shaft-1`, spline locking shaft), and `Cutter-1` (a thin saw-blade disc;
+  there is no separate "Cutter" group). The compressor's instancing pass moved the two static Rib
+  Supports out of `Fixture` to a top-level node — harmless. Units are **metres** in the file
+  (SolidWorks mm × 0.001). Names are matched on the text before `^`.
+- **Directions, derived from the model:** the slot in the back plates is horizontal with its end
+  arcs centred at x = ±29.55 mm and the shaft starts at the +X end, so "left" = −X, hence the
+  front view looks from +Z toward −Z and "counter-clockwise from the front" = a positive turn about
+  +Z. The axle is along Z (shaft is 118 mm long in Z) through the shaft bounding box's centre;
+  `Moving_Group` is re-parented into a pivot group there, so it turns about the axle. The module
+  warns in the console if the shaft isn't ~118 mm along Z (wrong units/axis).
+- **Timeline (11 s, then 0.5 s pause, repeat):** cutter down 33 mm (1.5 s) / hold 0.5 s / up
+  (1.5 s) → group slides 59.108814 mm left (1.5 s) then turns 75.09° CCW (1 s) → cutter down
+  35.79 mm / hold / up → group slides back and turns back together (1.5 s). `power2.inOut` on every
+  move.
+- **Verifying it (dev server only):** `await window.__gearCuttingTest()` in the console runs one
+  small move of each part and returns the measured world-space deltas (cutter −5 mm Y, part −5 mm
+  X, +15° about +Z). `window.__gearCuttingTimeline` / `__gearCuttingParts` expose the timeline and
+  nodes so you can seek (`tl.pause(); tl.time(t)`) and measure. These are stripped from the
+  production build (`import.meta.env.DEV`). Result on 2026-09-21: every distance, the 75.09° turn
+  and the fixed axle position checked out exactly.
+- The cover and the card each run their own copy of the timeline (they aren't synchronised).
 
 **Model compression script (`scripts/optimize-model.mjs`) — two real fixes for a non-SolidWorks source**
 The conveyor cart's uploaded `.glb` wasn't a plain SolidWorks export like the Cooling Unit's, and

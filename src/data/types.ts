@@ -16,6 +16,12 @@ export interface StepEmbed {
   title: string;
 }
 
+/**
+ * A built-in animation for a model, run by src/components/visuals/modelAnimations.ts.
+ *   'ptu-gear-cutting'  the PTU gear-cutting fixture: cutter, sliding and turning gear group
+ */
+export type ModelAnimationName = 'ptu-gear-cutting';
+
 /** A real-time 3D model (.glb) the visitor can rotate. */
 export interface StepModel {
   /** Path under public/, e.g. 'models/cooling-unit.glb'. */
@@ -35,6 +41,11 @@ export interface StepModel {
    * wash out to white.
    */
   brightness?: number;
+  /**
+   * Plays a built-in looping animation of the model's moving parts (it only
+   * runs while the model is on screen, and not under reduced motion).
+   */
+  animation?: ModelAnimationName;
 }
 
 export interface Stat {

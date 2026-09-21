@@ -126,6 +126,12 @@ rotatable 3D model (`model`), or several side by side (`split`).
   its near edge cropped as it spins: give that model a `margin` in its config (multiplier on camera
   distance; the gripper uses 1.25). Don't "fix" this globally — an exact fit zooms every existing
   model out 30–40% (tried and reverted).
+- A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
+  `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
+  demand, only plays while on screen, off under reduced motion). Currently one: `ptu-gear-cutting`
+  (cutter, sliding and turning gear group). Directions/axes are derived in handoff.md §7, and a
+  dev-only `window.__gearCuttingTest()` checks them. Add new animations as a case in
+  `createModelAnimation` plus a name in `ModelAnimationName` (types.ts).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.
@@ -136,6 +142,7 @@ rotatable 3D model (`model`), or several side by side (`split`).
 - All tiles are the same size (the Cooling Unit's), set at the user's request 2026-09-20.
 - Coffee Cup Gripper has its 3D model on its first step and as its tile cover; the user may add an
   animation later.
+- The saw fixture model there is animated (`animation: 'ptu-gear-cutting'`; see Step visuals).
 - Small Fixtures & Tooling has three 3D models (shaft tool, saw fixture, oiling fixture) stacked
   full size on its first step and side by side on its cover. Six WebGL canvases are live on the page at
   load, so measure phone performance before adding more cover models.

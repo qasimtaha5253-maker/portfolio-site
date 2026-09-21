@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { StepModel } from '@/data/types';
+import type { ModelAnimation } from './modelAnimations';
 
 const base = import.meta.env.BASE_URL;
 
@@ -151,20 +152,26 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       let frame = 0;
       let onScreen = true;
       let loaded = false;
+      // The model's built-in animation (`model.animation`), once loaded; null
+      // for a plain model and under reduced motion.
+      let anim: ModelAnimation | null = null;
       const draw = () => {
         // Stop drawing while scrolled away, or while another visual is showing:
         // the last frame stays on the canvas, which is faded out anyway.
         if (!onScreen || !state.current.active) {
           frame = 0;
+          anim?.setPlaying(false);
           return;
         }
+        anim?.setPlaying(true);
         controls.autoRotate = state.current.animated && state.current.active;
         controls.update();
         renderer.render(scene, camera);
         // Under reduced motion the model doesn't spin, so one rendered frame
         // reflects the current state fully — no need to keep drawing every
-        // frame (a drag or resize draws again).
-        frame = controls.autoRotate ? requestAnimationFrame(draw) : 0;
+        // frame (a drag or resize draws again). A model with its own
+        // animation needs every frame drawn while that plays.
+        frame = controls.autoRotate || anim ? requestAnimationFrame(draw) : 0;
       };
 
       const restart = () => {
@@ -242,6 +249,18 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           frameModel();
           setStatus('ready');
           draw();
+
+          // Model with its own animation: load that code only now that it's
+          // needed, then start drawing every frame (draw() plays/pauses it).
+          if (model.animation && state.current.animated) {
+            void import('./modelAnimations').then(({ createModelAnimation }) => {
+              if (disposed) return;
+              anim = createModelAnimation(model.animation!, THREE, gltf.scene);
+              cancelAnimationFrame(frame);
+              frame = 0;
+              restart();
+            });
+          }
         },
         undefined,
         () => !disposed && setStatus('error'),
@@ -249,6 +268,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
 
       cleanup = () => {
         cancelAnimationFrame(frame);
+        anim?.dispose();
         observer.disconnect();
         visibility.disconnect();
         controls.dispose();
