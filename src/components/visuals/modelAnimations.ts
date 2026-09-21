@@ -92,16 +92,17 @@ function gearCutting(THREE: Three, root: Object3D): ModelAnimation | null {
   const cut = (depth: number) => {
     tl.to(cutter.position, { y: y0 - depth, duration: 1.5 }).to(cutter.position, { y: y0, duration: 1.5 }, '+=0.5');
   };
+  // The turn's sense is tied to the slide, and reads the same from any side you view it
+  // from (viewing from the back flips left/right and clockwise/counter-clockwise together):
+  //   sliding RIGHT (+X) turns COUNTER-clockwise,  sliding LEFT (−X) turns CLOCKWISE.
+  // In model terms (+Z toward the front viewer): the slide left is −X, so its turn is
+  // clockwise from +Z, a negative angle about +Z; the return slide (+X) unwinds it.
   cut(CUT_1);
-  tl.to(pivot.position, { x: x0 - SLIDE, duration: 1.5 }) // slide left along the slot
-    .to(pivot.rotation, { z: TURN, duration: 1 }); //          then turn counter-clockwise 75.09°
+  tl.to(pivot.position, { x: x0 - SLIDE, duration: 1.5 }) // slide left (−X) along the slot
+    .to(pivot.rotation, { z: -TURN, duration: 1 }); //         then turn 75.09° clockwise from +Z
   cut(CUT_2);
-  // Slide back to the right while turning counter-clockwise (as seen from the front) the
-  // rest of the way round to the start orientation: 75.09° → 360° = 284.91°. It never
-  // unwinds clockwise. 360° is the same pose as 0°, so the loop is seamless.
-  tl.to(pivot.position, { x: x0, duration: 1.5 }).to(pivot.rotation, { z: Math.PI * 2, duration: 1.5 }, '<');
-  // Each lap ends at 360°; start the next one from an explicit 0° (the same pose).
-  tl.eventCallback('onRepeat', () => void (pivot.rotation.z = 0));
+  // Slide back (+X) while turning back to the start orientation, counter-clockwise from +Z.
+  tl.to(pivot.position, { x: x0, duration: 1.5 }).to(pivot.rotation, { z: 0, duration: 1.5 }, '<');
   // repeatDelay above is the closing 0.5 s pause before it loops.
 
   let wantPlaying = false;

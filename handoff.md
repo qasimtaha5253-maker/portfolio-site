@@ -294,15 +294,22 @@ animation would have the same problem — use elapsed time.
   `Moving_Group` is re-parented into a pivot group there, so it turns about the axle. The module
   warns in the console if the shaft isn't ~118 mm along Z (wrong units/axis).
 - **Timeline (11 s, then 0.5 s pause, repeat):** cutter down 33 mm (1.5 s) / hold 0.5 s / up
-  (1.5 s) → group slides 59.108814 mm left (1.5 s) then turns 75.09° CCW (1 s) → cutter down
-  35.79 mm / hold / up → group slides back to the right (1.5 s) **while turning counter-clockwise
-  the rest of the way round, 75.09° → 360°** (284.91°), so it ends in the start pose (360° ≡ 0°;
-  an `onRepeat` callback resets the angle to an explicit 0 each lap). `power2.inOut` on every move.
-  **Changed 2026-09-21 at his request:** the spec originally said "rotates back" (an unwind, which
-  is clockwise from the front); he watched it and asked for counter-clockwise whenever it moves
-  right, which is only the return move. Left = −X, so the first slide (left) then 75.09° CCW turn
-  are unchanged. If he later says the rotation looks backwards, check which *view* he's looking at:
-  the model auto-rotates, so left/right/clockwise flip with the viewing angle.
+  (1.5 s) → group slides 59.108814 mm toward −X (1.5 s) then turns **−75.09° about +Z** (1 s) →
+  cutter down 35.79 mm / hold / up → group slides back toward +X and turns back to 0° together
+  (1.5 s; an unwind). `power2.inOut` on every move.
+- **The rule for the turn direction (final, 2026-09-21): sliding RIGHT → COUNTER-clockwise,
+  sliding LEFT → CLOCKWISE.** It holds from any viewing side (viewing from the back flips
+  left/right and CW/CCW together). In model terms, seen from +Z: slide −X (left) then turn
+  clockwise (−75.09°); return slide +X (right) with a counter-clockwise unwind. Seen from −Z (the
+  side he was evidently watching from): first slide appears to go right and the turn after it
+  counter-clockwise. **History — this took three tries:** his original spec said "slide left, then
+  75.09° counter-clockwise as seen from the front" (that is left ↔ CCW, the opposite of the rule).
+  He then said "when it moves right it must rotate CCW, currently clockwise"; that was misread as
+  being about the return move, which got a 285° CCW spin (reverted). His third message ("rotating
+  clockwise after the first slide to the right") showed he meant the *first* slide + turn: from his
+  side the first slide appears to go right and the turn after it looked clockwise. The model
+  auto-rotates, so left/right/clockwise flip with the viewing angle — **when he describes a
+  direction, ask/derive which side he's looking from, or use the view-independent rule above.**
 - **Verifying it (dev server only):** `await window.__gearCuttingTest()` in the console runs one
   small move of each part and returns the measured world-space deltas (cutter −5 mm Y, part −5 mm
   X, +15° about +Z). `window.__gearCuttingTimeline` / `__gearCuttingParts` expose the timeline and
