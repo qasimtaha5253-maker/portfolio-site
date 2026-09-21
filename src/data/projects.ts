@@ -196,7 +196,7 @@ export const projects: Project[] = [
         stack: [
           { model: { src: 'models/shaft-adapter.glb', title: '3D model of the shaft removal tool', brightness: 0.5 } },
           { model: { src: 'models/ptu-gear-cutting-fixture.glb', title: 'Animated 3D model of the saw-cut fixture', margin: 1.25, brightness: 0.5, animation: 'ptu-gear-cutting' } },
-          { model: { src: 'models/oiling-assembly.glb', title: '3D model of the oiling fixture', margin: 1.35, brightness: 0.5 } },
+          { model: { src: 'models/oiling-assembly.glb', title: 'Animated 3D model of the oiling fixture', margin: 1.35, brightness: 0.5, animation: 'oiling-sensor' } },
         ],
       },
       {

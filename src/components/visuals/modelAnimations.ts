@@ -179,10 +179,46 @@ function gearCutting(THREE: Three, root: Object3D): ModelAnimation | null {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Speed-sensor oiling assembly
+//
+//   Sensor-1   the speed sensor — the only part that moves
+//   Fixture^Speed Sensor Oiling Assembly   stand + sponge: never moves
+//
+// The sensor is lowered 1.25 in (31.75 mm) into the sponge over 1.5 s, held for
+// 0.5 s, then raised the same distance over 1.5 s, and it loops straight away.
+// The file is in metres (the stand is 70 mm across); down is −Y.
+// ---------------------------------------------------------------------------
+const INCH = 25.4 * MM;
+
+function oilingSensor(THREE: Three, root: Object3D): ModelAnimation | null {
+  root.updateMatrixWorld(true);
+  const sensor = find(root, (o) => baseName(o).startsWith('Sensor-'));
+  const stand = find(root, (o) => /^Speed_Sensor_Stand/.test(o.name));
+  if (!sensor) {
+    console.warn('[oiling-sensor] expected a "Sensor-1" node');
+    return null;
+  }
+  if (stand) {
+    const width = new THREE.Box3().setFromObject(stand).getSize(new THREE.Vector3()).x;
+    if (Math.abs(width - 70 * MM) > 5 * MM) console.warn('[oiling-sensor] the stand is not the expected 70 mm; check the units', width);
+  }
+
+  const y0 = sensor.position.y;
+  const tl = gsap.timeline({ repeat: -1, paused: true, defaults: { ease: 'power2.inOut' } });
+  tl.to(sensor.position, { y: y0 - 1.25 * INCH, duration: 1.5 }) // lower 1.25 in
+    .to(sensor.position, { y: y0, duration: 1.5 }, '+=0.5'); //     hold 0.5 s, then raise it again
+
+  if (import.meta.env.DEV) Object.assign(window, { __oilingSensor: { timeline: tl, sensor } });
+  return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
+}
+
 /** Builds the named animation for a loaded model, or null if the model doesn't have the parts it needs. */
 export function createModelAnimation(name: ModelAnimationName, THREE: Three, root: Object3D): ModelAnimation | null {
   switch (name) {
     case 'ptu-gear-cutting':
       return gearCutting(THREE, root);
+    case 'oiling-sensor':
+      return oilingSensor(THREE, root);
   }
 }

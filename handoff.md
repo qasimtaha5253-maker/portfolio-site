@@ -149,8 +149,10 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
 - **Small Fixtures & Tooling** — got three 3D models (2026-09-19): shaft removal tool
   (`shaft-adapter.glb`), saw-cut fixture (**animated**, `ptu-gear-cutting-fixture.glb` — replaced
   the earlier static `gear-cutting-fixture.glb` on 2026-09-21; see §7 "Model animations") and
-  oiling fixture (`oiling-assembly.glb`, from
-  `Speed_Sensor_Oiling_Assembly`). On the first step ("Shaft removal tool", under its bullets)
+  oiling fixture (**animated**, `oiling-assembly.glb`, from his `Speed_Sensor_Oiling_Assembly`
+  "Motion Study" export, replaced 2026-09-21; `animation: 'oiling-sensor'`: the sensor lowers
+  1.25 in (31.75 mm) in 1.5 s, holds 0.5 s, raises 1.25 in in 1.5 s, loops forever with no extra
+  delay — see §7 "Model animations"). On the first step ("Shaft removal tool", under its bullets)
   they are a `stack`: three full-size boxes (672×504, same as the other projects' models) one
   under another. A row of three at that size can't fit (~890 px of room), and a first attempt
   as a `split` row (2026-09-19) looked too small to him. On the tile cover the same three sit
@@ -317,6 +319,16 @@ animation would have the same problem — use elapsed time.
   production build (`import.meta.env.DEV`). Result on 2026-09-21: every distance, the 75.09° turn
   and the fixed axle position checked out exactly.
 - The cover and the card each run their own copy of the timeline (they aren't synchronised).
+- **Oiling sensor (`oiling-sensor`, 2026-09-21):** nodes after export: `Sensor-1` (the only moving
+  part, 4 meshes — found by name starting `Sensor-`), `Fixture^Speed Sensor Oiling Assembly`
+  (stand, sponge press outer, sponge outer: static) and a stray "current camera". Units are metres
+  (stand 70 mm wide; the module warns if not). 1.25 in = 25.4 × 1.25 mm; down = −Y (the parent
+  is untransformed, so local Y = world Y). Timeline: down 1.5 s → hold 0.5 s → up 1.5 s = 3.5 s,
+  `repeat: -1`, **no** `repeatDelay`, `power2.inOut`. Verified in world space at t = 0/0.75/1.5/
+  1.75/2/2.75/3.5: offsets 0, −0.625, −1.25, −1.25, −1.25, −0.625, 0 in. The lowered sensor sits
+  inside the sponge ring (that is the point). Its `margin: 1.35` is still needed — 1.2 crops the base
+  of the cylinder (tried 1.1 this session and reverted without a visual check; the pane wouldn't
+  paint). Dev console: `window.__oilingSensor` = `{ timeline, sensor }`.
 
 **Model compression script (`scripts/optimize-model.mjs`) — two real fixes for a non-SolidWorks source**
 The conveyor cart's uploaded `.glb` wasn't a plain SolidWorks export like the Cooling Unit's, and

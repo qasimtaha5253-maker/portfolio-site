@@ -129,9 +129,10 @@ rotatable 3D model (`model`), or several side by side (`split`).
   model out 30–40% (tried and reverted).
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
-  demand, only plays while on screen, off under reduced motion). Currently one: `ptu-gear-cutting`
-  (cutter, sliding and turning gear group). Directions/axes are derived in handoff.md §7, and a
-  dev-only `window.__gearCuttingTest()` checks them. Add new animations as a case in
+  demand, only plays while on screen, off under reduced motion). Currently two: `ptu-gear-cutting`
+  (cutter, sliding and turning gear group) and `oiling-sensor` (sensor lowered 1.25 in and
+  raised). Directions/axes are derived in handoff.md §7, and a dev-only
+  `window.__gearCuttingTest()` checks the gear one. Add new animations as a case in
   `createModelAnimation` plus a name in `ModelAnimationName` (types.ts).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
