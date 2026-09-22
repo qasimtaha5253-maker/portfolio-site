@@ -62,8 +62,8 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `src/components/StepContent.tsx` — body / stats / bullets. `Photo.tsx` — responsive lazy WebP
   `<img>`; widths in `src/image-widths.json` (shared with the image script); adds
   `is-transparent` from `src/transparent-photos.json`.
-- `src/components/visuals/` — `ModelLayer.tsx` (Three.js .glb viewer) and `EmbedLayer.tsx`
-  (HTML animation in an iframe).
+- `src/components/visuals/` — `ModelLayer.tsx` (Three.js .glb viewer), `EmbedLayer.tsx`
+  (HTML animation in an iframe) and `VideoLayer.tsx` (a plain looping `<video>`).
 - `src/components/sections/` — `Intro` (uses HelixChronoMatrix, headline "Qasim Taha", no
   controls), `About`, `ContactLinks`.
 - `src/components/ui/helix-chrono-matrix.tsx` — the intro canvas component (user-supplied),
@@ -103,11 +103,20 @@ anything the user must do on their end in plain terms (he is not a web developer
 
 ## Step visuals
 A step in projects.ts can show a photo (`image`), a standalone HTML animation (`embed`), a
-rotatable 3D model (`model`), or several side by side (`split`).
+looping video (`video`), a rotatable 3D model (`model`), or several side by side (`split`).
 - `embed: { src: 'animations/<file>.html?v=N', title }` — file lives in public/animations/,
   runs in an iframe so its CSS/JS can't clash. Bump `?v=N` after editing the file or browsers
   serve the cached copy. `cart-section.html` is user-authored in his own tool; see handoff.md §7
   before touching it (background must be `--surface`, and two helper hooks must stay).
+- `video: { src: 'animations/<file>.mp4', poster?, title }` — public/animations/. A plain,
+  silent, looping `<video>` (`VideoLayer.tsx`; same on-screen-only playback and reduced-motion
+  fallback as the other visuals). For a numbered frame-sequence export (e.g. a SolidWorks Motion
+  Study's `.tga` frames): `npm run video -- content/animations/<name> public/animations/<name>.mp4
+  --fps <N> [--width 1280] [--poster]` (`scripts/optimize-video.mjs`) encodes H.264/MP4 with
+  `ffmpeg-static` (bundled, no system ffmpeg needed) — that one container plays natively
+  everywhere, including iOS Safari, so there's no second `<source>` to maintain. Keep the raw
+  frames in `content/animations/<name>/` (gitignored — a sequence can be 1 GB+). `--poster` also
+  writes a WebP still of frame 0 for the `poster` attribute.
 - `model: { src: 'models/<file>.glb', title }` — public/models/. `ModelLayer.tsx` loads
   three.js + GLTFLoader + OrbitControls on demand. Self-rotates (12°/s, time-based so it's the
   same on any refresh rate — always pass elapsed time to `controls.update()`); drag rotates with
@@ -122,7 +131,7 @@ rotatable 3D model (`model`), or several side by side (`split`).
   "Conveyor shaft").
 - `split: [{ image } | { model }, ...]` — several visuals side by side in one row (small).
   `stack: [...]` — several visuals one under another, each full size (Small Fixtures uses it).
-  Priority: `split` > `stack` > `model` > `embed` > `image`.
+  Priority: `split` > `stack` > `model` > `embed` > `video` > `image`.
 - Cooling unit (showpiece): model → section animation → CFD plot + strawberry flat → model.
   Conveyor cart has an animated model on its "Reverse engineering the line" step.
 - Camera framing in `ModelLayer` is symmetric horizontally but centred on the model's true
@@ -162,6 +171,8 @@ rotatable 3D model (`model`), or several side by side (`split`).
   (`qtaha@uoguelph.ca`) will be replaced before he graduates; not urgent.
 - Text is condensed from the user's PDF; keep steps short.
 - Custom domain is deliberately the last step; don't raise it early.
+- Kinder Toy Plane's "Process" step has a video of the assembly exploding apart (from a SolidWorks
+  Motion Study frame sequence); the `plane-exploded` photo stays as the reduced-motion fallback.
 
 ## Hosting
 - Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)
@@ -179,6 +190,7 @@ rotatable 3D model (`model`), or several side by side (`split`).
 - `npm run typecheck`
 - `npm run images` — convert new/changed photos in `content/photos` to WebP
 - `npm run model -- <in.glb> <out.glb>` — compress a 3D model (see Step visuals)
+- `npm run video -- <frames-dir> <out.mp4>` — encode a frame sequence to video (see Step visuals)
 - On Windows, stopping a background `npm run dev` task can leave `vite` holding port 5173;
   find it with `Get-NetTCPConnection -LocalPort 5173` and stop that process.
 

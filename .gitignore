@@ -8,3 +8,6 @@ dist
 
 # Raw CAD exports are huge; only the compressed public/models/*.glb is committed
 content/models/
+
+# Raw frame sequences are huge; only the compressed public/animations/*.mp4 is committed
+content/animations/

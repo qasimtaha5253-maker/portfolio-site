@@ -51,12 +51,20 @@ npm run dev          # dev server, exposed on the LAN (he opens it on his phone)
 npm run build        # tsc -b (TypeScript 7) then vite build — run before every push
 npm run typecheck    # tsc -b only
 npm run images       # content/photos/** -> public/projects/**/*.webp (+ transparent-photos.json)
-npm run model -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize]
+npm run model -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize] [--no-instance]
+npm run video -- <frames-dir> <out.mp4> [--fps 30] [--width 1280] [--crf 23] [--poster]
 ```
 
 `--no-resize` on the model script is new (§7) — skips the texture-resize step for sources whose
 texture size metadata is unreliable. Default ratio is 0.2, not 0.15 as an older note said — check
-`scripts/optimize-model.mjs` if in doubt rather than trusting a stale comment.
+`scripts/optimize-model.mjs` if in doubt rather than trusting a stale comment. `--no-instance`
+(added 2026-09-21) skips GPU-instancing repeated parts — needed for a model a *model animation*
+looks a part up by name in; see §7, "Conveyor shaft".
+
+`npm run video` (added 2026-09-21, `scripts/optimize-video.mjs`) turns a numbered frame sequence
+(e.g. `PlaneAssembly-0000.tga` …) into an H.264 MP4, using the `ffmpeg-static` package's bundled
+binary — no system ffmpeg needed. `--poster` also writes a first-frame WebP still. See §7, "Video
+pipeline" for the full story (a 1.1 GB TGA sequence → a 1.3 MB video).
 
 Windows: stopping a background `npm run dev` can leave vite holding port 5173. Find it with
 `Get-NetTCPConnection -LocalPort 5173` and stop that process.
@@ -77,7 +85,7 @@ src/components/
   StepContent.tsx              body / stats / bullets
   sections/                    Intro (canvas), About, ContactLinks
   ui/helix-chrono-matrix.tsx   user-supplied intro canvas, modified
-  visuals/                     ModelLayer (3D), EmbedLayer (iframe)
+  visuals/                     ModelLayer (3D), EmbedLayer (iframe), VideoLayer (plain <video>)
 src/hooks/
   useMediaQuery.ts              useMotionAllowed (dev-only `?reduced-motion` flag)
   useSmoothScroll.ts            Lenis + GSAP ticker; now RETURNS a RefObject<Lenis|null> (see §7)
@@ -85,8 +93,10 @@ src/hooks/
 src/styles/site.css            all site CSS, in @layer base/components
 content/photos/<project>/      source images (committed)
 content/models/                source .glb (GITIGNORED)
+content/animations/<name>/     source frame sequence, e.g. .tga (GITIGNORED — can be 1 GB+)
 public/projects/, public/models/, public/animations/   generated/served assets (committed)
 scripts/optimize-model.mjs     model compression — see §7 for two real fixes made this session
+scripts/optimize-video.mjs     frame-sequence -> MP4, added 2026-09-21 — see §7 "Video pipeline"
 ```
 
 ### How a tile works (`BentoGrid.tsx`)
@@ -125,9 +135,10 @@ scripts/optimize-model.mjs     model compression — see §7 for two real fixes 
 
 ### A step's visual (`StepVisual.tsx`)
 
-A step in `projects.ts` can set `image`, `embed` (HTML animation in an iframe), `model` (.glb), or
-`split: [...]` (several side by side, model and/or photo). Priority when a step sets more than one:
-`split` > `model` > `embed` > `image`. Under reduced motion, always the plain `image` regardless.
+A step in `projects.ts` can set `image`, `embed` (HTML animation in an iframe), `video` (plain
+looping `<video>`, added 2026-09-21), `model` (.glb), `stack`, or `split: [...]` (several side by
+side, model and/or photo). Priority when a step sets more than one:
+`split` > `stack` > `model` > `embed` > `video` > `image`. Under reduced motion, always `image`.
 Unlike the old pinned-chapter layout, there's no shared cell to crossfade between steps — the
 bento tile shows every step's own visual, stacked, all at once, when expanded.
 
@@ -242,7 +253,13 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   when nothing moved — see §6): at 1.5 s the two adaptor halves visibly close from an open
   two-piece fork into one solid block around the shaft, and the sleeve visibly descends over that
   block between 2 s and 3.5 s.
-- The other 6 projects are photo-only.
+- **Kinder Toy Plane** — got a video (2026-09-21) on its "Process" step: the plane assembly
+  exploding apart, from a SolidWorks Motion Study frame sequence he exported himself (841
+  `PlaneAssembly-NNNN.tga` frames, 2560×931, 30 fps, 1.1 GB — see §7 "Video pipeline"). The
+  existing `plane-exploded` photo on that step is unchanged and is now the reduced-motion
+  fallback. Not a tile cover (no cover-video mechanism exists — `coverModels()` only looks at
+  `model`/`split`/`stack`; this project's cover is still its plain `plane-photo`).
+- The other 5 projects are photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
 
@@ -459,6 +476,50 @@ stripped the native keyboard focus outline** — there was no visible focus indi
 keyboard users beyond the same faint scrim-darkening as hover. Fixed with an explicit
 `outline: 2px solid var(--accent); outline-offset: -2px;` on `:focus-visible`. Worth checking for
 this same silent side effect anywhere else `all: unset` gets used.
+
+**Video pipeline (`scripts/optimize-video.mjs`, `VideoLayer.tsx`) — added 2026-09-21, first use:
+Kinder Toy Plane**
+He dropped an 841-frame SolidWorks Motion Study export (`PlaneAssembly-0000.tga` … `-0840.tga`,
+2560×931, 30 fps he stated directly, RLE-compressed TGA — 1.1 GB total) straight into
+`public/animations/`, which would have committed 1.1 GB of raw frames to git if left there.
+- **Moved the raw sequence to `content/animations/toy-plane/`** (new gitignore rule, mirroring
+  `content/models/`) before doing anything else — treat any large raw asset a user saves into
+  `public/` this way as a mistake to fix immediately, not a place to build from.
+- **No system ffmpeg in this environment.** Added `ffmpeg-static` (a devDependency that bundles a
+  prebuilt binary — `npm install` printed an `allowScripts` warning about its postinstall script,
+  but the binary was already present at `node_modules/ffmpeg-static/ffmpeg.exe` and ran fine;
+  didn't chase the warning further). `optimize-video.mjs` calls it directly via
+  `execFileSync`, the same style `optimize-model.mjs` uses for its own tools.
+- **Output format: H.264 in an MP4 container, not WebM.** One `<source>`, no fallback needed —
+  MP4/H.264 is the one thing every target browser (including iOS Safari) plays natively. Encoded
+  at `--width 1280` (half the 2560 source) and `crf 23`: the 1.1 GB sequence became a 1.3 MB
+  video. `-movflags +faststart` so playback can start before the whole file has downloaded;
+  `-an` since this is a silent, muted, autoplaying loop like every other animation on the site,
+  not a video with sound.
+- **The frame-number pattern is read from the files themselves** (`^(.+?)(\d+)\.tga$` on the
+  first sorted filename), not hardcoded — `PlaneAssembly-0000.tga` gives ffmpeg the pattern
+  `PlaneAssembly-%04d.tga` and `-start_number 0` automatically. A future sequence with a
+  different name or digit count needs no script changes.
+- **`VideoLayer.tsx` mirrors `EmbedLayer.tsx`** exactly: `<video muted loop playsInline
+  preload="metadata">`, played/paused by an `active` prop (same `useOnScreen` IntersectionObserver
+  gating everything else already uses), reusing the `.photo-visual__frame` CSS class an iframe
+  also uses (`object-fit: contain` was added to that shared rule — a no-op for an iframe, but
+  letterboxes a video whose aspect ratio doesn't match the 4:3 box, which this one, at roughly
+  2.7:1, very much doesn't).
+- **A real environment trap, not an app bug: repeatedly hot-reloading `BentoGrid.tsx` while a tab
+  stayed open left `AnimatePresence`'s `onAnimationComplete` silently never firing again** — even
+  for tiles/content that had nothing to do with the edit (re-tested cooling-unit, unrelated to the
+  video work, and it broke too). Cost real time debugging what looked like a video-specific bug
+  (`ready` stuck `false`, nothing ever mounted) before realizing it reproduced identically on
+  totally unrelated content. **A genuinely fresh tab (`tabs_close` + `tabs_create` +
+  `navigate`), not `location.reload()` on a tab that's had source edits hot-reload into it
+  mid-session, is the only reliable way to test a `ready`/animation-gated feature after editing
+  the component that gates it.** `location.reload()` alone was NOT enough to reset the stuck
+  state in this session, even though it's a real navigation.
+- Verified: `readyState: 4` (fully loaded) and playing once mounted, `paused` toggles correctly on
+  scroll in/out, reduced motion mounts no `<video>` at all and shows the existing `plane-exploded`
+  photo instead, and a screenshot mid-playback visibly shows different frames a few seconds apart
+  (parts in different positions) — real playback, not a frozen poster.
 
 ## 8. Known issues / debts
 

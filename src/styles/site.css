@@ -226,13 +226,18 @@
 
 /* ---------- Step visuals (used inside an expanded tile) ---------- */
 
-/* Standalone HTML animation for a step (EmbedLayer). */
+/* Standalone HTML animation for a step (EmbedLayer), or a looping video
+   (VideoLayer) — object-fit only affects the <video> case; an <iframe>
+   ignores it, so one rule covers both. A video's own aspect ratio rarely
+   matches this box's 4:3 exactly, so it letterboxes onto the dark
+   background rather than stretching or cropping. */
 .photo-visual__frame {
   grid-area: 1 / 1;
   width: 100%;
   height: 100%;
   border: 0;
   background: var(--bg);
+  object-fit: contain;
   opacity: 0;
   transition: opacity var(--step-fade) ease;
 }

@@ -17,6 +17,21 @@ export interface StepEmbed {
 }
 
 /**
+ * A looping, silent video for this step — typically a numbered CAD frame
+ * sequence (e.g. a SolidWorks Motion Study export) converted with
+ * `npm run video`. Unlike `embed`, the file has no markup/JS of its own,
+ * just a plain <video>.
+ */
+export interface StepVideo {
+  /** Path under public/, e.g. 'animations/toy-plane.mp4'. */
+  src: string;
+  /** Still frame shown before playback starts, and under reduced motion if there's no `image`. Path under public/. */
+  poster?: string;
+  /** Described for screen readers, e.g. 'Animated exploded view of the toy plane assembly'. */
+  title: string;
+}
+
+/**
  * A built-in animation for a model, run by src/components/visuals/modelAnimations.ts.
  *   'ptu-gear-cutting'  the PTU gear-cutting fixture: cutter, sliding and turning gear group
  *   'oiling-sensor'     the speed-sensor oiling assembly: sensor lowered 1.25 in and raised
@@ -71,10 +86,12 @@ export interface Step {
   embed?: StepEmbed;
   /** Rotatable 3D model for this step (needs motion allowed; reduced motion shows `image`). */
   model?: StepModel;
+  /** Looping video for this step (needs motion allowed; reduced motion shows `image`, or the video's own `poster` if there's no `image`). */
+  video?: StepVideo;
   /**
    * Two or more visuals shown side by side in one row, e.g. a simulation
    * result beside the part it was run on. Each entry is a photo or a model.
-   * Priority when a step sets several: `split` > `stack` > `model` > `embed` > `image`.
+   * Priority when a step sets several: `split` > `stack` > `model` > `embed` > `video` > `image`.
    */
   split?: SplitItem[];
   /**
@@ -82,7 +99,7 @@ export interface Step {
    * size a single `model` or `image` gets) — for when a row would make them
    * too small. Each entry is a photo or a model. Also the tile cover, where
    * the models sit side by side. Priority: `split` > `stack` > `model` >
-   * `embed` > `image`.
+   * `embed` > `video` > `image`.
    */
   stack?: SplitItem[];
 }

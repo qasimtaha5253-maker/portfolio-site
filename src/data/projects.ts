@@ -358,6 +358,11 @@ export const projects: Project[] = [
           'Split into parts that pack into the egg, joined with snap fits.',
         ],
         image: { src: 'plane-exploded', alt: 'Exploded view of the toy plane parts' },
+        video: {
+          src: 'animations/toy-plane.mp4',
+          poster: 'animations/toy-plane-poster.webp',
+          title: 'Animated assembly of the toy plane, part by part',
+        },
       },
       {
         label: 'Results',

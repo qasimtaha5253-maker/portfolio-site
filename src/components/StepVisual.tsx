@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Photo } from './Photo';
 import { EmbedLayer } from './visuals/EmbedLayer';
 import { ModelLayer } from './visuals/ModelLayer';
+import { VideoLayer } from './visuals/VideoLayer';
 import type { Step, StepModel } from '@/data/types';
 
 const SIZES = '(min-width: 768px) 40rem, 100vw';
@@ -132,6 +133,14 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
     return (
       <div className="step-visual" ref={ref}>
         {ready && <EmbedLayer embed={step.embed} active={onScreen} />}
+      </div>
+    );
+  }
+
+  if (step.video) {
+    return (
+      <div className="step-visual" ref={ref}>
+        {ready && <VideoLayer video={step.video} active={onScreen} />}
       </div>
     );
   }
