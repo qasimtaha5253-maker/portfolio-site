@@ -112,77 +112,8 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: 'coffee-cup-gripper',
-    title: 'Coffee Cup Gripper',
-    context: 'Machine Design',
-    featured: true,
-    summary: 'A single-motor machine that grips a cup and moves it 20 cm up and 30 cm across.',
-    steps: [
-      {
-        label: 'The challenge',
-        body:
-          'Design and build a machine that grips a coffee cup and moves it 20 cm vertically and 30 cm horizontally onto a platform — using only one motor.',
-        image: { src: 'gripper-cad', alt: 'SolidWorks model of the wooden gripper frame with pulleys and motor' },
-        model: { src: 'models/coffee-cup-gripper.glb', title: '3D model of the coffee cup gripper', margin: 1.25 },
-      },
-      {
-        label: 'How it works',
-        bullets: [
-          'A pulley train with an overall 1:8 ratio turns motor rotation into linear gripper motion, trading speed for torque.',
-          'Drivetrain and motion path modelled in SolidWorks, then parts were CNC-fabricated and iterated for fit.',
-        ],
-        image: { src: 'pulley-train', alt: 'Close-up render of the pulley train with 1, 2 and 4 inch pulleys labelled' },
-      },
-      {
-        label: 'What it achieved',
-        stats: [
-          { value: '4 s', label: 'Cycle time' },
-          { value: '98%', label: 'Grade' },
-        ],
-        bullets: ['Smooth, repeatable transport, recognised for performance and design quality.'],
-        image: { src: 'built-gripper', alt: 'The built gripper holding a red cup' },
-      },
-    ],
-  },
-
-  // ---------- More projects (grid cards) ----------
-  {
-    id: 'ansys-stress',
-    title: 'ANSYS Stress Analysis',
-    context: 'Finite Element Analysis',
-    featured: false,
-    summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
-    steps: [
-      {
-        label: 'Idea',
-        bullets: [
-          'Study stress and deformation in 1060-H12 aluminium with FEA.',
-          'Validate theoretical stress-concentration factors (K) for plates with different hole diameters.',
-        ],
-        image: { src: 'plate-hole-stress', alt: 'Stress contour around a hole in a meshed plate' },
-      },
-      {
-        label: 'Process',
-        bullets: [
-          'Applied real-world boundary conditions in ANSYS.',
-          'Refined mesh size from 0.05 m to 0.00425 m, targeting high-stress zones.',
-          'Compared 2r/D and K-values against theory.',
-        ],
-        image: { src: 'bracket-mesh', alt: 'Meshed bracket model in ANSYS' },
-      },
-      {
-        label: 'Results',
-        bullets: [
-          'K-values matched theory within 2%.',
-          'Mesh convergence gave accurate stresses at low computational cost.',
-        ],
-        image: { src: 'hole-stress-detail', alt: 'Detailed stress contour near a hole' },
-      },
-    ],
-  },
-  {
     id: 'fixtures-tooling',
-    title: 'Small Fixtures & Tooling',
+    title: 'Assembly Line Fixtures & Tooling',
     context: 'Co-op',
     featured: false,
     summary: 'Three shop-floor tools: a shaft puller, a two-cut saw fixture and a one-pass oiling fixture.',
@@ -226,6 +157,73 @@ export const projects: Project[] = [
           'Collects excess oil at the bottom for easy cleaning and maintenance.',
         ],
         image: { src: 'oil-fixture-photo', alt: 'Oiling fixture with a part seated in it' },
+      },
+    ],
+  },
+  {
+    id: 'coffee-cup-gripper',
+    title: 'Coffee Cup Gripper',
+    context: 'Machine Design',
+    featured: true,
+    summary: 'A single-motor machine that grips a cup and moves it 20 cm up and 30 cm across.',
+    steps: [
+      {
+        label: 'The challenge',
+        body:
+          'Design and build a machine that grips a coffee cup and moves it 20 cm vertically and 30 cm horizontally onto a platform — using only one motor.',
+        image: { src: 'gripper-cad', alt: 'SolidWorks model of the wooden gripper frame with pulleys and motor' },
+        model: { src: 'models/coffee-cup-gripper.glb', title: '3D model of the coffee cup gripper', margin: 1.25 },
+      },
+      {
+        label: 'How it works',
+        bullets: [
+          'A pulley train with an overall 1:8 ratio turns motor rotation into linear gripper motion, trading speed for torque.',
+          'Drivetrain and motion path modelled in SolidWorks, then parts were CNC-fabricated and iterated for fit.',
+        ],
+        image: { src: 'pulley-train', alt: 'Close-up render of the pulley train with 1, 2 and 4 inch pulleys labelled' },
+      },
+      {
+        label: 'What it achieved',
+        stats: [
+          { value: '4 s', label: 'Cycle time' },
+          { value: '98%', label: 'Grade' },
+        ],
+        bullets: ['Smooth, repeatable transport, recognised for performance and design quality.'],
+        image: { src: 'built-gripper', alt: 'The built gripper holding a red cup' },
+      },
+    ],
+  },
+  {
+    id: 'ansys-stress',
+    title: 'ANSYS Stress Analysis',
+    context: 'Finite Element Analysis',
+    featured: false,
+    summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
+    steps: [
+      {
+        label: 'Idea',
+        bullets: [
+          'Study stress and deformation in 1060-H12 aluminium with FEA.',
+          'Validate theoretical stress-concentration factors (K) for plates with different hole diameters.',
+        ],
+        image: { src: 'plate-hole-stress', alt: 'Stress contour around a hole in a meshed plate' },
+      },
+      {
+        label: 'Process',
+        bullets: [
+          'Applied real-world boundary conditions in ANSYS.',
+          'Refined mesh size from 0.05 m to 0.00425 m, targeting high-stress zones.',
+          'Compared 2r/D and K-values against theory.',
+        ],
+        image: { src: 'bracket-mesh', alt: 'Meshed bracket model in ANSYS' },
+      },
+      {
+        label: 'Results',
+        bullets: [
+          'K-values matched theory within 2%.',
+          'Mesh convergence gave accurate stresses at low computational cost.',
+        ],
+        image: { src: 'hole-stress-detail', alt: 'Detailed stress contour near a hole' },
       },
     ],
   },
@@ -295,37 +293,6 @@ export const projects: Project[] = [
           'Presented the design process to the judges and placed 3rd.',
         ],
         image: { src: 'collection-mechanism', alt: 'Hand-held test of the servo collection mechanism' },
-      },
-    ],
-  },
-  {
-    id: 'hydraulic-hand',
-    title: 'Reverse-Engineered Hydraulic Hand',
-    context: 'Engineering Design II · Team of 5',
-    featured: false,
-    summary: 'Took apart a 200+ part toy hydraulic arm and rebuilt it as a full SolidWorks assembly.',
-    steps: [
-      {
-        label: 'Idea',
-        body: 'Reverse engineer a toy hydraulic arm with over 200 parts by disassembling, analysing and recreating it in SolidWorks.',
-        image: { src: 'hand-assembly', alt: 'Full SolidWorks assembly of the hydraulic hand' },
-      },
-      {
-        label: 'Process',
-        bullets: [
-          'Worked out each part’s role in the mechanism.',
-          'Measured every part and built a functional digital assembly.',
-          'Produced a 2D drawing for each part.',
-        ],
-        image: { src: 'hand-exploded', alt: 'Exploded view of the hydraulic hand' },
-      },
-      {
-        label: 'Results',
-        bullets: [
-          'Fully replicated the hydraulic hand in SolidWorks.',
-          'Strong teamwork and a detailed understanding of hydraulic systems and complex assemblies.',
-        ],
-        image: { src: 'part-drawing', alt: 'Engineering drawing of one hand component' },
       },
     ],
   },
@@ -409,6 +376,37 @@ export const projects: Project[] = [
         label: 'Results',
         bullets: ['Hit the target directly and placed 2nd in the competitive evaluation.'],
         image: { src: 'chassis-wiring', alt: 'Car chassis with Arduino wiring' },
+      },
+    ],
+  },
+  {
+    id: 'hydraulic-hand',
+    title: 'Reverse-Engineered Hydraulic Hand',
+    context: 'Engineering Design II · Team of 5',
+    featured: false,
+    summary: 'Took apart a 200+ part toy hydraulic arm and rebuilt it as a full SolidWorks assembly.',
+    steps: [
+      {
+        label: 'Idea',
+        body: 'Reverse engineer a toy hydraulic arm with over 200 parts by disassembling, analysing and recreating it in SolidWorks.',
+        image: { src: 'hand-assembly', alt: 'Full SolidWorks assembly of the hydraulic hand' },
+      },
+      {
+        label: 'Process',
+        bullets: [
+          'Worked out each part’s role in the mechanism.',
+          'Measured every part and built a functional digital assembly.',
+          'Produced a 2D drawing for each part.',
+        ],
+        image: { src: 'hand-exploded', alt: 'Exploded view of the hydraulic hand' },
+      },
+      {
+        label: 'Results',
+        bullets: [
+          'Fully replicated the hydraulic hand in SolidWorks.',
+          'Strong teamwork and a detailed understanding of hydraulic systems and complex assemblies.',
+        ],
+        image: { src: 'part-drawing', alt: 'Engineering drawing of one hand component' },
       },
     ],
   },
