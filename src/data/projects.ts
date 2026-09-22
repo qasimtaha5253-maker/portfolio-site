@@ -263,6 +263,11 @@ export const projects: Project[] = [
         bullets: [
           'Designed a tool to fully oil a part’s inside and outside surfaces, including the O-ring on its stem, durable enough for *300 uses per shift*.',
         ],
+        model: {
+          src: 'models/oiling-tool.glb',
+          title: 'Animated 3D model of the spring-loaded oiling tool, the coil lowering into the sponge',
+          animation: 'oiling-tool-coil',
+        },
         image: { src: 'oiling-tool-photo', alt: 'Oiling tool on a workbench with a part in place' },
       },
       {

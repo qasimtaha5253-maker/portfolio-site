@@ -38,13 +38,17 @@ export interface StepVideo {
  *   'conveyor-shaft'    the conveyor cart's drive shaft, turned 90° and back
  *   'shaft-puller'      the shaft removal tool: adaptor A pulled in, sleeve down, then back
  *   'propeller-spin'    the toy plane's propeller, spinning continuously about its own hub axis
+ *   'oiling-tool-coil'  the spring-loaded oiling tool: the coil lowers into the sponge, the
+ *                        last part of the descent together with the spring-loaded moving
+ *                        plate, then both reverse back up
  */
 export type ModelAnimationName =
   | 'ptu-gear-cutting'
   | 'oiling-sensor'
   | 'conveyor-shaft'
   | 'shaft-puller'
-  | 'propeller-spin';
+  | 'propeller-spin'
+  | 'oiling-tool-coil';
 
 /** A real-time 3D model (.glb) the visitor can rotate. */
 export interface StepModel {
