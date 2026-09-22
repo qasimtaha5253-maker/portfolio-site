@@ -22,13 +22,6 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 // be corrected by hand.
 const EXPAND_TRANSITION = { type: 'spring', stiffness: 500, damping: 42, mass: 0.7 } as const;
 
-// Cursor-driven 3D tilt on a collapsed tile's cover, desktop-mouse only.
-// `pointerType !== 'mouse'` is what keeps this off touch devices (a real
-// touch never fires a 'mouse' pointer event) — no separate media query
-// needed, and it still works on a hybrid laptop with both an actual mouse.
-const TILT_MAX_DEG = 6;
-const TILT_PERSPECTIVE_PX = 900;
-
 function coverImage(project: Project): ProjectImage | undefined {
   const images = [...project.steps.map((s) => s.image), ...(project.gallery ?? [])].filter(
     (img): img is ProjectImage => Boolean(img),
@@ -158,37 +151,8 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
     { dependencies: [animated], scope: gridRef, revertOnUpdate: true },
   );
 
-  // Tilts a collapsed tile's cover toward the cursor. Delegated on the grid
-  // (one listener instead of one per tile) — `.closest()` finds which tile,
-  // if any, the pointer is currently over.
-  function handleTilt(e: React.PointerEvent<HTMLDivElement>) {
-    if (!animated || e.pointerType !== 'mouse') return;
-    const hit = (e.target as HTMLElement).closest<HTMLElement>('.bento-tile__hit');
-    if (!hit || hit.closest('.bento-tile--expanded')) return;
-    const rect = hit.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width;
-    const py = (e.clientY - rect.top) / rect.height;
-    const rotateY = (px - 0.5) * 2 * TILT_MAX_DEG;
-    const rotateX = (0.5 - py) * 2 * TILT_MAX_DEG;
-    hit.style.transition = 'none';
-    hit.style.transform = `perspective(${TILT_PERSPECTIVE_PX}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  }
-
-  // `pointerleave` doesn't bubble, so a per-tile "reset" can't be delegated
-  // the same way as the move handler above — `pointerout` does bubble, and
-  // checking `relatedTarget` against the tile we're leaving tells us whether
-  // we've actually left it (vs. moving between two elements inside it).
-  function handleTiltOut(e: React.PointerEvent<HTMLDivElement>) {
-    const hit = (e.target as HTMLElement).closest<HTMLElement>('.bento-tile__hit');
-    if (!hit) return;
-    const related = e.relatedTarget as Node | null;
-    if (related && hit.contains(related)) return;
-    hit.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
-    hit.style.transform = '';
-  }
-
   return (
-    <div className="bento-grid" ref={gridRef} onPointerMove={handleTilt} onPointerOut={handleTiltOut}>
+    <div className="bento-grid" ref={gridRef}>
       {projects.map((project) => {
         const cover = coverImage(project);
         const models = coverModels(project);

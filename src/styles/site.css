@@ -473,11 +473,6 @@
   background: var(--surface);
   border: 1px solid var(--line);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
-  /* Gives the cover's cursor-tilt (BentoGrid's handleTilt, applied to
-     .bento-tile__hit, a child of this element) a 3D vanishing point. Inert
-     on its own — a 2D element ignores perspective until something inside
-     it gets a rotateX/rotateY transform. */
-  perspective: 900px;
 }
 
 .bento-tile:not(.bento-tile--expanded):has(.bento-tile__hit:hover),
