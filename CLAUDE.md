@@ -213,11 +213,18 @@ element counts) before concluding something is broken, and say so when something
 verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
 
 ## Status
-- 2026-09-21: bento grid is the live site on `main`. Every project has been revisited at least
-  once with real photos and, for most, a 3D model and/or video, several with built-in animations
-  (see handoff.md §6 for the current state of each project, §4b for how the model animations work).
-- Next up, in the order he wants them (see handoff.md §8 for detail): resize/reorder the cover
-  cards, fix the template inside the cards, update remaining photos/videos, rewrite each
-  project's bullet points.
-- Open debts (handoff.md §7): no Lighthouse/performance run yet; reduced-motion layout only
-  checked via the dev flag and DOM, never a real browser with the OS setting on.
+- 2026-09-22: bento grid is the live site on `main`. Every project now shares a consistent
+  What?/How?/Results heading pattern (Assembly Line Fixtures & Tooling keeps its own three
+  tool-name headings by design) with fully rewritten copy and `*bold*`-highlighted key figures;
+  an Experience section (work history) was added to the About area. The Spring-Loaded Oiling Tool
+  gained a 3D model with a built-in animation plus a second, static exploded-view instance of the
+  same model. Three previously photo-only projects (ANSYS, Reef Rover, Hydraulic Hand) got new
+  transparent-render photo covers, though none of the three has a 3D model yet. (See handoff.md
+  §6 for the current state of each project, §7 for how the model animations/config work and the
+  bugs found building them.)
+- Next up (see handoff.md §9 for detail, no fixed order): replace the two still-low-res photos
+  once he sends them, add 3D models/animations for the remaining photo-only projects (ANSYS, Reef
+  Rover, Hydraulic Hand), then the custom domain last.
+- Open debts (handoff.md §8): no Lighthouse/performance run yet; 9 WebGL canvases now live on the
+  page at load (up from 8); reduced-motion layout only checked via the dev flag and DOM, never a
+  real browser with the OS setting on.
