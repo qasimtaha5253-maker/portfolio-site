@@ -15,7 +15,7 @@ export interface ExperienceRole {
   dates: string;
   /** One-line summary of the role. */
   summary: string;
-  /** Exactly 3 short highlights, newest/most relevant first. */
+  /** A few short highlights, newest/most relevant first. */
   highlights: string[];
 }
 
@@ -25,11 +25,12 @@ export const experience: ExperienceRole[] = [
     company: 'Roadtrek Inc.',
     location: 'Cambridge, ON',
     dates: 'May 2026 – Present',
-    summary: 'Improving how parts, tools, and materials move through production.',
+    summary: 'Helping revamp the production floor, building the processes, tooling, and flow it runs on.',
     highlights: [
-      'Stations were losing hours waiting on missing parts, so I rebuilt the kitting checklists to identify every part up front. Station time dropped from **5 hours to 2**.',
-      'I designed a drill jig that holds a propane regulator bracket and locates its holes, cutting prep time by **67%** and removing manual layout entirely.',
-      'When our sealing tape started failing in the heat, I benchmarked replacements for adhesion, temperature resistance, and waterproofing. The new tape is now going into production.',
+      "I'm writing standard operating procedures so new operators can get up to speed quickly and build to the same standard from day one.",
+      "I'm reworking the production layout and flow so parts, tools, and materials are where each station needs them.",
+      'I design jigs that replace manual layout with repeatable accuracy. One drill jig alone cut prep time by **67%**.',
+      'I standardized kitting so stations stop waiting on missing parts, taking one station from **5 hours to 2**.',
     ],
   },
   {
