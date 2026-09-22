@@ -5,6 +5,7 @@ import { useSmoothScroll } from '@/hooks/useSmoothScroll';
 import { BentoGrid } from '@/components/BentoGrid';
 import { Intro } from '@/components/sections/Intro';
 import { About } from '@/components/sections/About';
+import { Experience } from '@/components/sections/Experience';
 import { ContactLinks } from '@/components/sections/ContactLinks';
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
     <main className={cn('site', animated && 'is-animated')}>
       <Intro />
       <About />
+      <Experience />
 
       <section className="bento-section" id="work" aria-labelledby="work-title">
         <header className="bento-section__header">
