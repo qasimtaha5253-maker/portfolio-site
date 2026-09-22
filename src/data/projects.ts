@@ -195,6 +195,11 @@ export const projects: Project[] = [
         ],
         bullets: ['Smooth, repeatable transport, recognised for performance and design quality.'],
         image: { src: 'built-gripper', alt: 'The built gripper holding a red cup' },
+        video: {
+          src: 'animations/coffee-cup-gripper.mp4',
+          poster: 'animations/coffee-cup-gripper-poster.webp',
+          title: 'Video of the built gripper transporting a cup',
+        },
       },
     ],
   },
