@@ -124,14 +124,19 @@
   font-weight: 600;
 }
 
+/* The list itself is centred as a block (it's inline-level, so the
+   ancestor's text-align: center places it), but it shrinks to the width of
+   its widest bullet rather than stretching full width — so every bullet's
+   text lines up on the same left edge instead of each line centring on its
+   own and staggering. */
 .step__bullets {
   margin: 0;
   list-style: disc;
   list-style-position: inside;
   padding-left: 0;
-  display: grid;
+  display: inline-grid;
   gap: 0.35rem;
-  text-align: center;
+  text-align: left;
 }
 
 /* ---------- Stats ---------- */

@@ -144,7 +144,6 @@ export const projects: Project[] = [
         model: {
           src: 'models/ptu-gear-cutting-fixture.glb',
           title: 'Animated 3D model of the saw-cut fixture',
-          margin: 1.25,
           brightness: 0.5,
           animation: 'ptu-gear-cutting',
         },
