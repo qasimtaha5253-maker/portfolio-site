@@ -30,18 +30,28 @@ function coverImage(project: Project): ProjectImage | undefined {
 }
 
 /** A project with a model on one of its steps shows it as its tile cover
- *  (rotating on hover) instead of a plain photo. Uses the first step with a
- *  model: all the models of a `split` row or `stack`, or the step's single
- *  `model` (same priority as StepVisual). Several models sit side by side. */
+ *  (rotating on hover) instead of a plain photo. A `split` row or `stack`
+ *  on any step supplies every model in it, side by side. Otherwise, every
+ *  step's own single `model` is used, deduped by src (a project may repeat
+ *  the same model on more than one step — the cover only needs it once) —
+ *  so a project with several different model-bearing steps (e.g. Assembly
+ *  Line Fixtures & Tooling) gets all of them side by side on its cover. */
 function coverModels(project: Project): StepModel[] {
   for (const step of project.steps) {
     for (const items of [step.split, step.stack]) {
       const models = items?.flatMap((item) => (item.model ? [item.model] : [])) ?? [];
       if (models.length) return models;
     }
-    if (step.model) return [step.model];
   }
-  return [];
+  const seen = new Set<string>();
+  const models: StepModel[] = [];
+  for (const step of project.steps) {
+    if (step.model && !seen.has(step.model.src)) {
+      seen.add(step.model.src);
+      models.push(step.model);
+    }
+  }
+  return models;
 }
 
 interface BentoGridProps {

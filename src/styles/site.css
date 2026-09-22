@@ -555,10 +555,6 @@
   text-align: center;
 }
 
-.bento-tile__step:has(.step-visual-group--triangle) {
-  max-width: 60rem;
-}
-
 .bento-tile__step:last-child {
   margin-bottom: 0;
 }
@@ -604,27 +600,6 @@
   object-fit: contain;
   background: var(--photo-bg);
   border-radius: var(--radius);
-}
-
-/* Three stacked models (e.g. Assembly Line Fixtures & Tooling): one on top,
-   centred, the other two side by side below it, all the same size — bigger
-   overall than a plain vertical stack since the step's own column widens
-   to fit them (see the :has() rule on .bento-tile__step). */
-.step-visual-group--triangle {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 0.9rem;
-}
-
-.step-visual-group--triangle .step-visual {
-  margin-top: 0;
-}
-
-.step-visual-group--triangle > *:first-child {
-  grid-column: 1 / -1;
-  justify-self: center;
-  width: calc(50% - 0.5rem);
 }
 
 @media (max-width: 900px) {

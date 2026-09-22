@@ -126,20 +126,12 @@ export const projects: Project[] = [
           'Detailed SolidWorks drawings with GD&T.',
         ],
         image: { src: 'shaft-puller-photo', alt: 'Shaft removal tool fitted to a splined shaft' },
-        // The three tools, each full size, one under another; on the tile's
-        // cover they sit side by side.
-        stack: [
-          {
-            model: {
-              src: 'models/shaft-adapter.glb',
-              title: 'Animated 3D model of the shaft removal tool',
-              brightness: 0.5,
-              animation: 'shaft-puller',
-            },
-          },
-          { model: { src: 'models/ptu-gear-cutting-fixture.glb', title: 'Animated 3D model of the saw-cut fixture', margin: 1.25, brightness: 0.5, animation: 'ptu-gear-cutting' } },
-          { model: { src: 'models/oiling-assembly.glb', title: 'Animated 3D model of the oiling fixture', margin: 1.35, brightness: 0.5, animation: 'oiling-sensor' } },
-        ],
+        model: {
+          src: 'models/shaft-adapter.glb',
+          title: 'Animated 3D model of the shaft removal tool',
+          brightness: 0.5,
+          animation: 'shaft-puller',
+        },
       },
       {
         label: 'Saw-cut fixture',
@@ -149,6 +141,13 @@ export const projects: Project[] = [
           'Stable, accurate, efficient cuts.',
         ],
         image: { src: 'saw-fixture-photo', alt: 'Saw-cut fixture clamped on a milling table' },
+        model: {
+          src: 'models/ptu-gear-cutting-fixture.glb',
+          title: 'Animated 3D model of the saw-cut fixture',
+          margin: 1.25,
+          brightness: 0.5,
+          animation: 'ptu-gear-cutting',
+        },
       },
       {
         label: 'Oiling fixture',
@@ -157,6 +156,13 @@ export const projects: Project[] = [
           'Collects excess oil at the bottom for easy cleaning and maintenance.',
         ],
         image: { src: 'oil-fixture-photo', alt: 'Oiling fixture with a part seated in it' },
+        model: {
+          src: 'models/oiling-assembly.glb',
+          title: 'Animated 3D model of the oiling fixture',
+          margin: 1.35,
+          brightness: 0.5,
+          animation: 'oiling-sensor',
+        },
       },
     ],
   },

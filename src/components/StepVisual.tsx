@@ -100,30 +100,25 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
   }
 
   if (step.stack?.length) {
-    const items = step.stack.map((item, i) =>
-      item.model ? (
-        <ModelBox key={item.model.src} model={item.model} animated={animated} ready={ready} />
-      ) : item.image ? (
-        <Photo
-          key={item.image.src}
-          projectId={projectId}
-          image={item.image}
-          sizes={SIZES}
-          className="step-visual__img"
-        />
-      ) : (
-        <div key={i} />
-      ),
+    return (
+      <>
+        {step.stack.map((item, i) =>
+          item.model ? (
+            <ModelBox key={item.model.src} model={item.model} animated={animated} ready={ready} />
+          ) : item.image ? (
+            <Photo
+              key={item.image.src}
+              projectId={projectId}
+              image={item.image}
+              sizes={SIZES}
+              className="step-visual__img"
+            />
+          ) : (
+            <div key={i} />
+          ),
+        )}
+      </>
     );
-
-    // Three models read better as a triangle (one on top, two below) than a
-    // long vertical stack — and the group gets to use a wider column, so
-    // each one renders noticeably bigger too (see the CSS).
-    if (step.stack.length === 3 && step.stack.every((item) => item.model)) {
-      return <div className="step-visual-group step-visual-group--triangle">{items}</div>;
-    }
-
-    return <>{items}</>;
   }
 
   if (step.model) {
