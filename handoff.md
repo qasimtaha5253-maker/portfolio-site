@@ -390,8 +390,20 @@ one-off hacks, so reach for an existing knob before inventing a new mechanism):
   don't eyeball it.
 - `autoRotate` — `false` turns off a model's own self-spin while leaving drag-to-rotate fully
   working (default `true`, i.e. unchanged behaviour, when motion is allowed). For a model meant to
-  be inspected by hand rather than passively watched — the oiling tool's exploded view is the only
-  user of this so far.
+  be inspected by hand rather than passively watched. The oiling tool's exploded view used this at
+  first, then was switched back to `true` (his request) so it spins like every other cover model —
+  no current user of `false` left, but the knob stays for whenever one comes up.
+- **A re-exported "same" model isn't guaranteed to need new code.** Swapping in an updated oiling
+  tool export (`oiling_tool_stand.glb`), the four parts' own heights and top-to-bottom stacking
+  order turned out identical to the previous export — confirmed by measuring each part's
+  world-space bounding box on the new file, not assumed from the filename or the fact it "looked
+  like the same tool" (rule 3 still applies: verify, don't carry over). Because the difference was
+  just a rigid shift of the whole assembly, the existing `oiling-tool-coil` animation and the
+  exploded view's `explode` offsets both worked unchanged. Compressing it still needed
+  `--no-instance`, though, for a reason beyond point 4's name-lookup case: the default instancing
+  pass pulled the repeated screws/springs out of the `Moving_Plate` group into anonymous top-level
+  nodes, which would have left them behind when `explode` moves the plate, even though nothing
+  looks them up by name.
 - Auto-rotate (when on) is **time-based** (12°/s, `controls.update(elapsedSeconds)`), so it's the
   same speed regardless of the viewer's screen refresh rate — this was a real, reported bug (spun
   2.4× faster on a 144 Hz monitor than a 60 Hz phone) before it was fixed. Any future per-frame
@@ -420,6 +432,13 @@ one-off hacks, so reach for an existing knob before inventing a new mechanism):
   `margin: auto` instead of relying on the inherited `text-align`. Worth checking anywhere else in
   `site.css` that centres an `<img>` — this bug is easy to reintroduce by copying the "just use
   text-align" pattern that works fine for actual inline/text content.
+- **`:hover` fires on tap on a touch device and stays "stuck" until something else is tapped** —
+  the bento tile's orange border-highlight and its `+`/`×` toggle's orange background were both on
+  `:hover` alongside `:focus-visible`, and he reported it interfering with scrolling on mobile.
+  Fixed by dropping `:hover` from those two rules, leaving only `:focus-visible` (keyboard nav
+  still gets the highlight; touch and mouse hover no longer change the accent colour). The photo
+  zoom and the scrim darken-on-hover effects were left alone — only the orange accent was reported
+  as a problem, not hover effects generally.
 
 ## 8. Known debts
 
