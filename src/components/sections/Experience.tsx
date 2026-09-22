@@ -61,7 +61,6 @@ export function Experience() {
         <h2 className="bento-section__title" id="experience-title">
           Where I&apos;ve worked
         </h2>
-        <p className="bento-section__hint">Two co-ops in manufacturing and tooling design.</p>
       </header>
 
       <div className="experience" ref={listRef}>

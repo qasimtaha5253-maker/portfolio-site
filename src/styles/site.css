@@ -354,8 +354,13 @@
   white-space: nowrap;
 }
 
+/* The role's one-line summary, set apart from the bullets below as an
+   opening line: the mono face used for labels elsewhere, italic, in the
+   accent colour instead of the body's muted grey. */
 .experience__summary {
-  color: var(--muted);
+  font-family: var(--font-mono);
+  font-style: italic;
+  color: var(--accent);
   margin: 0 0 1rem;
 }
 
