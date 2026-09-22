@@ -84,16 +84,18 @@ export const projects: Project[] = [
     summary: 'A transfer cart that docks between production conveyors, cutting operator handling time by 70%.',
     steps: [
       {
-        label: 'The goal',
-        body:
-          'Move parts from one conveyor line to another without permanent fixtures. The cart had to attach and detach easily, stay stable in operation, and work with different conveyor setups.',
+        label: 'What?',
+        bullets: [
+          'Designed a *detachable transfer cart* to move parts between conveyor belts, replacing manual lifting and carrying with a wheeled, quick-attach handoff.',
+          'Goal: reduce manual part handling and stay compatible with varying conveyor setups without permanent fixtures.',
+        ],
         image: { src: 'cart-cad', alt: 'SolidWorks model of the conveyor transfer cart on casters' },
       },
       {
-        label: 'Reverse engineering the line',
+        label: 'How?',
         bullets: [
-          'Measured the existing conveyors on the floor for dimensions, materials and compatibility.',
-          'Produced detailed SolidWorks drawings with ASME Y14.5 GD&T.',
+          'Reverse-engineered the existing conveyors on the floor to capture dimensions, materials, and interface points.',
+          'Built the frame from *T-slot aluminum extrusion*, mounted on casters for mobility across the shop floor.',
         ],
         model: {
           src: 'models/conveyor-cart.glb',
@@ -103,17 +105,21 @@ export const projects: Project[] = [
         image: { src: 'shaft-assembly-render', alt: 'Render of the cart frame with drive shaft and mounting plate' },
       },
       {
-        label: 'How it works',
+        // No heading: continues the "How?" section above with a second visual.
+        label: '',
         bullets: [
-          'A drive-shaft mechanism lets the operator couple and uncouple the cart from the conveyor drive.',
-          'Locking profile plates lower and lock the pallet so the cart can be moved without the part falling off.',
+          'Designed a *drive shaft mechanism* letting the operator attach and detach the cart from the conveyor system, paired with *locking profile plates* that lower and lock the pallet in place so parts don’t shift or fall in transit.',
+          'Produced detailed technical drawings in SolidWorks incorporating *ASME Y14.5 GD&T* standards.',
         ],
         image: { src: 'drive-shaft-exploded', alt: 'Exploded view of the drive shaft coupling, handle and mounting flange' },
       },
       {
-        label: 'What it achieved',
+        label: 'Results',
         stats: [{ value: '70%', label: 'Less operator handling time' }],
-        bullets: ['The finished cart fit the existing assembly-line conveyors seamlessly.'],
+        bullets: [
+          'Cart mated seamlessly with the existing conveyor lines on the assembly floor.',
+          'Reduced operator handling time by *70%*.',
+        ],
         image: { src: 'cart-on-line', alt: 'The finished cart on the production floor' },
       },
     ],
@@ -126,11 +132,10 @@ export const projects: Project[] = [
     summary: 'Three shop-floor tools: a shaft puller, a two-cut saw fixture and a one-pass oiling fixture.',
     steps: [
       {
-        label: 'Shaft removal tool',
+        label: 'Shaft Removal Tool',
         bullets: [
-          'Two-piece interlocking tool grips the shaft while a slide hammer threads into the top.',
-          'Faster shaft removal with less manual effort and less risk of damaging parts.',
-          'Detailed SolidWorks drawings with GD&T.',
+          'Designed a *2-piece interlocking tool* that clamps onto a shaft while a hammer puller threads into the top, pulling the shaft cleanly from its ring.',
+          'Enabled quick, repeatable shaft removal while cutting manual effort and the risk of damaging surrounding components.',
         ],
         image: { src: 'shaft-puller-photo', alt: 'Shaft removal tool fitted to a splined shaft' },
         model: {
@@ -141,11 +146,10 @@ export const projects: Project[] = [
         },
       },
       {
-        label: 'Saw-cut fixture',
+        label: 'Saw-Cut Fixture',
         bullets: [
-          'Holds the part for a saw cut, then rotates to line up the second cut and produce a triangular section.',
-          'Rotation angle and a tight fit calculated so the part still slides along the slot.',
-          'Stable, accurate, efficient cuts.',
+          'Built a fixture that holds a part stable for an initial saw cut, then *rotates to align the first cut with the second*, combining both passes into a clean triangular section.',
+          'Produced stable, accurate cuts with both passes consistently aligned.',
         ],
         image: { src: 'saw-fixture-photo', alt: 'Saw-cut fixture clamped on a milling table' },
         model: {
@@ -156,10 +160,10 @@ export const projects: Project[] = [
         },
       },
       {
-        label: 'Oiling fixture',
+        label: 'Oiling Fixture',
         bullets: [
-          'Oils the full circumference of the part in one go, with no manual brushing.',
-          'Collects excess oil at the bottom for easy cleaning and maintenance.',
+          'Designed a tool to oil the full circumference of a part — inside, outside, and the O-ring — in one pass with no manual brushing, plus a fixture that collects excess oil at the base for easy cleanup.',
+          'Delivered full, even oil coverage while eliminating manual brushing.',
         ],
         image: { src: 'oil-fixture-photo', alt: 'Oiling fixture with a part seated in it' },
         model: {
@@ -180,27 +184,32 @@ export const projects: Project[] = [
     summary: 'A single-motor machine that grips a cup and moves it 20 cm up and 30 cm across.',
     steps: [
       {
-        label: 'The challenge',
-        body:
-          'Design and build a machine that grips a coffee cup and moves it 20 cm vertically and 30 cm horizontally onto a platform — using only one motor.',
+        label: 'What?',
+        bullets: [
+          'Designed and fabricated a *single-motor machine* to grip a coffee cup and move it 20 cm vertically and 30 cm horizontally onto a platform.',
+          'Goal: efficient, precise pick-and-place motion off just one motor.',
+        ],
         image: { src: 'gripper-cad', alt: 'SolidWorks model of the wooden gripper frame with pulleys and motor' },
         model: { src: 'models/coffee-cup-gripper.glb', title: '3D model of the coffee cup gripper', margin: 1.25 },
       },
       {
-        label: 'How it works',
+        label: 'How?',
         bullets: [
-          'A pulley train with an overall 1:8 ratio turns motor rotation into linear gripper motion, trading speed for torque.',
-          'Drivetrain and motion path modelled in SolidWorks, then parts were CNC-fabricated and iterated for fit.',
+          'Converted single-motor RPM into *linear gripper motion* using a pulley train with an overall *1:8 ratio* to boost torque and control speed.',
+          'Modeled the drivetrain and motion path in SolidWorks, then fabricated the parts in the *university shop on standard machinery*, iterating for fit.',
         ],
         image: { src: 'pulley-train', alt: 'Close-up render of the pulley train with 1, 2 and 4 inch pulleys labelled' },
       },
       {
-        label: 'What it achieved',
+        label: 'Results',
         stats: [
           { value: '4 s', label: 'Cycle time' },
           { value: '98%', label: 'Grade' },
         ],
-        bullets: ['Smooth, repeatable transport, recognised for performance and design quality.'],
+        bullets: [
+          'Achieved smooth, repeatable transport with a *5-second* cycle time.',
+          'Earned a *98% grade* for performance and design quality.',
+        ],
         image: { src: 'built-gripper', alt: 'The built gripper holding a red cup' },
         video: {
           src: 'animations/coffee-cup-gripper.mp4',
@@ -218,27 +227,23 @@ export const projects: Project[] = [
     summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
     steps: [
       {
-        label: 'Idea',
+        label: 'What?',
         bullets: [
-          'Study stress and deformation in 1060-H12 aluminium with FEA.',
-          'Validate theoretical stress-concentration factors (K) for plates with different hole diameters.',
+          'Investigated stress distribution and deformation in *1060-H12 aluminum* plates with holes, validating theoretical stress concentration factors (K-values) against simulation.',
         ],
         image: { src: 'plate-hole-stress', alt: 'Stress contour around a hole in a meshed plate' },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Applied real-world boundary conditions in ANSYS.',
-          'Refined mesh size from 0.05 m to 0.00425 m, targeting high-stress zones.',
-          'Compared 2r/D and K-values against theory.',
+          'Applied real-world boundary conditions in ANSYS, refining mesh size from *0.05 m down to 0.00425 m* with targeted refinement in high-stress zones around the holes, balancing accuracy against computational cost.',
         ],
         image: { src: 'bracket-mesh', alt: 'Meshed bracket model in ANSYS' },
       },
       {
         label: 'Results',
         bullets: [
-          'K-values matched theory within 2%.',
-          'Mesh convergence gave accurate stresses at low computational cost.',
+          'Validated simulated K-values against theory within *<2% error*.',
         ],
         image: { src: 'hole-stress-detail', alt: 'Detailed stress contour near a hole' },
       },
@@ -252,28 +257,24 @@ export const projects: Project[] = [
     summary: 'A spring-loaded sponge tool that oils a part inside and out, cutting cycle time by 93%.',
     steps: [
       {
-        label: 'Idea',
+        label: 'What?',
         bullets: [
-          'Fully oil the inside and outside of a part and the O-ring on its stem.',
-          'Easy enough for an operator to use 300 times per shift.',
+          'Designed a tool to fully oil a part’s inside and outside surfaces, including the O-ring on its stem, durable enough for *300 uses per shift*.',
         ],
         image: { src: 'oiling-tool-photo', alt: 'Oiling tool on a workbench with a part in place' },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Selected springs by spring rate and mounted them to a plate for linear motion.',
-          'Shoulder bolts guide the springs so they cannot buckle sideways.',
-          'Waterjet-cut sponges to the part’s dimensions.',
+          'Sized a spring for the right rate to give smooth linear motion, guided by shoulder bolts to keep it from bending sideways, and waterjet-cut sponges to the part’s exact dimensions for full-surface contact.',
         ],
         image: { src: 'spring-mechanism', alt: 'Exploded CAD of the spring-loaded plate and shoulder bolts' },
       },
       {
         label: 'Results',
         bullets: [
-          'Supports the part’s weight yet compresses under light force.',
-          'Sponges oil the inner and outer walls and the O-ring.',
-          'Oiling cycle time reduced by 93%.',
+          'Spring compressed under light force while still supporting the part’s weight; sponges fully lubricated the inside/outside walls and O-ring.',
+          'Cut oiling cycle time by *93%*.',
         ],
         image: { src: 'oiling-tool-cad', alt: 'CAD of the oiling tool with the part seated' },
       },
@@ -287,27 +288,23 @@ export const projects: Project[] = [
     summary: 'A rover prototype that sorts orange balls from white ones — a stand-in for collecting algae off coral reefs.',
     steps: [
       {
-        label: 'Idea',
+        label: 'What?',
         bullets: [
-          'Build a prototype that collects orange balls from among white ones and deposits them in a box.',
-          'Represents a rover collecting algae from coral reefs; needs both a collection and a deposit mechanism.',
+          'Designed and built a rover to collect orange balls among white ones and deposit them into a box, modeling a rover collecting algae off coral reefs.',
         ],
         image: { src: 'rover-prototype', alt: 'Wired rover prototype with a collection arm' },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Team of five, splitting the work by each member’s strengths.',
-          'Functional digital assembly in SolidWorks.',
-          'Colour sensor, servo motors and a slider mechanism.',
+          'Modeled a functional digital assembly in SolidWorks; built the collection/deposit mechanism around a *color sensor*, servo motors, and a slider mechanism, in a 5-person team split by strengths.',
         ],
         image: { src: 'rover-cad', alt: 'SolidWorks render of the rover' },
       },
       {
         label: 'Results',
         bullets: [
-          'Working prototype that completed the task.',
-          'Presented the design process to the judges and placed 3rd.',
+          'Functioning prototype completed the task and secured *3rd place*.',
         ],
         image: { src: 'collection-mechanism', alt: 'Hand-held test of the servo collection mechanism' },
       },
@@ -321,10 +318,9 @@ export const projects: Project[] = [
     summary: 'A snap-together, rubber-band-powered toy plane that packs into a Kinder Surprise egg.',
     steps: [
       {
-        label: 'Idea',
+        label: 'What?',
         bullets: [
-          'A reconfigurable 3D-printed toy for toddlers that fits inside a Kinder Surprise egg when taken apart.',
-          'Moves forward on its own with a mechanism that uses zero stored potential energy.',
+          'Designed a *reconfigurable 3D-printed toy plane* for toddlers that collapses to fit inside a Kinder Surprise egg and self-propels forward using *zero stored energy input* once wound.',
         ],
         image: { src: 'plane-photo', alt: 'Assembled 3D-printed toy plane' },
         model: {
@@ -334,11 +330,9 @@ export const projects: Project[] = [
         },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Lightweight SolidWorks design with aerofoil-shaped wings and a rubber-band propeller.',
-          'Push-pin trigger holds the propeller once wound.',
-          'Split into parts that pack into the egg, joined with snap fits.',
+          'Modeled a lightweight design in SolidWorks with aerofoil-shaped wings and a rubber-band-powered propeller, a push-pin trigger to hold the propeller after winding, and snap joints for tool-free assembly.',
         ],
         image: { src: 'plane-exploded', alt: 'Exploded view of the toy plane parts' },
         video: {
@@ -350,8 +344,7 @@ export const projects: Project[] = [
       {
         label: 'Results',
         bullets: [
-          'Met all project constraints and toddler safety criteria.',
-          'Pitched as a product: design, material and manufacturing cost, and marketing.',
+          'Met all toddler safety and project constraints; presented as a consumer product covering design, material cost, manufacturing cost, and marketing strategy.',
         ],
         image: { src: 'egg-packaging', alt: 'Plane parts packed inside a transparent egg' },
       },
@@ -365,10 +358,9 @@ export const projects: Project[] = [
     summary: 'An Arduino-driven Meccano car with a catapult that hits a target with a ping-pong ball.',
     steps: [
       {
-        label: 'Idea',
+        label: 'What?',
         bullets: [
-          'Build a Meccano vehicle with motors, a breadboard circuit and an Arduino for forward and reverse motion.',
-          'Add a launcher that shoots a ping-pong ball at a target.',
+          'Designed a Meccano-based vehicle with forward/reverse drive and a ball-launching mechanism to hit a target.',
         ],
         image: { src: 'car-photo', alt: 'Finished Meccano car with decorative flames' },
         model: {
@@ -381,17 +373,15 @@ export const projects: Project[] = [
         },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Motor drives the axle through an elastic band.',
-          '3D-printed ball holder integrated with a catapult.',
-          'Manual clip-release mechanism to fire.',
+          'Drove the wheels with a *motorized axle via an elastic band*, controlled through an Arduino and breadboard circuit; built a 3D-printed ping-pong-ball holder integrated with a catapult, released by a manual clip mechanism.',
         ],
         image: { src: 'exploded-view', alt: 'Exploded view of the Meccano car' },
       },
       {
         label: 'Results',
-        bullets: ['Hit the target directly and placed 2nd in the competitive evaluation.'],
+        bullets: ['Successfully launched the ball onto target; placed *2nd* in the competitive evaluation.'],
         image: { src: 'chassis-wiring', alt: 'Car chassis with Arduino wiring' },
       },
     ],
@@ -404,24 +394,23 @@ export const projects: Project[] = [
     summary: 'Took apart a 200+ part toy hydraulic arm and rebuilt it as a full SolidWorks assembly.',
     steps: [
       {
-        label: 'Idea',
-        body: 'Reverse engineer a toy hydraulic arm with over 200 parts by disassembling, analysing and recreating it in SolidWorks.',
+        label: 'What?',
+        bullets: [
+          'Reverse-engineered a *200+ part toy hydraulic arm*, fully disassembling and recreating it as a working digital model.',
+        ],
         image: { src: 'hand-assembly', alt: 'Full SolidWorks assembly of the hydraulic hand' },
       },
       {
-        label: 'Process',
+        label: 'How?',
         bullets: [
-          'Worked out each part’s role in the mechanism.',
-          'Measured every part and built a functional digital assembly.',
-          'Produced a 2D drawing for each part.',
+          'Worked in a 5-person team to dissect each part’s role, took accurate measurements, modeled the full assembly in SolidWorks, and produced individual 2D drawings for every part.',
         ],
         image: { src: 'hand-exploded', alt: 'Exploded view of the hydraulic hand' },
       },
       {
         label: 'Results',
         bullets: [
-          'Fully replicated the hydraulic hand in SolidWorks.',
-          'Strong teamwork and a detailed understanding of hydraulic systems and complex assemblies.',
+          'Successfully replicated the toy hydraulic hand in SolidWorks, demonstrating strong understanding of hydraulic systems and complex assemblies.',
         ],
         image: { src: 'part-drawing', alt: 'Engineering drawing of one hand component' },
       },
