@@ -70,6 +70,13 @@ export interface StepModel {
    * runs while the model is on screen, and not under reduced motion).
    */
   animation?: ModelAnimationName;
+  /**
+   * One-time correction for a source export that wasn't saved the right way up
+   * — `[x, y, z]` degrees, applied (in that order) before framing/centring, so
+   * everything else (camera, spin axis, `margin`) then treats the *corrected*
+   * orientation as upright. Only needed once per model; not an ongoing tilt.
+   */
+  rotation?: [number, number, number];
 }
 
 export interface Stat {

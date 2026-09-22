@@ -265,7 +265,13 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   **Animated (`propeller-spin`):** the propeller spins continuously forever — the only one of the
   five model animations that never stops, reverses, or returns to a start pose. See §7,
   "Propeller spin" for how its (non-axis-aligned) spin axis was found and verified.
-- The other 5 projects are photo-only.
+- **Meccano Car Ball Launcher** — got a real 3D model (2026-09-21) on its first step ("Idea"),
+  which per the usual rule made it the tile cover too, replacing the `car-photo` cover image
+  (that photo is now only the reduced-motion fallback). His export was saved with the whole
+  assembly tipped onto its side, not standing on its wheels — corrected with a new `rotation`
+  field on `StepModel` (see §7, "Meccano car orientation", for how the correction angles were
+  derived from the model's own geometry rather than guessed/eyeballed).
+- The other 4 projects are photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
 
@@ -570,6 +576,54 @@ conveyor-cart instancing problem last session).
   quaternion is the exact negation of its t = 0 value component-wise — a quaternion and its
   negation represent the identical rotation, so this confirms the loop returns to exactly the
   start orientation with no seam or drift.
+
+**Meccano car orientation (`StepModel.rotation`, 2026-09-21) — a new, general fix, not a
+one-off hack for this model**
+He said the export was "rotated on its side" and asked for it to stand on its 4 wheels. This
+turned out not to be a clean 90°-on-one-axis tip — the correction needed is a genuine compound
+rotation (`[68.83, 27.793, 39.712]°` XYZ, not a round number on any axis), so it had to be
+*derived*, not guessed by eye and iterated in the browser.
+- **How the correction was found, from the file's own geometry, no visual guessing:** all 4 tire
+  meshes are thin discs along the file's Y axis (their spin/axle direction), so Y is the car's
+  true lateral (left/right) axis regardless of anything else. Two tires share one (X, Z) position
+  and the other two share a different (X, Z) — an axle pair each, front and rear — so the vector
+  between those two (X, Z) points is the car's true forward/backward direction, and it's *not*
+  aligned to X or Z alone (a diagonal, ≈145° off the X axis) — meaning whatever's "tipped" here
+  isn't a simple single-axis roll. The one remaining direction perpendicular to both (lateral and
+  forward) is the only candidate for true "up" — two options (opposite signs); picked the one the
+  chassis-mounted `BreadBoard-2` node sits toward, relative to the 4 wheel-centres' average
+  position (electronics mount on the deck, above the wheels, not below) — cross-checked against
+  the same test using the model's overall bounding-box centre instead of the breadboard
+  specifically, and both agreed. `THREE.Quaternion().setFromUnitVectors(trueUp, (0,1,0))` gives
+  the minimal rotation with no unwanted twist (twist around the up axis doesn't matter — the
+  camera auto-rotates around the model regardless of which way it initially faces), converted to
+  Euler XYZ degrees for `projects.ts`. A throwaway node script (using three.js's own
+  `Quaternion`/`Euler` classes, not hand arithmetic) did this and also sanity-checked the answer:
+  applying the computed rotation to the derived "up" vector lands on exactly `(0,1,0)`, and
+  applying it to the lateral axis lands with `y ≈ 0` (fully horizontal) — both checked out exactly.
+- **Where the correction is applied:** `ModelLayer.tsx`, on `gltf.scene.rotation` (via
+  `model.rotation`, new optional `[x,y,z]` degrees field on `StepModel`), **before** the existing
+  centring/bounding-box/frame-distance code runs — so that code (which assumes the object it
+  measures is already upright) works unmodified for a model that needed this fix, the same as one
+  that didn't. Applying the correction any later (e.g. after centring) would measure the *wrong*
+  (still-tipped) bounding box first and frame it incorrectly.
+- **Compression used the default settings** (not `--no-instance`) — this model has no built-in
+  animation looking up a part by name, so there's nothing for GPU-instancing to break here, unlike
+  the conveyor cart. Checked anyway (re-read the compressed file) before assuming it: 5.0 MB →
+  0.4 MB, 15 instance batches (mostly duplicate Meccano strips/bolts), fine.
+- **Verified visually** (the DOM/numeric checks used for the other models don't apply well here —
+  there's no "is this the exact expected value" to check, only "does it look like a car standing
+  up"): expanded the tile and screenshotted the model — 4 wheels level along the bottom of the
+  frame, chassis and its red/yellow flame decoration running horizontally above them, the
+  launcher's Meccano-strip arm rising vertically off the chassis. Correct on the first attempt.
+- **If a future upload has the same problem**, this is the general recipe: find something on the
+  model that's rigidly, unambiguously axis-aligned in a way that constrains 2 of the 3 axes (here,
+  the wheels' spin axis did that for "lateral"; a fixed shaft or a flat mounting plate on another
+  model would work the same way), derive the third from any two named/positioned parts that
+  should differ along it (front axle vs rear axle here), then resolve the up/down sign with
+  something that's unambiguously "above" the rest of the model (electronics on a deck, a roof, a
+  handle) — never guess Euler angles by eye and nudge them in the browser; that's slow and doesn't
+  generalise to a non-90° tip like this one.
 
 ## 8. Known issues / debts
 

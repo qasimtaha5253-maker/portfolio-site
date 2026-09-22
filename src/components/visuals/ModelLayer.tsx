@@ -199,6 +199,17 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         `${base}${model.src}`,
         (gltf) => {
           if (disposed) return;
+
+          // A source export that wasn't saved upright gets a one-time
+          // correction here, before anything below measures it — so framing,
+          // the spin axis and `margin` all then treat the corrected pose as
+          // "up", the same as a model that arrived upright.
+          if (model.rotation) {
+            const [x, y, z] = model.rotation;
+            gltf.scene.rotation.set((x * Math.PI) / 180, (y * Math.PI) / 180, (z * Math.PI) / 180);
+            gltf.scene.updateMatrixWorld(true);
+          }
+
           // Centre the model and pull the camera back far enough to frame it.
           const box = new THREE.Box3().setFromObject(gltf.scene);
           const size = box.getSize(new THREE.Vector3());

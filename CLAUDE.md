@@ -140,6 +140,10 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   its near edge cropped as it spins: give that model a `margin` in its config (multiplier on camera
   distance; the gripper uses 1.25). Don't "fix" this globally — an exact fit zooms every existing
   model out 30–40% (tried and reverted).
+- A source export that wasn't saved upright gets `rotation: [x, y, z]` in its config (Euler XYZ
+  degrees, applied once before framing/centring — a fixed correction, not an ongoing tilt). The
+  Meccano car ball launcher needed this (`[68.83, 27.793, 39.712]`, worked out from the wheels'
+  and a chassis part's own geometry, not guessed — see handoff.md §7, "Meccano car orientation").
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
   demand, only plays while on screen, off under reduced motion). Currently five:
@@ -178,6 +182,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   Motion Study frame sequence); the `plane-exploded` photo stays as the reduced-motion fallback.
   Its "Idea" step (and, automatically, its tile cover) has a 3D model with the propeller spinning
   continuously (`animation: 'propeller-spin'`); `plane-photo` stays as the reduced-motion fallback.
+- Meccano Car Ball Launcher's "Idea" step (and, automatically, its tile cover) has a 3D model —
+  needs the `rotation` correction above; `car-photo` stays as the reduced-motion fallback.
 
 ## Hosting
 - Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)

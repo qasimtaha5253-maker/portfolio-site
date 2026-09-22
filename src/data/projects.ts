@@ -393,6 +393,14 @@ export const projects: Project[] = [
           'Add a launcher that shoots a ping-pong ball at a target.',
         ],
         image: { src: 'car-photo', alt: 'Finished Meccano car with decorative flames' },
+        model: {
+          src: 'models/meccano-launcher.glb',
+          title: '3D model of the Meccano car ball launcher',
+          // The export was saved on its side; this rotates it upright so the
+          // car stands on its 4 wheels — see handoff.md §7, "Meccano car
+          // orientation" for how it was worked out.
+          rotation: [68.83, 27.793, 39.712],
+        },
       },
       {
         label: 'Process',
