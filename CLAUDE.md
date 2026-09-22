@@ -213,9 +213,11 @@ element counts) before concluding something is broken, and say so when something
 verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
 
 ## Status
-- 2026-09-18: bento grid is the live site on `main`. Pinned-chapter code, its CSS and the
-  `visual` config field have been deleted.
-- Open items (see handoff.md §8): the reduced-motion layout has only been checked via the dev
-  flag and DOM, never in a real browser with the OS setting on; no Lighthouse/performance
-  run yet on the bento version; the four `gallery` photos on the Small Fixtures & Tooling project are not
-  rendered by the bento tile (only used as cover candidates).
+- 2026-09-21: bento grid is the live site on `main`. Every project has been revisited at least
+  once with real photos and, for most, a 3D model and/or video, several with built-in animations
+  (see handoff.md §6 for the current state of each project, §4b for how the model animations work).
+- Next up, in the order he wants them (see handoff.md §8 for detail): resize/reorder the cover
+  cards, fix the template inside the cards, update remaining photos/videos, rewrite each
+  project's bullet points.
+- Open debts (handoff.md §7): no Lighthouse/performance run yet; reduced-motion layout only
+  checked via the dev flag and DOM, never a real browser with the OS setting on.
