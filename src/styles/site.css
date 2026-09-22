@@ -564,10 +564,15 @@
   margin-bottom: 0;
 }
 
+/* Same navy-to-orange gradient text as the stat numbers (.stats__value),
+   just without their box/ellipse decoration. */
 .bento-tile__step h4 {
   font-size: clamp(1.35rem, 2.6vw, 1.75rem);
   margin: 0 0 0.75rem;
-  color: var(--fg);
+  background: linear-gradient(100deg, #8fa8ff, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .bento-tile__step .step-visual__img {
