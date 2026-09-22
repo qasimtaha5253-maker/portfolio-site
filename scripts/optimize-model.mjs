@@ -1,7 +1,7 @@
 /**
  * Shrinks a .glb exported from SolidWorks for the web.
  *
- *   npm run model -- content/models/cooling-unit.glb public/models/cooling-unit.glb [--ratio 0.2]
+ *   npm run model -- content/models/cooling-unit.glb public/models/cooling-unit.glb [--ratio 0.2] [--no-instance]
  *
  * SolidWorks exports are far too heavy to put on a web page (hundreds of MB,
  * millions of triangles), so this:
@@ -41,9 +41,16 @@ const ratio = ratioArg === -1 ? 0.2 : Number(args[ratioArg + 1]);
 // crashes. `--no-resize` skips resizing (still converts to webp) as a
 // workaround for those files.
 const resize = args.includes('--no-resize') ? undefined : [1024, 1024];
+// The instancing pass collapses every repeated part (e.g. identical bolts,
+// or — critically — two mirrored copies of a sub-assembly) into a single
+// GPU-instanced mesh, whose per-instance transforms live in a flat buffer
+// instead of named nodes. That's exactly what a model animation looks a
+// node up by name to grab, so a model with a part `ModelLayer` needs to
+// find and move at runtime needs this off, even at the cost of a larger file.
+const skipInstancing = args.includes('--no-instance');
 
 if (!input || !output) {
-  console.error('Usage: npm run model -- <input.glb> <output.glb> [--ratio 0.2] [--no-resize]');
+  console.error('Usage: npm run model -- <input.glb> <output.glb> [--ratio 0.2] [--no-resize] [--no-instance]');
   process.exit(1);
 }
 
@@ -115,7 +122,7 @@ for (const texture of document.getRoot().listTextures()) {
 await document.transform(
   prune({ keepAttributes: false, keepLeaves: false }),
   dedup(),
-  instance({ min: 2 }), // repeated parts become GPU instances
+  ...(skipInstancing ? [] : [instance({ min: 2 })]), // repeated parts become GPU instances
   resample(),
   weld(),
   simplify({ simplifier: MeshoptSimplifier, ratio, error: 0.002 }),

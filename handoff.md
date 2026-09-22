@@ -137,8 +137,11 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   size): Cooling Unit, Conveyor Cart, Coffee Cup Gripper.
 - **Cooling Unit** — 4 steps, showpiece: 3D model → HTML section animation → CFD plot + strawberry
   flat split → 3D model again + stats. Has a cover model (spins on its tile).
-- **Conveyor Cart** — got a real 3D model this session (step 2, "Reverse engineering the line"),
-  replacing what had been a plain (low-res) photo there. Also picked up a cover model automatically.
+- **Conveyor Cart** — 3D model on step 2 ("Reverse engineering the line") and as the tile cover,
+  replacing what had been a plain (low-res) photo there. **Animated (`conveyor-shaft`, 2026-09-21,
+  replacing an earlier real model with no motion):** the whole drive-shaft sub-assembly ("Shaft to
+  Rotate" — shaft, both handles, locking profiles, collars) turns 90° and back; see §7 "Model
+  animations" for the node-name gotcha this one hit and why it's compressed without instancing.
 - **Coffee Cup Gripper** — got its real 3D model (2026-09-18) on the first step ("The challenge",
   shown under the text, after the first point); it is also the tile's cover model. The source
   export was 5 MB / 925k triangles → 0.7 MB / 97k after `npm run model` (one unreadable,
@@ -164,6 +167,51 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   2026-09-20, then "lower more" — 0.7 → 0.5; their pale grey parts were washing out to white; the
   value is a multiplier on the shared 0.68 exposure and applies to the cover as well — nudge it if
   he wants darker/lighter).
+- **Conveyor shaft (`conveyor-shaft`, 2026-09-21) — read this before touching model animations on
+  any file with duplicated parts.** The node to rotate is `Shaft to Rotate` (shaft, both handles,
+  locking profiles, collars — the second, mirrored half is a genuine duplicate of the first). His
+  first export compressed to a tiny 40-node file: `npm run model`'s default instancing pass
+  (`instance({ min: 2 })` in `optimize-model.mjs`) collapsed every repeated part — including both
+  shaft halves and dozens of identical roller-assembly screws/bearings — into anonymous
+  GPU-instanced batch nodes at the scene root, with per-instance transforms baked into a flat
+  buffer instead of named children. `findByBaseName('Shaft to Rotate')` then found nothing to
+  rotate but a bare, un-decorated shaft cylinder — the handles etc. would have stayed fixed in
+  place while the shaft spun through them. **Fix:** added a `--no-instance` flag to
+  `optimize-model.mjs` (skips the `instance()` step) and used it for this model — the file is
+  still ~0.6 MB either way, instancing wasn't doing much for *this* one, so there's no downside
+  here specifically. Don't assume that holds for every future upload; if a model with genuinely
+  massive duplicate-part counts needs both instancing *and* a named-node animation, the fix would
+  need to be more targeted (e.g. excluding just that subtree from `instance()`), which the current
+  flag doesn't do.
+- **Node names three.js actually produces — a second real bug found on the same model.** The
+  gltf-transform-based inspector script used to explore these files (a throwaway, not checked in)
+  reads *raw* glTF names; **`GLTFLoader` sanitizes every node name before three.js ever sees it**
+  (`PropertyBinding.sanitizeNodeName`): whitespace → `_`, and reserved characters
+  (`` [ ] . : / ``) are *deleted*, not replaced. Two real bugs from this, both now fixed in
+  `modelAnimations.ts`:
+  1. `baseName()`'s existing comment already knew spaces become underscores, but the code that
+     used it for this model compared against `'Shaft to Rotate'` (a name with real spaces) instead
+     of `'Shaft_to_Rotate'` — silently matched nothing (`find` returns `undefined`, not an error).
+  2. `dedup()` renames a mesh node it merges with an identical one elsewhere to the full
+     slash-joined path it was found at, e.g. `".../Shaft to Rotate_Assembly Updated-1/Shaft-1"` —
+     and since `/` is one of the deleted characters, three.js's sanitized version has **no
+     separator at all** between the old path segments; splitting on `/` (which worked fine for the
+     PTU/oiling models, since their meshes weren't deduped into shared instances) finds nothing.
+     Fixed by matching with `.includes()` on the (space-sanitized) leaf name instead of a path
+     split — the substring survives even glued onto its former parent's name.
+  Both failures were silent (`find()` returns `undefined`, no thrown error) — a `console.warn`
+  when the expected nodes aren't found (already the pattern in `gearCutting`/`oilingSensor`) is
+  what actually surfaced this; check the browser console first if a new model animation "does
+  nothing".
+- **Direction, this time from the embedded camera, not the geometry.** Unlike the gear fixture's
+  slot, nothing about this shaft assembly is asymmetric enough to read left/right/clockwise from
+  the geometry itself. Used the `.glb`'s own `"current camera"` node instead (every SolidWorks
+  export carries the viewport that was active when it was exported) — computed its world position
+  and forward vector (quaternion × local −Z) and found it sitting well past the shaft's +Z end,
+  looking back toward −Z. So +Z points at that viewer, and (same convention as the gear fixture)
+  clockwise from there is a **negative** rotation about +Z. If he says it looks backwards, it's one
+  sign flip (`SHAFT_TURN`'s sign in `modelAnimations.ts`) — but first check which end of the cart
+  he was actually looking from, the same lesson as the gear fixture's direction mix-ups.
   `shaft-adapter.glb` was replaced by a newer export from him on 2026-09-20 (the upper puller
   block now shows the interlocking notch). Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
   the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now only shows

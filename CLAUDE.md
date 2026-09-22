@@ -112,15 +112,19 @@ rotatable 3D model (`model`), or several side by side (`split`).
   three.js + GLTFLoader + OrbitControls on demand. Self-rotates (12°/s, time-based so it's the
   same on any refresh rate — always pass elapsed time to `controls.update()`); drag rotates with
   mouse or finger; pauses when off-screen; no self-rotation under reduced motion.
-- `npm run model -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize]` cleans and quantizes an
-  export (three reads quantized meshes natively — no decoder download). It handles
+- `npm run model -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize] [--no-instance]` cleans and
+  quantizes an export (three reads quantized meshes natively — no decoder download). It handles
   Draco-compressed sources and drops textures whose bytes don't match their declared MIME type.
-  Keep source exports in `content/models/` (gitignored).
+  Keep source exports in `content/models/` (gitignored). **`--no-instance` skips turning repeated
+  parts into GPU instances — required for a model whose animation looks a part up by name if
+  that part is duplicated elsewhere in the file** (the default instancing pass collapses
+  duplicates into anonymous batch nodes with no named children left to find; see handoff.md §7,
+  "Conveyor shaft").
 - `split: [{ image } | { model }, ...]` — several visuals side by side in one row (small).
   `stack: [...]` — several visuals one under another, each full size (Small Fixtures uses it).
   Priority: `split` > `stack` > `model` > `embed` > `image`.
 - Cooling unit (showpiece): model → section animation → CFD plot + strawberry flat → model.
-  Conveyor cart has a model on its "Reverse engineering the line" step.
+  Conveyor cart has an animated model on its "Reverse engineering the line" step.
 - Camera framing in `ModelLayer` is symmetric horizontally but centred on the model's true
   vertical midpoint; always seed `camera.position` as `fixedDirection.add(target)`. It fits the
   model's height and swing radius but not the camera's downward tilt, so a wide, low model can get
@@ -129,11 +133,15 @@ rotatable 3D model (`model`), or several side by side (`split`).
   model out 30–40% (tried and reverted).
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
-  demand, only plays while on screen, off under reduced motion). Currently two: `ptu-gear-cutting`
-  (cutter, sliding and turning gear group) and `oiling-sensor` (sensor lowered 1.25 in and
-  raised). Directions/axes are derived in handoff.md §7, and a dev-only
-  `window.__gearCuttingTest()` checks the gear one. Add new animations as a case in
-  `createModelAnimation` plus a name in `ModelAnimationName` (types.ts).
+  demand, only plays while on screen, off under reduced motion). Currently three:
+  `ptu-gear-cutting` (cutter, sliding and turning gear group), `oiling-sensor` (sensor lowered
+  1.25 in and raised) and `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back).
+  Directions/axes are derived in handoff.md §7, and a dev-only `window.__gearCuttingTest()`
+  checks the gear one. **Node names: three.js sanitizes every one on load** (whitespace → `_`;
+  `[ ] . : /` are deleted, not replaced) — match against the sanitized form, not the name a
+  gltf-transform-based inspector script reports; see handoff.md §7, "Node names three.js actually
+  produces" for two real bugs this caused. Add new animations as a case in `createModelAnimation`
+  plus a name in `ModelAnimationName` (types.ts).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.

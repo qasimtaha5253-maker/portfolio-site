@@ -20,8 +20,9 @@ export interface StepEmbed {
  * A built-in animation for a model, run by src/components/visuals/modelAnimations.ts.
  *   'ptu-gear-cutting'  the PTU gear-cutting fixture: cutter, sliding and turning gear group
  *   'oiling-sensor'     the speed-sensor oiling assembly: sensor lowered 1.25 in and raised
+ *   'conveyor-shaft'    the conveyor cart's drive shaft, turned 90° and back
  */
-export type ModelAnimationName = 'ptu-gear-cutting' | 'oiling-sensor';
+export type ModelAnimationName = 'ptu-gear-cutting' | 'oiling-sensor' | 'conveyor-shaft';
 
 /** A real-time 3D model (.glb) the visitor can rotate. */
 export interface StepModel {

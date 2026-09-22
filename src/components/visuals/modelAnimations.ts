@@ -24,6 +24,17 @@ function find(root: Object3D, test: (o: Object3D) => boolean): Object3D | undefi
 // spaces into underscores), so match on the part before the "^".
 const baseName = (o: Object3D) => o.name.split('^')[0];
 
+// gltf-transform's dedup() renames a mesh node it merges with an identical one
+// elsewhere in the file to the full slash-joined path it was found at, to keep
+// names unique (e.g. ".../Shaft to Rotate_Assembly Updated-1/Shaft-1"). Three.js's
+// loader then sanitizes every node name: whitespace becomes "_", and reserved
+// characters — including "/" — are deleted outright, not replaced, so that
+// prefix doesn't become a separate segment, it's glued straight onto the leaf's
+// own name with no separator at all. The leaf's own name still appears intact
+// *somewhere* in the result, just not after a "/" — so match with `.includes()`
+// on the (space-sanitized) leaf name, not a path split.
+const sanitized = (name: string) => name.replace(/\s/g, '_');
+
 // ---------------------------------------------------------------------------
 // PTU gear-cutting fixture
 //
@@ -213,6 +224,78 @@ function oilingSensor(THREE: Three, root: Object3D): ModelAnimation | null {
   return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
 }
 
+// ---------------------------------------------------------------------------
+// Conveyor cart drive shaft
+//
+//   "Shaft to Rotate"   the whole drive-shaft sub-assembly (shaft, both
+//                        handles, locking profiles, collars) — turns as one
+//                        piece; everything else on the cart stays put.
+//
+// This export has many duplicated parts (two mirrored shaft halves, dozens of
+// identical roller-assembly screws/bearings), which `npm run model`'s default
+// instancing pass collapses into shared GPU-instanced batches — fine for a
+// static model, but it also swallows the very node this animation looks up
+// by name, so this .glb was compressed with `--no-instance` to keep every
+// part addressable (still ~0.6 MB either way; instancing wasn't doing much
+// for the file size here).
+//
+// The "Shaft to Rotate" node sits at the local origin with an identity
+// transform, and its "Shaft-1" mesh (the plain shaft rod, not the many
+// "Shaft__-1" roller shafts elsewhere in the cart) is centred exactly on
+// that origin — so the group is already pivoted on its own rotation axis,
+// running along local/world Z. Still wrapped in a pivot at the shaft's own
+// centre (found from its mesh, not trusted from the group's name) for the
+// same robustness as the gear fixture, in case a future export isn't quite
+// this tidy.
+//
+// Direction: the file has no physical left/right cue the way the gear
+// fixture's slot did, so "clockwise" is read from the .glb's own embedded
+// "current camera" (the SolidWorks viewport open when this was exported) —
+// it sits well past the shaft's +Z end looking back toward −Z, i.e. +Z
+// points at that viewer, so a clockwise turn from there is a NEGATIVE
+// rotation about +Z. If this reads backwards on screen, flip SHAFT_TURN's
+// sign — everything else about the motion stays the same.
+// ---------------------------------------------------------------------------
+const SHAFT_TURN = -Math.PI / 2; // 90°, clockwise as seen from the embedded camera (see above)
+
+function conveyorShaft(THREE: Three, root: Object3D): ModelAnimation | null {
+  root.updateMatrixWorld(true);
+
+  // three.js replaces spaces in node names with underscores on load (see
+  // baseName's comment above), so the SolidWorks name "Shaft to Rotate"
+  // arrives as "Shaft_to_Rotate".
+  const group = find(root, (o) => baseName(o) === 'Shaft_to_Rotate');
+  // Scoped to `group`'s own subtree, where the only other shafts are the
+  // "Shaft__-1" roller shafts (double underscore, no plain "Shaft-1" — a
+  // substring match is unambiguous here).
+  const shaft = group && find(group, (o) => o.name.includes(sanitized('Shaft-1')));
+  if (!group?.parent || !shaft) {
+    console.warn('[conveyor-shaft] expected a "Shaft to Rotate" node containing "Shaft-1"; found', { group, shaft });
+    return null;
+  }
+
+  const shaftBox = new THREE.Box3().setFromObject(shaft);
+  const shaftSize = shaftBox.getSize(new THREE.Vector3());
+  if (!(shaftSize.z > shaftSize.x && shaftSize.z > shaftSize.y)) {
+    console.warn('[conveyor-shaft] "Shaft-1" is not the expected long-and-thin rod along Z; check the axis', shaftSize);
+  }
+
+  const parent = group.parent;
+  const pivot: Group = new THREE.Group();
+  pivot.name = 'Shaft to Rotate pivot';
+  pivot.position.copy(parent.worldToLocal(shaftBox.getCenter(new THREE.Vector3())));
+  parent.add(pivot);
+  pivot.updateMatrixWorld(true);
+  pivot.attach(group); // keeps the shaft assembly exactly where it is in the world
+
+  const tl = gsap.timeline({ repeat: -1, paused: true, defaults: { ease: 'power2.inOut' } });
+  tl.to(pivot.rotation, { z: SHAFT_TURN, duration: 1.5 }) // turn 90°
+    .to(pivot.rotation, { z: 0, duration: 1.5 }, '+=1'); //   hold 1 s, then turn back
+
+  if (import.meta.env.DEV) Object.assign(window, { __conveyorShaft: { timeline: tl, pivot, group, shaft } });
+  return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
+}
+
 /** Builds the named animation for a loaded model, or null if the model doesn't have the parts it needs. */
 export function createModelAnimation(name: ModelAnimationName, THREE: Three, root: Object3D): ModelAnimation | null {
   switch (name) {
@@ -220,5 +303,7 @@ export function createModelAnimation(name: ModelAnimationName, THREE: Three, roo
       return gearCutting(THREE, root);
     case 'oiling-sensor':
       return oilingSensor(THREE, root);
+    case 'conveyor-shaft':
+      return conveyorShaft(THREE, root);
   }
 }
