@@ -228,12 +228,6 @@ export const projects: Project[] = [
         image: { src: 'oil-fixture-photo', alt: 'Oiling fixture with a part seated in it' },
       },
     ],
-    gallery: [
-      { src: 'shaft-puller-cad', alt: 'CAD of the shaft removal tool on the part' },
-      { src: 'shaft-puller-drawing', alt: 'Engineering drawing of the shaft removal tool' },
-      { src: 'saw-fixture-cad', alt: 'CAD of the saw-cut fixture holding the part' },
-      { src: 'oil-fixture-cad', alt: 'Transparent CAD of the oiling fixture' },
-    ],
   },
   {
     id: 'oiling-tool',
