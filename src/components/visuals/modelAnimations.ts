@@ -348,6 +348,63 @@ function shaftPuller(THREE: Three, root: Object3D): ModelAnimation | null {
   return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
 }
 
+// ---------------------------------------------------------------------------
+// Kinder Toy Plane propeller
+//
+//   "Propeller-1"   a single rigid mesh — spins continuously about its own
+//                    hub axis forever, nothing else on the model moves
+//
+// Unlike the other animations, this one never stops or reverses — it's a
+// plain continuous spin, so there's no direction to get backwards and no
+// pose to return to.
+//
+// The propeller isn't axis-aligned in the file: its node has its own
+// placement quaternion (tilting it into its mounted position on the nose),
+// and its own mesh geometry isn't authored on a world axis either. Found the
+// spin axis from the mesh's own (pre-placement) local geometry — vertices
+// spread far along local Z (the blade span, std ≈ 0.027) and comparatively
+// little along local X (≈ 0.008, the blade's chord/width) or local Y
+// (≈ 0.006, the smallest spread of the three: the blade's own thickness,
+// i.e. the direction perpendicular to the flat blade plane — the hub/shaft
+// axis a real 2-blade prop spins about).
+//
+// To spin "in place" about that hub, without disturbing the mounted
+// orientation, this keeps the node's original (placement) quaternion fixed
+// and multiplies in an extra rotation about the local Y axis every frame:
+// Qfinal = Qplacement · Qspin(angle) — the spin happens in the propeller's
+// own pre-placement frame, *before* it's placed, the same as a real
+// propeller turning on a shaft that itself sits at a fixed mounting angle.
+// ---------------------------------------------------------------------------
+function propellerSpin(THREE: Three, root: Object3D): ModelAnimation | null {
+  const propeller = find(root, (o) => baseName(o).startsWith('Propeller'));
+  if (!propeller) {
+    console.warn('[propeller-spin] expected a "Propeller" node; found none');
+    return null;
+  }
+
+  const placement = propeller.quaternion.clone();
+  const axis = new THREE.Vector3(0, 1, 0); // the propeller's own local hub axis (see above)
+  const spin = new THREE.Quaternion();
+  const state = { angle: 0 };
+  const ROTATIONS_PER_SECOND = 1.25; // tune here for a faster/slower spin
+
+  const tl = gsap.timeline({ repeat: -1, paused: true }).to(state, {
+    angle: Math.PI * 2,
+    duration: 1 / ROTATIONS_PER_SECOND,
+    ease: 'none', // constant speed, not eased — matches a motor spinning at a steady rate
+    onUpdate: () => {
+      spin.setFromAxisAngle(axis, state.angle);
+      propeller.quaternion.copy(placement).multiply(spin);
+    },
+  });
+  // A tween from 0 to 2π looping via `repeat: -1` snaps back to angle 0 at the
+  // end of each lap — invisible here, since a 2π turn and a 0 turn are the
+  // same orientation, so nothing actually jumps.
+
+  if (import.meta.env.DEV) Object.assign(window, { __propellerSpin: { timeline: tl, propeller, placement, axis } });
+  return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
+}
+
 /** Builds the named animation for a loaded model, or null if the model doesn't have the parts it needs. */
 export function createModelAnimation(name: ModelAnimationName, THREE: Three, root: Object3D): ModelAnimation | null {
   switch (name) {
@@ -359,5 +416,7 @@ export function createModelAnimation(name: ModelAnimationName, THREE: Three, roo
       return conveyorShaft(THREE, root);
     case 'shaft-puller':
       return shaftPuller(THREE, root);
+    case 'propeller-spin':
+      return propellerSpin(THREE, root);
   }
 }

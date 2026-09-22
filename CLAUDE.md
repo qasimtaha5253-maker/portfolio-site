@@ -142,10 +142,13 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   model out 30–40% (tried and reverted).
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
-  demand, only plays while on screen, off under reduced motion). Currently four:
+  demand, only plays while on screen, off under reduced motion). Currently five:
   `ptu-gear-cutting` (cutter, sliding and turning gear group), `oiling-sensor` (sensor lowered
-  1.25 in and raised), `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back) and
-  `shaft-puller` (adaptor A pulled in, sleeve down, then both back out).
+  1.25 in and raised), `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back),
+  `shaft-puller` (adaptor A pulled in, sleeve down, then both back out) and `propeller-spin` (the
+  toy plane's propeller, spinning continuously about its own hub axis — the only one of the five
+  that never stops/reverses; see handoff.md §7 for how its axis was found from the mesh's own
+  local geometry, not the node's placement transform).
   Directions/axes are derived in handoff.md §7, and a dev-only `window.__gearCuttingTest()`
   checks the gear one. **Node names: three.js sanitizes every one on load** (whitespace → `_`;
   `[ ] . : /` are deleted, not replaced) — match against the sanitized form, not the name a
@@ -173,6 +176,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 - Custom domain is deliberately the last step; don't raise it early.
 - Kinder Toy Plane's "Process" step has a video of the assembly exploding apart (from a SolidWorks
   Motion Study frame sequence); the `plane-exploded` photo stays as the reduced-motion fallback.
+  Its "Idea" step (and, automatically, its tile cover) has a 3D model with the propeller spinning
+  continuously (`animation: 'propeller-spin'`); `plane-photo` stays as the reduced-motion fallback.
 
 ## Hosting
 - Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)

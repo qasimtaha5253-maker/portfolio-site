@@ -37,8 +37,14 @@ export interface StepVideo {
  *   'oiling-sensor'     the speed-sensor oiling assembly: sensor lowered 1.25 in and raised
  *   'conveyor-shaft'    the conveyor cart's drive shaft, turned 90° and back
  *   'shaft-puller'      the shaft removal tool: adaptor A pulled in, sleeve down, then back
+ *   'propeller-spin'    the toy plane's propeller, spinning continuously about its own hub axis
  */
-export type ModelAnimationName = 'ptu-gear-cutting' | 'oiling-sensor' | 'conveyor-shaft' | 'shaft-puller';
+export type ModelAnimationName =
+  | 'ptu-gear-cutting'
+  | 'oiling-sensor'
+  | 'conveyor-shaft'
+  | 'shaft-puller'
+  | 'propeller-spin';
 
 /** A real-time 3D model (.glb) the visitor can rotate. */
 export interface StepModel {

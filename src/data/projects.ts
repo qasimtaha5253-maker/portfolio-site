@@ -349,6 +349,11 @@ export const projects: Project[] = [
           'Moves forward on its own with a mechanism that uses zero stored potential energy.',
         ],
         image: { src: 'plane-photo', alt: 'Assembled 3D-printed toy plane' },
+        model: {
+          src: 'models/toy-plane.glb',
+          title: 'Animated 3D model of the toy plane, propeller spinning',
+          animation: 'propeller-spin',
+        },
       },
       {
         label: 'Process',

@@ -258,7 +258,13 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   `PlaneAssembly-NNNN.tga` frames, 2560×931, 30 fps, 1.1 GB — see §7 "Video pipeline"). The
   existing `plane-exploded` photo on that step is unchanged and is now the reduced-motion
   fallback. Not a tile cover (no cover-video mechanism exists — `coverModels()` only looks at
-  `model`/`split`/`stack`; this project's cover is still its plain `plane-photo`).
+  `model`/`split`/`stack`; that's a separate model, added next).
+- **Kinder Toy Plane, again** — also got a real 3D model (2026-09-21) on its first step ("Idea"),
+  which per the usual rule made it the tile cover too, replacing the `plane-photo` cover image
+  (that photo is now only the reduced-motion fallback on both the cover and the "Idea" step).
+  **Animated (`propeller-spin`):** the propeller spins continuously forever — the only one of the
+  five model animations that never stops, reverses, or returns to a start pose. See §7,
+  "Propeller spin" for how its (non-axis-aligned) spin axis was found and verified.
 - The other 5 projects are photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
@@ -520,6 +526,50 @@ He dropped an 841-frame SolidWorks Motion Study export (`PlaneAssembly-0000.tga`
   scroll in/out, reduced motion mounts no `<video>` at all and shows the existing `plane-exploded`
   photo instead, and a screenshot mid-playback visibly shows different frames a few seconds apart
   (parts in different positions) — real playback, not a frozen poster.
+
+**Propeller spin (`propeller-spin`, 2026-09-21) — a continuous spin, and finding an axis that
+isn't aligned to anything**
+His `Kinder_Toy_Plane_Model.glb` is a single flat node list (25 meshes, no sub-assembly grouping)
+under a root `PlaneAssembly` node — `Propeller-1` is one rigid mesh among them, nothing else on
+the model moves. Compressed with the *default* settings (instancing is fine here — it only
+merged the 4 wheels/legs into batches, `Propeller-1` stayed its own untouched node; confirmed by
+re-reading the compressed file before wiring anything up, the same check that caught the
+conveyor-cart instancing problem last session).
+- **This is the first *continuous* model animation** — the other four all move to a pose, hold,
+  and return; this one spins forever with no start/end pose to get backwards. So no "does it
+  match the spec" direction check applies the way it did for the others — only "is it spinning
+  about the right axis, in place, without disturbing where the propeller sits."
+- **The node's own placement isn't axis-aligned**, and neither is the mesh's own geometry in its
+  local (pre-placement) space — there's no clean world- or even local-axis spin direction to read
+  off a bounding box the way the earlier animations could. Found the true spin axis by computing
+  the **standard deviation of the propeller mesh's own vertex positions along each local axis**
+  (not just min/max range, which a tapered blade can make misleading): local Z had by far the
+  widest spread (~0.027, the blade span/sweep direction), local X was next (~0.008, the blade's
+  chord/width), and local Y the narrowest (~0.006) — the direction perpendicular to the flat
+  blade plane, i.e. the hub axis a real 2-blade prop turns on. Used local **Y**.
+- **To spin "in place" without disturbing the mounted orientation**, the node's original
+  (placement) quaternion is captured once and kept fixed; every frame,
+  `propeller.quaternion.copy(placement).multiply(spinQuaternion(angle))` — the spin is applied
+  *before* the placement (right-multiplied), i.e. it happens in the propeller's own pre-mount
+  frame, then that spinning propeller gets placed at its mounted angle — not the same thing as
+  spinning about a world or even the node's *current* local axis, which would slowly drift the
+  mounting angle itself if done via repeatedly incrementing `.rotation.y`/similar Euler math
+  instead of quaternion composition.
+- Driven by a GSAP tween of a plain `{ angle: 0 → 2π }` value with `repeat: -1`, `ease: 'none'`
+  (constant angular speed, not eased — matches a motor, not a bounce) and an `onUpdate` doing the
+  quaternion math above — a different shape from the other four animations' `gsap.timeline().to()`
+  chains on `.position`/`.rotation` directly, since composing quaternions isn't something a plain
+  property tween can do. 1.25 rotations/second (one lap every 0.8 s) is an arbitrary, easily
+  adjusted choice (the constant is commented) — picked slow enough to read clearly as spinning
+  rather than blurring/strobing on screen, not because of anything mechanically meaningful.
+- **Verified by seeking the timeline** (`tl.pause(); tl.time(t)` at t = 0, 0.1, 0.2, 0.4, 0.6,
+  0.8 s — the same deterministic technique used for every other animation, more reliable here
+  than real-time playback given the pane's rAF throttling, see the environment-trap note above):
+  the quaternion changes smoothly across those samples, `propeller.position` never changes at
+  all (confirms it only spins, doesn't wander), and at t = 0.8 s (one full lap at 1.25 rev/s) the
+  quaternion is the exact negation of its t = 0 value component-wise — a quaternion and its
+  negation represent the identical rotation, so this confirms the loop returns to exactly the
+  start orientation with no seam or drift.
 
 ## 8. Known issues / debts
 
