@@ -261,7 +261,13 @@
   border-radius: var(--radius);
 }
 
-.photo-visual__split-img.is-transparent {
+/* Qualified with the context selectors below (not just .photo-visual__split-img
+   / .step-visual__img) so this reliably outranks their own background rules
+   regardless of source order — same specificity, "is it transparent" should
+   always win over "what panel colour", but two equal-specificity rules
+   resolve by source order otherwise, which silently broke this before. */
+.photo-visual__split-img.is-transparent,
+.step-visual--split .photo-visual__split-img.is-transparent {
   background: none;
 }
 
@@ -295,8 +301,11 @@
   color: var(--muted);
 }
 
-/* Cut-out (transparent) renders need no panel behind them. */
-.step-visual__img.is-transparent {
+/* Cut-out (transparent) renders need no panel behind them. Qualified with
+   .bento-tile__step (see the .photo-visual__split-img.is-transparent
+   comment above) so it reliably outranks that context's own background. */
+.step-visual__img.is-transparent,
+.bento-tile__step .step-visual__img.is-transparent {
   background: none;
 }
 
@@ -677,7 +686,10 @@
 }
 
 .bento-tile__step .step-visual__img {
-  margin-top: 0.75rem;
+  /* Tailwind's preflight sets img { display: block }, so the step's own
+     text-align: center (which only centres inline content) doesn't apply
+     to it — needs its own auto margins instead. */
+  margin: 0.75rem auto 0;
   max-width: 24rem;
   width: 100%;
   border-radius: 8px;
