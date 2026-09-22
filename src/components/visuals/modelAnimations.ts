@@ -337,12 +337,12 @@ function shaftPuller(THREE: Three, root: Object3D): ModelAnimation | null {
   const inward = radial.clone().normalize().multiplyScalar(-1.5 * INCH); // 1.5 in, toward the axis
   const sy0 = sleeve.position.y;
 
-  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.5, paused: true, defaults: { ease: 'power2.inOut' } });
-  tl.to(adaptorA.position, { x: ax0 + inward.x, z: az0 + inward.y, duration: 1.5 }) // A moves inward, 1.5 in
-    .to(sleeve.position, { y: sy0 - 2 * INCH, duration: 1.5 }, '+=0.5') //             sleeve moves down, 2 in
-    .to(sleeve.position, { y: sy0, duration: 1.5 }, '+=0.5') //                        sleeve moves back up
-    .to(adaptorA.position, { x: ax0, z: az0, duration: 1.5 }, '+=0.5'); //             A moves outward again
-  // repeatDelay above is the closing 0.5 s pause before it loops.
+  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.25, paused: true, defaults: { ease: 'power2.inOut' } });
+  tl.to(adaptorA.position, { x: ax0 + inward.x, z: az0 + inward.y, duration: 1 }) // A moves inward, 1.5 in
+    .to(sleeve.position, { y: sy0 - 2 * INCH, duration: 1 }, '+=0.25') //             sleeve moves down, 2 in
+    .to(sleeve.position, { y: sy0, duration: 1 }, '+=0.25') //                        sleeve moves back up
+    .to(adaptorA.position, { x: ax0, z: az0, duration: 1 }, '+=0.25'); //             A moves outward again
+  // repeatDelay above is the closing 0.25 s pause before it loops.
 
   if (import.meta.env.DEV) Object.assign(window, { __shaftPuller: { timeline: tl, adaptorA, sleeve } });
   return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
