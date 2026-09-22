@@ -19,32 +19,31 @@ export const projects: Project[] = [
       'A battery-electric, towable pre-cooler that chills strawberries to 1 °C right at the field.',
     steps: [
       {
-        label: 'The problem',
-        body:
-          'Small Ontario strawberry farms have no cooling at the point of harvest, so fruit sits at 30.5 °C for 2–4 hours and loses 20–37% of its marketability.',
+        label: 'What?',
         bullets: [
-          'Goal: cool fruit to 0–2 °C in the field, before it ever reaches cold storage.',
-          'Off-grid, six vented flats, towable by one worker, keeps fruit dry, low-GWP refrigerant.',
+          'Designed a mobile, *battery-electric forced-air pre-cooling cart* that brings refrigeration directly to the harvest site for small-scale Ontario strawberry farms without fixed cold storage.',
+          'Aimed to cool freshly picked berries from *30.5 °C to 1 °C* within the harvest window, eliminating the 2–4 hour ambient delay that drives *Botrytis cinerea* (grey mould) growth. Each hour of delay costs roughly one day of shelf life.',
         ],
         model: { src: 'models/cooling-unit.glb', title: 'Rotatable 3D model of the cooling unit assembly' },
         image: { src: 'strawberry-flat', alt: 'CAD of a standard 16 × 12 × 4 in vented strawberry flat, empty and loaded' },
       },
       {
-        label: 'How it works',
+        label: 'How?',
         bullets: [
-          'SolidWorks model of the cart, enclosure and flats with a 12 m/s forced-air cooling path.',
-          'R-290 refrigeration cycle analysed on a P-h diagram; variable-speed compressor selected.',
-          '48 V LiFePO₄ battery and inverter sized from a duty-cycle energy analysis.',
+          'Engineered a *vapour-compression refrigeration cycle* using *R-290 (propane) refrigerant (GWP = 3)* driven by a *variable-speed Secop SLVE18CN compressor*. It is rated at ~2,010 W at −9 °C, giving *23% capacity headroom* over the 1,640 W design load.',
+          'Performed a full *thermal load analysis* covering forced convection, wall conduction, and lid infiltration. This showed that strawberry field heat accounts for *96.9%* of the load, and every downstream component was sized from that figure.',
+          'Sized a *fin-and-tube evaporator coil* (83 fins at 5 fins/cm, 32.0 m² vs. 22.41 m² required) and verified a −9 °C evaporator temperature analytically. Heat is rejected through *twin fan-assisted microchannel condensers* at 40 °C.',
+          'Specified *1.6 in PIR foam insulation* (k = 0.023 W/m·K) over PUR, limiting wall and infiltration losses to only *3.1%* of the total load.',
+          'Designed the *off-grid power system*: a *48 V, 80 Ah LiFePO₄ battery* with a 4,000 W inverter. It was sized for a 4-hour session at 60% duty cycle with a *43% capacity margin*, and the 2,890 W compressor startup surge stays below the inverter rating.',
         ],
         embed: { src: 'animations/cart-section.html?v=8', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
         image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
       },
       {
-        label: 'Validation',
+        label: 'How?',
         bullets: [
-          'ANSYS CFD confirmed the load cools from 30.5 °C to 1 °C in 2.17 hours — well inside the 4-hour window.',
-          'SolidWorks FEA on the structure, plus a 10-year cost and carbon model.',
-          'Built-in margins: +43% battery runtime, +43% evaporator area, +23% compressor capacity.',
+          'Validated cooling performance with *ANSYS CFD*, showing berry surface temperatures of ~13 °C at 30 minutes and ~1 °C at 2 hours. This agreed with the analytical cooling-time prediction.',
+          'Modelled the enclosure around *standard vented strawberry flats* in SolidWorks. It uses a wagon-style chassis with front-wheel steering and thick-tread tires to move with pickers over rough field terrain.',
         ],
         split: [
           { image: { src: 'flat-simulation', alt: 'ANSYS CFD contour plot on a vented strawberry flat' } },
@@ -52,7 +51,7 @@ export const projects: Project[] = [
         ],
       },
       {
-        label: 'What it achieved',
+        label: 'What It Achieved',
         stats: [
           { value: '2.17 hr', label: '30.5 → 1 °C' },
           { value: '1,640 W', label: 'Cooling load' },
@@ -61,9 +60,13 @@ export const projects: Project[] = [
           { value: '~2 yr', label: 'Payback' },
         ],
         bullets: [
-          '7× return over 10 years, at a fraction of the $15–30k cost of commercial units.',
-          '461 kg CO₂e/yr avoided (R-290 GWP of 3 vs 1,430 for R-134a).',
-          'Met every design criterion; recommended for prototype fabrication.',
+          'Cools a full *109 kg load (6 flats)* to 1 °C in *2.17 hours*, with *5.70 hours* of battery runtime per charge, enough for two full loads.',
+          'Achieved a real system *COP of 2.09*, with the variable-speed compressor running at *81.6% partial load (~786 W)*.',
+          'Recovers an estimated *$5,292 annually* in spoilage losses (base case), against a total annual ownership cost of just *$865*.',
+          'Delivered a *6.3 benefit-to-cost ratio* with a *2-year discounted payback* on a *$6,515* capital investment.',
+          'Projected a *+$45,690 10-year cumulative net benefit* (7.0× return).',
+          'Avoids a net *461 kg CO₂e annually* through reduced food waste, roughly equivalent to powering an Ontario home for 18 days.',
+          'Removes the cold-chain access barrier for small farms by acting as a dedicated pre-cooler at the point of harvest.',
         ],
         model: { src: 'models/cooling-unit.glb', title: 'Rotatable 3D model of the cooling unit assembly' },
       },

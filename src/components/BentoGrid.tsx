@@ -228,8 +228,8 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                   }}
                 >
                   {project.summary && <p className="bento-tile__summary bento-tile__summary--detail">{project.summary}</p>}
-                  {project.steps.map((step) => (
-                    <section className="bento-tile__step" key={step.label}>
+                  {project.steps.map((step, stepIndex) => (
+                    <section className="bento-tile__step" key={`${step.label}-${stepIndex}`}>
                       <h4>{step.label}</h4>
                       <StepContent step={step} />
                       <StepVisual
