@@ -234,7 +234,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                           label) — e.g. a second visual that continues the same section
                           instead of starting a new one. */}
                       {step.label && <h4>{step.label}</h4>}
-                      <StepContent step={step} />
+                      <StepContent step={step} ready={contentReady} />
                       <StepVisual
                         projectId={project.id}
                         step={step}
