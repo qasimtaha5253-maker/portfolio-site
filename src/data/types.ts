@@ -81,6 +81,15 @@ export interface StepModel {
    * orientation as upright. Only needed once per model; not an ongoing tilt.
    */
   rotation?: [number, number, number];
+  /**
+   * Node names (or name substrings, matched the same loose way model
+   * animations look parts up — see modelAnimations.ts) whose materials
+   * render see-through, so parts nested inside (e.g. springs inside a
+   * housing) are visible. `transparentOpacity` sets how see-through
+   * (default 0.3).
+   */
+  transparentParts?: string[];
+  transparentOpacity?: number;
 }
 
 export interface Stat {

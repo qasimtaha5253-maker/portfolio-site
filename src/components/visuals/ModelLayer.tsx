@@ -238,6 +238,33 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           gltf.scene.position.sub(centre);
           scene.add(gltf.scene);
 
+          // `model.transparentParts`: make a named part (and everything
+          // nested inside it) see-through, so what's inside it is visible —
+          // e.g. a housing over a mechanism. depthWrite off keeps it from
+          // hiding what's behind it in the depth buffer regardless of draw
+          // order; double-sided so the inside face still renders (a CAD
+          // export's shell is usually front-face-only).
+          if (model.transparentParts?.length) {
+            const opacity = model.transparentOpacity ?? 0.3;
+            const parts = model.transparentParts;
+            gltf.scene.traverse((obj) => {
+              if (!parts.some((part) => obj.name.includes(part))) return;
+              obj.traverse((inner) => {
+                const mesh = inner as { isMesh?: boolean; material?: unknown };
+                if (!mesh.isMesh) return;
+                const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+                for (const m of materials) {
+                  const mat = m as { transparent?: boolean; opacity?: number; depthWrite?: boolean; side?: number } | undefined;
+                  if (!mat) continue;
+                  mat.transparent = true;
+                  mat.opacity = opacity;
+                  mat.depthWrite = false;
+                  mat.side = THREE.DoubleSide;
+                }
+              });
+            });
+          }
+
           // Reach from the spin axis, measured after the shift above.
           const shifted = box.clone().translate(centre.clone().negate());
           reachXZ = Math.hypot(

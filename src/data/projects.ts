@@ -267,6 +267,8 @@ export const projects: Project[] = [
           src: 'models/oiling-tool.glb',
           title: 'Animated 3D model of the spring-loaded oiling tool, the coil lowering into the sponge',
           animation: 'oiling-tool-coil',
+          margin: 1.4,
+          transparentParts: ['Fix'],
         },
         image: { src: 'oiling-tool-photo', alt: 'Oiling tool on a workbench with a part in place' },
       },
