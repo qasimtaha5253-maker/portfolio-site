@@ -17,6 +17,13 @@ export const projects: Project[] = [
     featured: true,
     summary:
       'A battery-electric, towable pre-cooler that chills strawberries to 1 °C right at the field.',
+    // The tile's actual cover is always the 3D model (coverModels() takes
+    // priority), so this is never shown — it only exists so coverImage()'s
+    // fallback doesn't pick 'strawberry-flat' (used on two different steps
+    // below) as the "cover", which would suppress it on whichever step
+    // isn't shown first.
+    cover: 'final-design',
+    gallery: [{ src: 'final-design', alt: 'Dimensioned CAD drawing of the final cooling cart design' }],
     steps: [
       {
         label: 'What?',
@@ -36,19 +43,17 @@ export const projects: Project[] = [
           'Specified *1.6 in PIR foam insulation* (k = 0.023 W/m·K) over PUR, limiting wall and infiltration losses to only *3.1%* of the total load.',
           'Designed the *off-grid power system*: a *48 V, 80 Ah LiFePO₄ battery* with a 4,000 W inverter. It was sized for a 4-hour session at 60% duty cycle with a *43% capacity margin*, and the 2,890 W compressor startup surge stays below the inverter rating.',
         ],
-        embed: { src: 'animations/cart-section.html?v=8', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
+        embed: { src: 'animations/cart-section.html?v=10', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
         image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
       },
       {
-        label: 'How?',
+        // No heading: continues the "How?" section above with a second visual.
+        label: '',
         bullets: [
           'Validated cooling performance with *ANSYS CFD*, showing berry surface temperatures of ~13 °C at 30 minutes and ~1 °C at 2 hours. This agreed with the analytical cooling-time prediction.',
           'Modelled the enclosure around *standard vented strawberry flats* in SolidWorks. It uses a wagon-style chassis with front-wheel steering and thick-tread tires to move with pickers over rough field terrain.',
         ],
-        split: [
-          { image: { src: 'flat-simulation', alt: 'ANSYS CFD contour plot on a vented strawberry flat' } },
-          { image: { src: 'strawberry-flat', alt: 'CAD of the standard vented strawberry flat the simulation was run on, empty and loaded' } },
-        ],
+        image: { src: 'strawberry-flat', alt: 'CAD of the standard vented strawberry flat, empty and loaded' },
       },
       {
         label: 'What It Achieved',
@@ -68,7 +73,6 @@ export const projects: Project[] = [
           'Avoids a net *461 kg CO₂e annually* through reduced food waste, roughly equivalent to powering an Ontario home for 18 days.',
           'Removes the cold-chain access barrier for small farms by acting as a dedicated pre-cooler at the point of harvest.',
         ],
-        model: { src: 'models/cooling-unit.glb', title: 'Rotatable 3D model of the cooling unit assembly' },
       },
     ],
   },

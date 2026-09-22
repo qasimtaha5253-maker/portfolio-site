@@ -230,7 +230,10 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                   {project.summary && <p className="bento-tile__summary bento-tile__summary--detail">{project.summary}</p>}
                   {project.steps.map((step, stepIndex) => (
                     <section className="bento-tile__step" key={`${step.label}-${stepIndex}`}>
-                      <h4>{step.label}</h4>
+                      {/* A step can share its heading with the one before it (an empty
+                          label) — e.g. a second visual that continues the same section
+                          instead of starting a new one. */}
+                      {step.label && <h4>{step.label}</h4>}
                       <StepContent step={step} />
                       <StepVisual
                         projectId={project.id}

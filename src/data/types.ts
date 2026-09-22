@@ -85,7 +85,9 @@ export interface Stat {
 }
 
 export interface Step {
-  /** Step heading, e.g. "How it works". */
+  /** Step heading, e.g. "How it works". An empty string shows no heading,
+   *  for a step that continues the previous one's (e.g. a second visual
+   *  under the same section instead of starting a new one). */
   label: string;
   /** Paragraph text. */
   body?: string;

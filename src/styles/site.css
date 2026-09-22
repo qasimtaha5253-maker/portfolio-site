@@ -654,6 +654,13 @@
   text-align: center;
 }
 
+/* An embedded HTML animation (iframe) reads better bigger than the default
+   column — 25% wider, so the .step-visual box (and everything inside the
+   SVG, since it scales with its container) grows to match. */
+.bento-tile__step:has(iframe) {
+  max-width: 52.5rem;
+}
+
 .bento-tile__step:last-child {
   margin-bottom: 0;
 }
