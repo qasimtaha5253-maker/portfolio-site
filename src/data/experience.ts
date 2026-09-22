@@ -38,11 +38,12 @@ export const experience: ExperienceRole[] = [
     company: 'Camcor (Linamar Corporation)',
     location: 'Guelph, ON',
     dates: 'January 2025 – August 2025',
-    summary: 'Designing the tooling behind driveline production.',
+    summary: 'Helping launch a new production line — from floor layout to the tools and gauges that run it.',
     highlights: [
-      'I took **18** production tools from concept to release, from gear cutting fixtures to robot pallets and bearing pullers, all detailed to ASME Y14.5.',
+      'I helped launch a new production line, laying out machine cells and the shop floor in AutoCAD to set up the assembly line.',
+      'I designed **18** tools and fixtures, from gear cutting fixtures to robot pallets and bearing pullers, to set up the line efficiently — all detailed to ASME Y14.5.',
       'I cut the time operators spent handling parts by **70%** with a detachable conveyor cart.',
-      'I helped launch a new PTU production line by designing the variable and go/no-go gauges used to check its parts.',
+      'I made the variable and go/no-go gauges used to quality-check the new parts.',
     ],
   },
 ];
