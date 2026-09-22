@@ -90,6 +90,22 @@ export interface StepModel {
    */
   transparentParts?: string[];
   transparentOpacity?: number;
+  /**
+   * Turns the model's own self-rotation off (default on, when motion is
+   * allowed) — for a model that should only turn when the visitor drags it,
+   * e.g. a static exploded view. Dragging to rotate still works either way.
+   */
+  autoRotate?: boolean;
+  /**
+   * A one-time static "explode": each entry shifts a named part (matched
+   * the same loose way as `transparentParts`, but against the *start* of
+   * the name so a part's own label — e.g. "Design 2 Holder" inside a
+   * "Holder" group — doesn't also match and get shifted a second time) by
+   * a local `[x, y, z]` offset in metres, applied once right after load,
+   * before centring/framing. Not an ongoing animation — for pulling a
+   * model's parts apart into an exploded view.
+   */
+  explode?: { part: string; offset: [number, number, number] }[];
 }
 
 export interface Stat {

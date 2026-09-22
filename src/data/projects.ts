@@ -277,6 +277,29 @@ export const projects: Project[] = [
         bullets: [
           'Sized a spring for the right rate to give smooth linear motion, guided by shoulder bolts to keep it from bending sideways, and waterjet-cut sponges to the part’s exact dimensions for full-surface contact.',
         ],
+        model: {
+          src: 'models/oiling-tool.glb',
+          title: 'Exploded 3D model of the spring-loaded oiling tool: the coil, the fixed sponge assembly, the moving plate and the holder, top to bottom',
+          // Static exploded view, not a rotating cover model — drag only.
+          autoRotate: false,
+          margin: 1.15,
+          // Pulled apart along Y (this model's own vertical axis — see the
+          // 'oiling-tool-coil' comment in modelAnimations.ts) into the
+          // requested top-to-bottom order, each part offset just enough to
+          // clear the one above it by a consistent gap, worked out from
+          // this model's own part heights, not eyeballed:
+          //   Coil   Y 0.0906–0.1386 (h 0.048)   -> top slot,    offset +0.0114
+          //   Fixed  Y 0.0650–0.0872 (h 0.0222)  -> 2nd slot,    offset −0.0102
+          //   Moving Plate Y 0.0135–0.0795 (h 0.066) -> 3rd slot, offset −0.0498
+          //   Holder Y 0–0.0875 (h 0.0875)       -> bottom slot, offset −0.1487
+          // (each slot's top = the slot above's bottom minus a 0.025 gap)
+          explode: [
+            { part: 'ASM_Coil', offset: [0, 0.0114, 0] },
+            { part: 'Fixed', offset: [0, -0.0102, 0] },
+            { part: 'Moving_Plate', offset: [0, -0.0498, 0] },
+            { part: 'Holder', offset: [0, -0.1487, 0] },
+          ],
+        },
         image: { src: 'spring-mechanism', alt: 'Exploded CAD of the spring-loaded plate and shoulder bolts' },
       },
       {

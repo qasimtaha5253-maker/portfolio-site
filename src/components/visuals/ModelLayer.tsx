@@ -169,11 +169,18 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           return;
         }
         anim?.setPlaying(true);
-        controls.autoRotate = state.current.animated && state.current.active;
+        controls.autoRotate = state.current.animated && state.current.active && model.autoRotate !== false;
         // Real elapsed time, so the spin is the same speed at any frame rate. Capped so a
         // hiccup (or the first frame after being idle) can't make it jump.
         const now = performance.now();
         const elapsed = lastDraw ? Math.min((now - lastDraw) / 1000, 0.1) : 0;
+        // Marks a draw as in progress *before* controls.update(), which can
+        // synchronously fire the 'change' listener below (e.g. rotating on
+        // its own, not just from a drag) — restart() checks `frame` to
+        // avoid re-entering draw() while already inside it, so this has to
+        // be set before update() can trigger that, not after (the real
+        // frame id/0 overwrites this once rendering for real is done).
+        frame = -1;
         controls.update(elapsed);
         renderer.render(scene, camera);
         // Under reduced motion the model doesn't spin, so one rendered frame
@@ -188,6 +195,12 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         if (onScreen && loaded && !frame && state.current.active) draw();
       };
       resume.current = restart;
+      // The loop below only keeps re-scheduling itself while auto-rotating
+      // or a built-in animation is playing — for a static model (neither),
+      // it draws one frame and stops. OrbitControls fires this on every
+      // camera change, including from a drag, so that still draws a fresh
+      // frame each time instead of showing a stale one while being dragged.
+      controls.addEventListener('change', restart);
 
       const visibility = new IntersectionObserver(([entry]) => {
         onScreen = entry.isIntersecting;
@@ -207,6 +220,23 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           if (model.rotation) {
             const [x, y, z] = model.rotation;
             gltf.scene.rotation.set((x * Math.PI) / 180, (y * Math.PI) / 180, (z * Math.PI) / 180);
+            gltf.scene.updateMatrixWorld(true);
+          }
+
+          // `model.explode`: a one-time static pull-apart, before framing
+          // measures the (now-exploded) model. Matched against the *start*
+          // of each node's name, not `.includes()`, so a part's own mesh
+          // label nested inside a same-named group (e.g. "Design 2 Holder"
+          // inside "Holder") doesn't also match and get shifted twice.
+          if (model.explode?.length) {
+            for (const { part, offset } of model.explode) {
+              gltf.scene.traverse((obj) => {
+                if (!obj.name.startsWith(part)) return;
+                obj.position.x += offset[0];
+                obj.position.y += offset[1];
+                obj.position.z += offset[2];
+              });
+            }
             gltf.scene.updateMatrixWorld(true);
           }
 
@@ -319,6 +349,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         anim?.dispose();
         observer.disconnect();
         visibility.disconnect();
+        controls.removeEventListener('change', restart);
         controls.dispose();
         scene.traverse((obj) => {
           const mesh = obj as { geometry?: { dispose(): void }; material?: unknown };
