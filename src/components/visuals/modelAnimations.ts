@@ -356,14 +356,15 @@ function shaftPuller(THREE: Three, root: Object3D): ModelAnimation | null {
 //   "Moving Plate"   the spring-loaded plate (plus its springs and shoulder
 //                     screws) the coil rests on for the last part of its
 //                     descent — moves with the coil for that part only
-//   "Fix"            the sponge/holder assembly: never moves
+//   "Holder"          the outer housing around everything: never moves
+//   "Fixed"           the sponge/ring assembly inside the holder: never moves
 //
-// Direction, worked out from the model itself: the three top-level groups'
-// own transforms differ almost entirely along Y (X/Z are ~0), and the coil's
-// world-space bounding box (Y 0.091–0.139 m) sits well above both the moving
-// plate (Y 0.014–0.080 m) and the fixed sponge assembly (Y 0–0.0875 m, its
-// underside sitting at Y=0) — so the coil starts above the tool and is
-// lowered into it, i.e. down is −Y.
+// Direction, worked out from the model itself: every top-level group's own
+// transform differs almost entirely along Y (X/Z are ~0), and the coil's
+// world-space bounding box (Y 0.091–0.139 m) sits well above the moving
+// plate (Y 0.014–0.080 m), the holder (Y 0–0.0875 m, its underside at Y=0)
+// and the fixed sponge assembly (Y 0.065–0.087 m) — so the coil starts
+// above the tool and is lowered into it, i.e. down is −Y.
 // ---------------------------------------------------------------------------
 function oilingToolCoil(_THREE: Three, root: Object3D): ModelAnimation | null {
   root.updateMatrixWorld(true);
@@ -375,15 +376,15 @@ function oilingToolCoil(_THREE: Three, root: Object3D): ModelAnimation | null {
   }
 
   const DOWN_1 = 38.1 * MM;
-  const DOWN_2 = 11.77 * MM;
+  const DOWN_2 = 13.66 * MM;
   const y0 = coil.position.y;
   const plateY0 = plate.position.y;
 
   const tl = gsap.timeline({ repeat: -1, paused: true, defaults: { ease: 'power2.inOut' } });
-  tl.to(coil.position, { y: y0 - DOWN_1, duration: 1 }) // coil alone, down 38.1 mm
-    .to(coil.position, { y: y0 - DOWN_1 - DOWN_2, duration: 1 }) // then coil down 11.77 mm more,
+  tl.to(coil.position, { y: y0 - DOWN_1, duration: 1 }) // coil alone, down 38.1 mm (no pause after)
+    .to(coil.position, { y: y0 - DOWN_1 - DOWN_2, duration: 1 }) // then coil down 13.66 mm more,
     .to(plate.position, { y: plateY0 - DOWN_2, duration: 1 }, '<') //   together with the moving plate
-    .to(coil.position, { y: y0 - DOWN_1, duration: 1 }, '+=0.25') // pause 0.25 s, then coil up 11.77 mm,
+    .to(coil.position, { y: y0 - DOWN_1, duration: 1 }, '+=0.25') // pause 0.25 s, then coil up 13.66 mm,
     .to(plate.position, { y: plateY0, duration: 1 }, '<') //         together with the moving plate again
     .to(coil.position, { y: y0, duration: 1 }); // then coil alone, up 38.1 mm, back to the start
 
