@@ -225,6 +225,8 @@ export const projects: Project[] = [
     context: 'Finite Element Analysis',
     featured: false,
     summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
+    cover: 'stress-render',
+    gallery: [{ src: 'stress-render', alt: 'ANSYS stress contour render of the plate with a central hole' }],
     steps: [
       {
         label: 'What?',
@@ -286,6 +288,8 @@ export const projects: Project[] = [
     context: 'Guelph Engineering Competition · 3rd place',
     featured: false,
     summary: 'A rover prototype that sorts orange balls from white ones — a stand-in for collecting algae off coral reefs.',
+    cover: 'rover-chassis-render',
+    gallery: [{ src: 'rover-chassis-render', alt: 'CAD render of the rover chassis with wheels, battery and electronics' }],
     steps: [
       {
         label: 'What?',
@@ -392,6 +396,8 @@ export const projects: Project[] = [
     context: 'Engineering Design II · Team of 5',
     featured: false,
     summary: 'Took apart a 200+ part toy hydraulic arm and rebuilt it as a full SolidWorks assembly.',
+    cover: 'hand-render',
+    gallery: [{ src: 'hand-render', alt: 'CAD render of the reverse-engineered hydraulic hand assembly' }],
     steps: [
       {
         label: 'What?',

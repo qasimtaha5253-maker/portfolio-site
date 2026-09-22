@@ -1,5 +1,8 @@
 [
+  "ansys-stress/stress-render",
   "cooling-unit/final-design",
   "cooling-unit/flat-simulation",
-  "cooling-unit/strawberry-flat"
+  "cooling-unit/strawberry-flat",
+  "hydraulic-hand/hand-render",
+  "reef-rover/rover-chassis-render"
 ]
