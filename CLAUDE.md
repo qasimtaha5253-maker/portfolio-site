@@ -133,9 +133,10 @@ rotatable 3D model (`model`), or several side by side (`split`).
   model out 30–40% (tried and reverted).
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
-  demand, only plays while on screen, off under reduced motion). Currently three:
+  demand, only plays while on screen, off under reduced motion). Currently four:
   `ptu-gear-cutting` (cutter, sliding and turning gear group), `oiling-sensor` (sensor lowered
-  1.25 in and raised) and `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back).
+  1.25 in and raised), `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back) and
+  `shaft-puller` (adaptor A pulled in, sleeve down, then both back out).
   Directions/axes are derived in handoff.md §7, and a dev-only `window.__gearCuttingTest()`
   checks the gear one. **Node names: three.js sanitizes every one on load** (whitespace → `_`;
   `[ ] . : /` are deleted, not replaced) — match against the sanitized form, not the name a

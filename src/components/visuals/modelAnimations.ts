@@ -34,6 +34,7 @@ const baseName = (o: Object3D) => o.name.split('^')[0];
 // *somewhere* in the result, just not after a "/" — so match with `.includes()`
 // on the (space-sanitized) leaf name, not a path split.
 const sanitized = (name: string) => name.replace(/\s/g, '_');
+const sanitizedIncludes = (o: Object3D, name: string) => o.name.includes(sanitized(name));
 
 // ---------------------------------------------------------------------------
 // PTU gear-cutting fixture
@@ -268,7 +269,7 @@ function conveyorShaft(THREE: Three, root: Object3D): ModelAnimation | null {
   // Scoped to `group`'s own subtree, where the only other shafts are the
   // "Shaft__-1" roller shafts (double underscore, no plain "Shaft-1" — a
   // substring match is unambiguous here).
-  const shaft = group && find(group, (o) => o.name.includes(sanitized('Shaft-1')));
+  const shaft = group && find(group, (o) => sanitizedIncludes(o, 'Shaft-1'));
   if (!group?.parent || !shaft) {
     console.warn('[conveyor-shaft] expected a "Shaft to Rotate" node containing "Shaft-1"; found', { group, shaft });
     return null;
@@ -296,6 +297,57 @@ function conveyorShaft(THREE: Three, root: Object3D): ModelAnimation | null {
   return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
 }
 
+// ---------------------------------------------------------------------------
+// Shaft removal tool (shaft adapter + sleeve)
+//
+//   "Shaft Adaptor A"   one of the two interlocking halves that grip the
+//                        shaft — the only one this animation moves
+//   "Sleeve"             the slide-hammer sleeve that threads onto the top
+//   "Shaft Adaptor B", the output-shaft body   never move
+//
+// Adaptor A sits offset from the shaft's own (vertical, Y) axis — "inwards"
+// is read as toward that axis: the direction from A's start position to the
+// axis, in the horizontal (X/Z) plane, computed from wherever A actually is
+// rather than assumed, so this still works if the part is repositioned in a
+// future export. "Down" for the sleeve is unambiguous — everything in this
+// file stacks along Y (shaft body at the bottom, adaptors above it, sleeve
+// on top) — so it's simply −Y.
+// ---------------------------------------------------------------------------
+function shaftPuller(THREE: Three, root: Object3D): ModelAnimation | null {
+  root.updateMatrixWorld(true);
+  const adaptorA = find(root, (o) => sanitizedIncludes(o, 'Shaft Adaptor A'));
+  const sleeve = find(root, (o) => sanitizedIncludes(o, 'Sleeve'));
+  if (!adaptorA || !sleeve) {
+    console.warn('[shaft-puller] expected "Shaft Adaptor A" and "Sleeve" nodes; found', { adaptorA, sleeve });
+    return null;
+  }
+
+  // A's offset from the shaft's vertical axis, in the horizontal plane —
+  // "inward" is the direction from here back toward that axis (X=0, Z=0).
+  const ax0 = adaptorA.position.x;
+  const az0 = adaptorA.position.z;
+  const radial = new THREE.Vector2(ax0, az0);
+  if (radial.length() < 1e-4) {
+    console.warn('[shaft-puller] "Shaft Adaptor A" sits on the shaft axis already; no inward direction to move along', {
+      ax0,
+      az0,
+    });
+    return null;
+  }
+  const inward = radial.clone().normalize().multiplyScalar(-1.5 * INCH); // 1.5 in, toward the axis
+  const sy0 = sleeve.position.y;
+
+  const tl = gsap.timeline({ repeat: -1, repeatDelay: 0.5, paused: true, defaults: { ease: 'power2.inOut' } });
+  tl.to(adaptorA.position, { x: ax0 + inward.x, z: az0 + inward.y, duration: 1.5 }) // A moves inward, 1.5 in
+    .to(sleeve.position, { y: sy0 - 2 * INCH, duration: 1.5 }, '+=0.5') //             sleeve moves down, 2 in
+    .to(sleeve.position, { y: sy0, duration: 1.5 }, '+=0.5') //                        sleeve moves back up
+    .to(adaptorA.position, { x: ax0, z: az0, duration: 1.5 }, '+=0.5'); //             A moves outward again
+  // repeatDelay above is the closing 0.5 s pause before it loops.
+
+  if (import.meta.env.DEV) Object.assign(window, { __shaftPuller: { timeline: tl, adaptorA, sleeve } });
+  return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
+}
+
 /** Builds the named animation for a loaded model, or null if the model doesn't have the parts it needs. */
 export function createModelAnimation(name: ModelAnimationName, THREE: Three, root: Object3D): ModelAnimation | null {
   switch (name) {
@@ -305,5 +357,7 @@ export function createModelAnimation(name: ModelAnimationName, THREE: Three, roo
       return oilingSensor(THREE, root);
     case 'conveyor-shaft':
       return conveyorShaft(THREE, root);
+    case 'shaft-puller':
+      return shaftPuller(THREE, root);
   }
 }

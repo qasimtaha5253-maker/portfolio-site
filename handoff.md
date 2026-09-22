@@ -150,7 +150,10 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   fallback. If he meant the model to go under the *second* step ("How it works") instead, move
   the `model:` line in `projects.ts`. He may still add an animation later.
 - **Small Fixtures & Tooling** — got three 3D models (2026-09-19): shaft removal tool
-  (`shaft-adapter.glb`), saw-cut fixture (**animated**, `ptu-gear-cutting-fixture.glb` — replaced
+  (**animated**, `shaft-adapter.glb` — replaced with an animated export 2026-09-21;
+  `animation: 'shaft-puller'`: adaptor A pulled in 1.5 in, sleeve down 2 in, sleeve back up,
+  adaptor A back out, 0.5 s pause after every move — see §7 "Shaft puller"), saw-cut fixture
+  (**animated**, `ptu-gear-cutting-fixture.glb` — replaced
   the earlier static `gear-cutting-fixture.glb` on 2026-09-21; see §7 "Model animations") and
   oiling fixture (**animated**, `oiling-assembly.glb`, from his `Speed_Sensor_Oiling_Assembly`
   "Motion Study" export, replaced 2026-09-21; `animation: 'oiling-sensor'`: the sensor lowers
@@ -212,11 +215,33 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
   clockwise from there is a **negative** rotation about +Z. If he says it looks backwards, it's one
   sign flip (`SHAFT_TURN`'s sign in `modelAnimations.ts`) — but first check which end of the cart
   he was actually looking from, the same lesson as the gear fixture's direction mix-ups.
-  `shaft-adapter.glb` was replaced by a newer export from him on 2026-09-20 (the upper puller
-  block now shows the interlocking notch). Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces
-  the `shaft-puller-photo` photo (it was the cover and the step-1 image); the photo now only shows
-  under reduced motion. The saw-cut and oiling steps keep their photos. If he'd rather have each
-  model under its own step (shaft / saw / oiling), move each into that step as a plain `model`.
+  `shaft-adapter.glb` has been replaced twice: 2026-09-20 with a newer static export (the upper
+  puller block gained the interlocking notch), then 2026-09-21 with the animated one (see §7).
+  Sources 3–15 MB → 0.1–0.7 MB each. In animated mode this replaces the `shaft-puller-photo` photo
+  (it was the cover and the step-1 image); the photo now only shows under reduced motion. The
+  saw-cut and oiling steps keep their photos. If he'd rather have each model under its own step
+  (shaft / saw / oiling), move each into that step as a plain `model`.
+- **Shaft puller (`shaft-puller`, 2026-09-21).** Node names (post three.js sanitizing): `Sleeve-1`
+  (the slide-hammer sleeve — no spaces, unaffected), `Shaft_Adaptor_A-1` and `Shaft_Adaptor_B-1`
+  (the two interlocking halves that grip the shaft — only A moves; B and the shaft body stay
+  fixed). Everything stacks along local/world Y (shaft body at the bottom, both adaptors mid,
+  sleeve on top), so "sleeve down" is unambiguously −Y — no direction guesswork needed there.
+  "Inwards towards the model" for adaptor A was read as *radially, toward the shaft's own vertical
+  (Y) axis* — computed at runtime from wherever A's start position actually is (`new
+  THREE.Vector2(x0, z0)`, normalized and negated), not a hardcoded direction, so it stays correct
+  if a future export repositions the part. This reading was confirmed by a striking coincidence
+  worth knowing about: A's start position is *exactly* 1.500000 in from the axis, so moving
+  "inward by 1.5 in" lands it precisely at (X=0, Z=0) — landing dead-on like that from an
+  independently-specified distance is a strong sign this is the intended motion, not a
+  misread axis. Timeline (8 s, then repeats): A in (1.5 s) → 0.5 s pause → sleeve down 2 in
+  (1.5 s) → 0.5 s pause → sleeve up (1.5 s) → 0.5 s pause → A out (1.5 s) → 0.5 s pause (loop).
+  Verified in world space: A's radial travel is exactly 1.5 in, sleeve's vertical travel exactly
+  2 in, both return to their exact start position, every duration matches. Also confirmed
+  visually (batch a timeline-seek + screenshot immediately after one another, or the auto-rotating
+  camera drifts enough between separate tool calls to make two screenshots look inconsistent even
+  when nothing moved — see §6): at 1.5 s the two adaptor halves visibly close from an open
+  two-piece fork into one solid block around the shaft, and the sleeve visibly descends over that
+  block between 2 s and 3.5 s.
 - The other 6 projects are photo-only.
 - A "Choosing a concept" step existed on Cooling Unit once and was **deleted at his request** — he
   doesn't want to discuss alternative concepts. Don't reintroduce it.
@@ -233,6 +258,13 @@ bento tile shows every step's own visual, stacked, all at once, when expanded.
 - Cross-checking real behavior sometimes required the user's own report from his actual phone/
   desktop — this pane's limits mean Claude's own testing isn't always sufficient proof, and it's
   fine to say so rather than overclaim.
+- **Two separate `computer` screenshot calls, even seconds apart, can show a self-rotating model
+  from two different camera angles** (auto-rotate keeps turning in the real wall-clock time each
+  tool call takes) — a real, deliberate move (e.g. a part descending) can look reversed or
+  unchanged purely from that drift, a false alarm this session hit on the shaft-puller sleeve.
+  Trust the measured world-space transform over a pixel comparison across separate calls; if you
+  do want a visual check, batch the seek-and-screenshot pairs together (`browser_batch`) to
+  minimise the gap between them.
 - WebGL canvases can't be copied after their frame unless created with `preserveDrawingBuffer`
   (they aren't here) — don't try to inspect a render by reading canvas pixels.
 - Bash heredocs mangle backticks — use the Write/Edit tools for anything containing backticks or
