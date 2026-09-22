@@ -220,38 +220,6 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: 'ansys-stress',
-    title: 'ANSYS Stress Analysis',
-    context: 'Finite Element Analysis',
-    featured: false,
-    summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
-    cover: 'stress-render',
-    gallery: [{ src: 'stress-render', alt: 'ANSYS stress contour render of the plate with a central hole' }],
-    steps: [
-      {
-        label: 'What?',
-        bullets: [
-          'Investigated stress distribution and deformation in *1060-H12 aluminum* plates with holes, validating theoretical stress concentration factors (K-values) against simulation.',
-        ],
-        image: { src: 'plate-hole-stress', alt: 'Stress contour around a hole in a meshed plate' },
-      },
-      {
-        label: 'How?',
-        bullets: [
-          'Applied real-world boundary conditions in ANSYS, refining mesh size from *0.05 m down to 0.00425 m* with targeted refinement in high-stress zones around the holes, balancing accuracy against computational cost.',
-        ],
-        image: { src: 'bracket-mesh', alt: 'Meshed bracket model in ANSYS' },
-      },
-      {
-        label: 'Results',
-        bullets: [
-          'Validated simulated K-values against theory within *<2% error*.',
-        ],
-        image: { src: 'hole-stress-detail', alt: 'Detailed stress contour near a hole' },
-      },
-    ],
-  },
-  {
     id: 'oiling-tool',
     title: 'Spring-Loaded Inside-Out Oiling Tool',
     context: 'Co-op',
@@ -311,6 +279,38 @@ export const projects: Project[] = [
           'Cut oiling cycle time by *93%*.',
         ],
         image: { src: 'oiling-tool-cad', alt: 'CAD of the oiling tool with the part seated' },
+      },
+    ],
+  },
+  {
+    id: 'ansys-stress',
+    title: 'ANSYS Stress Analysis',
+    context: 'Finite Element Analysis',
+    featured: false,
+    summary: 'Validated stress-concentration factors in 1060-H12 aluminium plates to within 2% of theory.',
+    cover: 'stress-render',
+    gallery: [{ src: 'stress-render', alt: 'ANSYS stress contour render of the plate with a central hole' }],
+    steps: [
+      {
+        label: 'What?',
+        bullets: [
+          'Investigated stress distribution and deformation in *1060-H12 aluminum* plates with holes, validating theoretical stress concentration factors (K-values) against simulation.',
+        ],
+        image: { src: 'plate-hole-stress', alt: 'Stress contour around a hole in a meshed plate' },
+      },
+      {
+        label: 'How?',
+        bullets: [
+          'Applied real-world boundary conditions in ANSYS, refining mesh size from *0.05 m down to 0.00425 m* with targeted refinement in high-stress zones around the holes, balancing accuracy against computational cost.',
+        ],
+        image: { src: 'bracket-mesh', alt: 'Meshed bracket model in ANSYS' },
+      },
+      {
+        label: 'Results',
+        bullets: [
+          'Validated simulated K-values against theory within *<2% error*.',
+        ],
+        image: { src: 'hole-stress-detail', alt: 'Detailed stress contour near a hole' },
       },
     ],
   },
