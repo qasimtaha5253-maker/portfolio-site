@@ -102,6 +102,14 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       // controls.update(), so this is the same on a 144 Hz monitor as on a 60 Hz
       // phone (without it OrbitControls turns a fixed step per frame).
       controls.autoRotateSpeed = 2;
+      if (!interactive) {
+        // OrbitControls' connect() sets touch-action: none on the canvas
+        // unconditionally, regardless of enableRotate — reserving the touch
+        // gesture for rotation even when rotation is off. A non-interactive
+        // tile cover never rotates from touch, so that was silently
+        // swallowing the scroll gesture whenever it started on a cover.
+        renderer.domElement.style.touchAction = 'pan-y';
+      }
 
       // Set once the model is loaded: how far the camera needs to sit back to
       // fit the model. reachXZ is measured from the spin centre (not the
