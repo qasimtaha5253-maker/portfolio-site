@@ -141,6 +141,11 @@ export interface Step {
    *  showing them — for a long list (e.g. a full results rundown) that
    *  would otherwise dominate the step before the visitor even asks for it. */
   bulletsCollapsed?: boolean;
+  /** A condensed version of `bullets` (same points, shorter), shown in an
+   *  expandable card instead of a plain "View Details" button — only used
+   *  when `bulletsCollapsed` is set. The card is clickable as a whole, and
+   *  the full `bullets` appear below the summary once opened. */
+  bulletsSummary?: string[];
   /** Highlight numbers shown as boxes. */
   stats?: Stat[];
   /** Small expandable cards, shown below `bullets` — see `MiniCard`. */

@@ -121,6 +121,19 @@ function CollapsibleBullets({ bullets }: { bullets: string[] }) {
   );
 }
 
+/** The "grows from 0 to fit content" accordion panel shared by MiniCardItem
+ *  and SummaryCard below — a 0fr -> 1fr grid track animates height without
+ *  JS measuring the content. Stays mounted (not conditionally rendered)
+ *  even while closed, since that's what the transition needs; aria-hidden
+ *  keeps it out of the accessibility tree until open. */
+function ExpandPanel({ open, children }: { open: boolean; children: ReactNode }) {
+  return (
+    <div className="mini-card__panel" aria-hidden={!open}>
+      <div className="mini-card__panel-inner">{children}</div>
+    </div>
+  );
+}
+
 /** One `step.cards` entry: a stat-box-styled card collapsed to just its
  *  title, expanding in place to reveal its own bullet list when tapped. */
 function MiniCardItem({ card }: { card: MiniCard }) {
@@ -146,19 +159,45 @@ function MiniCardItem({ card }: { card: MiniCard }) {
           ))}
         </dl>
       )}
-      {/* Stays mounted (not conditionally rendered) even while closed — the
-          grid-row height transition below needs the content present to
-          animate open smoothly. aria-hidden keeps it out of the accessibility
-          tree until then. */}
-      <div className="mini-card__panel" aria-hidden={!open}>
-        <div className="mini-card__panel-inner">
-          <ul className="mini-card__bullets">
-            {card.bullets.map((text) => (
-              <li key={text}>{renderBold(text)}</li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <ExpandPanel open={open}>
+        <ul className="mini-card__bullets">
+          {card.bullets.map((text) => (
+            <li key={text}>{renderBold(text)}</li>
+          ))}
+        </ul>
+      </ExpandPanel>
+    </div>
+  );
+}
+
+/** `step.bullets` behind `step.bulletsSummary` (also needs `bulletsCollapsed`):
+ *  a single card whose header is a condensed version of the points, adding
+ *  the full ones below when tapped — instead of CollapsibleBullets' plain
+ *  button, which shows nothing at all until clicked. */
+function SummaryCard({ summary, bullets }: { summary: string[]; bullets: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={cn('mini-card mini-card--summary', open && 'mini-card--open')}>
+      <button
+        type="button"
+        className="mini-card__toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <ul className="mini-card__summary">
+          {summary.map((text) => (
+            <li key={text}>{renderBold(text)}</li>
+          ))}
+        </ul>
+        <ChevronDown className="mini-card__chevron" aria-hidden="true" />
+      </button>
+      <ExpandPanel open={open}>
+        <ul className="mini-card__bullets">
+          {bullets.map((text) => (
+            <li key={text}>{renderBold(text)}</li>
+          ))}
+        </ul>
+      </ExpandPanel>
     </div>
   );
 }
@@ -182,7 +221,11 @@ export function StepContent({ step, ready }: { step: Step; ready: boolean }) {
 
       {step.bullets && step.bullets.length > 0 && (
         step.bulletsCollapsed ? (
-          <CollapsibleBullets bullets={step.bullets} />
+          step.bulletsSummary && step.bulletsSummary.length > 0 ? (
+            <SummaryCard summary={step.bulletsSummary} bullets={step.bullets} />
+          ) : (
+            <CollapsibleBullets bullets={step.bullets} />
+          )
         ) : (
           <ul className="step__bullets">
             {step.bullets.map((text) => (

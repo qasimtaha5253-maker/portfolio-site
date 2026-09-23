@@ -322,6 +322,28 @@
   color: transparent;
 }
 
+/* SummaryCard's condensed version of `bullets`, standing in for
+   .mini-card__title's place in the toggle button. */
+.mini-card--summary .mini-card__toggle {
+  align-items: flex-start;
+}
+
+.mini-card__summary {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  list-style: disc;
+  list-style-position: inside;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.mini-card--summary .mini-card__chevron {
+  margin-top: 0.15rem;
+}
+
 .mini-card__chevron {
   flex: none;
   width: 1.1rem;

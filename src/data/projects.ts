@@ -27,6 +27,11 @@ export const projects: Project[] = [
     steps: [
       {
         label: 'What?',
+        bulletsCollapsed: true,
+        bulletsSummary: [
+          'A mobile, battery-electric pre-cooling cart for farms without cold storage.',
+          'Cools berries from *30.5 °C to 1 °C* right at the field to stop spoilage before it starts.',
+        ],
         bullets: [
           'Designed a mobile, *battery-electric forced-air pre-cooling cart* that brings refrigeration directly to the harvest site for small-scale Ontario strawberry farms without fixed cold storage.',
           'Aimed to cool freshly picked berries from *30.5 °C to 1 °C* within the harvest window, eliminating the 2–4 hour ambient delay that drives *Botrytis cinerea* (grey mould) growth. Each hour of delay costs roughly one day of shelf life.',
