@@ -135,6 +135,14 @@ export const projects: Project[] = [
       },
       {
         label: 'How?',
+        model: {
+          src: 'models/conveyor-cart-rotate.glb',
+          title: 'Animated 3D model of the cart’s crank handle, turning 90° and back',
+          animation: 'crank-rotate',
+        },
+        // Kept only as the reduced-motion fallback (every model/animation
+        // step keeps its original photo for that — see CLAUDE.md); not
+        // shown otherwise, since the model replaces it as the visible visual.
         image: { src: 'shaft-assembly-render', alt: 'Render of the cart frame with drive shaft and mounting plate' },
         cards: [
           {
@@ -161,11 +169,6 @@ export const projects: Project[] = [
             ],
           },
         ],
-      },
-      {
-        // No heading: continues the "How?" section above with a second visual.
-        label: '',
-        image: { src: 'drive-shaft-exploded', alt: 'Exploded view of the drive shaft coupling, handle and mounting flange' },
       },
       {
         label: 'Results',
@@ -270,7 +273,7 @@ export const projects: Project[] = [
             title: 'Fabrication',
             preview: [
               { label: 'Software', value: 'SolidWorks' },
-              { label: 'Shop', value: 'University shop' },
+              { label: 'Shop', value: 'CNC Tooling' },
             ],
             bullets: [
               'Modeled the drivetrain and motion path in SolidWorks, then fabricated the parts in the *university shop on standard machinery*, iterating for fit.',
@@ -281,7 +284,7 @@ export const projects: Project[] = [
       {
         label: 'Results',
         stats: [
-          { value: '4 s', label: 'Cycle time' },
+          { value: '5 s', label: 'Cycle time' },
           { value: '98%', label: 'Grade' },
         ],
         bulletsCollapsed: true,
@@ -372,6 +375,15 @@ export const projects: Project[] = [
           'Spring compressed under light force while still supporting the part’s weight; sponges fully lubricated the inside/outside walls and O-ring.',
           'Cut oiling cycle time by *93%*.',
         ],
+        model: {
+          src: 'models/oiling-tool.glb',
+          title: '3D model of the fully assembled spring-loaded oiling tool — drag to rotate',
+          margin: 1.4,
+          // No auto-spin here (the What? step's model already does that) —
+          // this instance is meant to be inspected by hand. Drag-to-rotate
+          // still works either way; autoRotate only turns off the idle spin.
+          autoRotate: false,
+        },
         image: { src: 'oiling-tool-cad', alt: 'CAD of the oiling tool with the part seated' },
       },
     ],

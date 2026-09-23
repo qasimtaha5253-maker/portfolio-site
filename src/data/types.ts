@@ -41,6 +41,7 @@ export interface StepVideo {
  *   'oiling-tool-coil'  the spring-loaded oiling tool: the coil lowers into the sponge, the
  *                        last part of the descent together with the spring-loaded moving
  *                        plate, then both reverse back up
+ *   'crank-rotate'      the conveyor cart's crank handle sub-assembly, turned 90° and back
  */
 export type ModelAnimationName =
   | 'ptu-gear-cutting'
@@ -48,7 +49,8 @@ export type ModelAnimationName =
   | 'conveyor-shaft'
   | 'shaft-puller'
   | 'propeller-spin'
-  | 'oiling-tool-coil';
+  | 'oiling-tool-coil'
+  | 'crank-rotate';
 
 /** A real-time 3D model (.glb) the visitor can rotate. */
 export interface StepModel {

@@ -298,6 +298,57 @@ function conveyorShaft(THREE: Three, root: Object3D): ModelAnimation | null {
 }
 
 // ---------------------------------------------------------------------------
+// Conveyor cart crank handle
+//
+//   "rotate^Crank"   the crank handle sub-assembly (drive shaft, spring
+//                     stop, McMaster-Carr handle, stop pin, drive shaft
+//                     rest) — turns together as one rigid piece; the mount
+//                     plate and its screws (the rest of "Crank") stay put.
+//
+// The node is already named for the job ("rotate"), but its rotation axis
+// still had to come from the geometry, not the name: the "Drive shaft"
+// mesh's own world-space bounding box is 0.0650 x 0.0650 x 0.1133 m,
+// long along world Z and centred (X spans ±0.0325 around 0) — so Z is the
+// shaft's own axis, not an assumption. Wrapped in a pivot at that box's
+// centre (as conveyor-shaft above does), rather than animating the node's
+// own rotation.z directly, for the same robustness if a future export
+// re-centres or re-parents the group.
+// ---------------------------------------------------------------------------
+const CRANK_TURN = Math.PI / 2; // 90°
+
+function crankRotate(THREE: Three, root: Object3D): ModelAnimation | null {
+  root.updateMatrixWorld(true);
+
+  const group = find(root, (o) => baseName(o) === 'rotate');
+  const shaft = group && find(group, (o) => sanitizedIncludes(o, 'Drive shaft'));
+  if (!group?.parent || !shaft) {
+    console.warn('[crank-rotate] expected a "rotate" node containing "Drive shaft"; found', { group, shaft });
+    return null;
+  }
+
+  const shaftBox = new THREE.Box3().setFromObject(shaft);
+  const shaftSize = shaftBox.getSize(new THREE.Vector3());
+  if (!(shaftSize.z > shaftSize.x && shaftSize.z > shaftSize.y)) {
+    console.warn('[crank-rotate] "Drive shaft" is not the expected long-and-thin rod along Z; check the axis', shaftSize);
+  }
+
+  const parent = group.parent;
+  const pivot: Group = new THREE.Group();
+  pivot.name = 'rotate pivot';
+  pivot.position.copy(parent.worldToLocal(shaftBox.getCenter(new THREE.Vector3())));
+  parent.add(pivot);
+  pivot.updateMatrixWorld(true);
+  pivot.attach(group); // keeps the crank sub-assembly exactly where it is in the world
+
+  const tl = gsap.timeline({ repeat: -1, paused: true, defaults: { ease: 'power2.inOut' } });
+  tl.to(pivot.rotation, { z: CRANK_TURN, duration: 1 }) // turn 90° over 1 s
+    .to(pivot.rotation, { z: 0, duration: 1 }, '+=0.25'); //   pause 0.25 s, then turn back over 1 s
+
+  if (import.meta.env.DEV) Object.assign(window, { __crankRotate: { timeline: tl, pivot, group, shaft } });
+  return { setPlaying: (playing) => void (playing ? tl.play() : tl.pause()), dispose: () => void tl.kill() };
+}
+
+// ---------------------------------------------------------------------------
 // Shaft removal tool (shaft adapter + sleeve)
 //
 //   "Shaft Adaptor A"   one of the two interlocking halves that grip the
@@ -464,5 +515,7 @@ export function createModelAnimation(name: ModelAnimationName, THREE: Three, roo
       return propellerSpin(THREE, root);
     case 'oiling-tool-coil':
       return oilingToolCoil(THREE, root);
+    case 'crank-rotate':
+      return crankRotate(THREE, root);
   }
 }
