@@ -187,8 +187,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 
 ## Hosting
 - Repo: https://github.com/qasimtaha5253-maker/portfolio-site (branch `main`)
-- Live site (Vercel, auto-deploys on push to `main`):
-  https://portfolio-site-qasim-1db5.vercel.app/
+- Live site (Vercel, auto-deploys on push to `main`): **https://qtaha.com** (his own domain, DNS
+  pointed at Vercel) — https://portfolio-site-qasim-1db5.vercel.app/ also still works.
 - Project lives at `C:\Users\qasim\Documents\portfolio-site` (moved out of OneDrive; don't
   move it back — OneDrive syncing `node_modules` caused file locks).
 - Push automatically once a change builds and passes checks, then report what went live.
@@ -213,18 +213,22 @@ element counts) before concluding something is broken, and say so when something
 verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
 
 ## Status
-- 2026-09-22: bento grid is the live site on `main`. Every project now shares a consistent
-  What?/How?/Results heading pattern (Assembly Line Fixtures & Tooling keeps its own three
-  tool-name headings by design) with fully rewritten copy and `*bold*`-highlighted key figures;
-  an Experience section (work history) was added to the About area. The Spring-Loaded Oiling Tool
-  gained a 3D model with a built-in animation plus a second, static exploded-view instance of the
-  same model. Three previously photo-only projects (ANSYS, Reef Rover, Hydraulic Hand) got new
-  transparent-render photo covers, though none of the three has a 3D model yet. (See handoff.md
-  §6 for the current state of each project, §7 for how the model animations/config work and the
-  bugs found building them.)
-- Next up (see handoff.md §9 for detail, no fixed order): replace the two still-low-res photos
-  once he sends them, add 3D models/animations for the remaining photo-only projects (ANSYS, Reef
-  Rover, Hydraulic Hand), then the custom domain last.
-- Open debts (handoff.md §8): no Lighthouse/performance run yet; 9 WebGL canvases now live on the
-  page at load (up from 8); reduced-motion layout only checked via the dev flag and DOM, never a
-  real browser with the OS setting on.
+- 2026-09-23: bento grid is the live site on `main`, now at its own domain (qtaha.com). The About
+  area's Experience section was removed at his request. Four projects (Cooling Unit, Conveyor
+  Cart, Coffee Cup Gripper, Oiling Tool) now use a new expandable content system — "What?" points
+  collapse into a tappable summary card, "How?" bullets group into small stat-box-styled mini-cards
+  with always-visible spec previews, "Results" bullets hide behind a "View Details" button (see
+  handoff.md §8 for the full system and which field combination goes where). The other 6 projects
+  still use plain bullets — not done yet, not declined, just not asked for. A first shadcn
+  component (Button) was integrated, including the theme tokens it needed (handoff.md §9). Five
+  more projects picked up a stat box pulled from existing copy (ANSYS, Reef Rover, Hydraulic Hand,
+  Meccano Launcher, plus a correction on Coffee Cup Gripper's). The conveyor cart gained a new
+  animated 3D model (its crank handle) and moved its main model to the "What?" step. (See
+  handoff.md §6 for the current state of each project, §7 for the model-animation recipe and the
+  bugs found this pass, §8–9 for the two new systems.)
+- Next up (see handoff.md §11 for detail): replace the two still-low-res photos once he sends
+  them, then add 3D models/animations for the remaining photo-only projects (ANSYS, Reef Rover,
+  Hydraulic Hand). The custom domain is done (qtaha.com, live) — no longer on this list.
+- Open debts (handoff.md §10): no Lighthouse/performance run yet; still 9 WebGL canvases live on
+  the page at load; reduced-motion layout only checked via the dev flag and DOM, never a real
+  browser with the OS setting on.

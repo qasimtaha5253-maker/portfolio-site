@@ -4,12 +4,11 @@ Written for a fresh Claude Code / Cowork session picking this up cold. Read `CLA
 (project rules, architecture, stack) — this doc is the "how we got here and what to watch for"
 companion to it, not a replacement.
 
-Last updated: 2026-09-22. This is a condensed rewrite of a rewrite — a full session-by-session
-history existed before this and was trimmed twice now; nothing load-bearing was cut, but if
-something here seems to skip a step, check the git log (`git log --oneline`) rather than assuming
-it was missed. **Section numbers changed in this pass** — CLAUDE.md's own cross-references
-("see handoff.md §7...") were written against an even older numbering and had drifted; they're
-realigned to this version's §7, so trust the numbers in *this* file over memory of an older one.
+Last updated: 2026-09-23. Full rewrite — the previous version covered up through the bento-grid
+build-out and the first round of 3D-model animations; this one folds that history in condensed
+form and adds everything from the session that followed (visual polish, the expandable mini-card
+content system, the shadcn integration, several project-content passes). Section numbers changed
+again — trust *this* file's numbers over memory of an older one.
 
 ---
 
@@ -17,55 +16,60 @@ realigned to this version's §7, so trust the numbers in *this* file over memory
 
 Single-page portfolio for Qasim Taha, final-year Mechanical Engineering co-op student at the
 University of Guelph. 10 projects, defined in one config file, rendered as a bento grid: every
-project is a same-sized tile; tapping one expands it in place to show its steps. An Experience
-section (work history, stacked cards) sits in the About area, above the grid.
+project is a same-sized tile; tapping one expands it in place to show its steps.
 
-- **Live:** https://portfolio-site-qasim-1db5.vercel.app/ — Vercel auto-deploys on push to `main`
-  (can take several minutes to actually publish; don't assume a push failed just because the live
-  site hasn't updated yet — see §5 for how to actually confirm what's live instead of guessing).
+- **Live:** https://qtaha.com — his own domain, DNS pointed at Vercel, deploy is live there.
+  https://portfolio-site-qasim-1db5.vercel.app/ still works too (Vercel's own domain, unchanged).
 - **Repo:** https://github.com/qasimtaha5253-maker/portfolio-site — work directly on `main`.
 - **Local:** `C:\Users\qasim\Documents\portfolio-site` (moved off OneDrive on purpose — don't move
   it back, OneDrive syncing `node_modules` caused file locks).
 - **Old versions, tagged, not deleted:** `pinned-chapter-version` (the block-by-block scrollytelling
   layout the bento grid replaced), `vanilla-js-version` (the original pre-React build).
+- The About area's **Experience section (work history) was removed** at his request this session —
+  don't reintroduce it. The component (`Experience.tsx`), its data file (`experience.ts`) and CSS
+  were deleted outright, not just unmounted. Page order is now: Intro → About → BentoGrid (`#work`)
+  → footer (`#contact`).
 
 ## 2. How the user works — read this before doing anything else
 
 - He gives direction; you write all the code and explain anything he must do himself in plain
   terms — **he is not a web developer**, so no unexplained jargon.
 - **Push automatically once a change builds and passes checks, then report what went live.** Don't
-  sit on finished work waiting for approval — this has been the working pattern for the whole
-  project and he's explicitly asked for it. The one exception seen so far: he asked for a handoff
-  doc and explicitly wanted clarifying questions *before* the rewrite, not after — see the next
-  bullet.
-- For a large or ambiguous ask, a short batch of up-front clarifying questions (via whatever your
-  tool's equivalent of `AskUserQuestion` is) is welcomed, not seen as friction — he answered a
-  4-question batch in one shot without pushback. Don't guess at scope on something like "rewrite
-  X" or "send me Y" when a quick question would remove the guesswork.
-- He describes symptoms precisely ("the screen moves up and down when...", "cropped at the
-  bottom, space on top") — reproduce *exactly* what he describes rather than guessing at a
-  nearby-sounding bug, and expect pushback, correctly, if a fix doesn't match what he's actually
-  seeing on his own device.
-- He's comfortable with real changes when they're the right fix (new libraries, downgrading a core
-  dependency, reworking a layout, swapping an approach mid-stream) as long as the reasoning is
-  explained, and isn't precious about existing code.
-- **Report honestly, including what couldn't be verified.** See §5's Browser-pane caveats — this
-  environment's testing has real limits and he already knows it; say so rather than overclaiming.
-  This came up a lot in practice: several turns had long stretches of blank/frozen screenshots,
-  and the honest move was leaning on DOM/computed-style checks and saying plainly what a
-  screenshot did and didn't confirm.
-- He uploads 3D models, images and frame sequences as files from his own tools (SolidWorks Motion
-  Study exports, phone photos/screenshots, mostly), usually from `Downloads\Motion Study\` or via
-  the chat upload path (`C:\Users\qasim\.claude\uploads\...` — a one-off temp location per
-  attachment, not a folder to treat as permanent storage). He describes the motion or change he
-  wants in plain terms ("moves inwards by 1.5 in", "rotated on its side, fix it", "make the
-  fixture transparent") — see §7 for how to turn that into working code without guessing.
-- **He iterates on 3D content in small follow-up steps**, not one big spec up front: a model gets
-  added, then he asks to tweak its framing, then add transparency, then swap in an updated export,
-  then add a second (differently-configured) instance of the same model for an exploded view. Each
-  of those was a separate, short request. Expect this pattern to continue — build the generic,
-  reusable `StepModel` knob (see §7) rather than a one-off hack, since the next ask is often "now
-  do a variant of that."
+  sit on finished work waiting for approval. The one established exception: a handoff-doc rewrite
+  itself, where he wants clarifying questions *before* you write it, not after — see the next
+  bullet, and this doc is itself an example of that pattern working well (he answered a 3-question
+  batch, including a free-typed correction, in one shot).
+- For a large or ambiguous ask, a short batch of up-front clarifying questions is welcomed. Don't
+  guess at scope on something like "rewrite X" when a quick question would remove the guesswork.
+- **He iterates in small, sequential asks**, not one big spec — this has been true all along and
+  was true for essentially this entire session (a long run of single-feature requests back to
+  back: one visual tweak, one content restructure, one bug report, repeat). Don't try to
+  anticipate or batch-ahead of where he's headed; just do the current ask well.
+- **Once a content *pattern* is established for one project, he expects it carried over to others
+  on request, without having to re-specify the pattern each time.** "Do the same for the conveyor
+  cart" or "now do the same stat box expanding thing for X and Y, for each of their sections"
+  means: apply the exact same structure already built for the reference project (see §8) —
+  What?/How?/Results get the same treatment, same component reuse, same visual language — not a
+  freshly-designed variant. When he gives this kind of request, look at what the reference project
+  actually has and mirror it faithfully; inventing a "similar but different" version is the wrong
+  move even if it seems reasonable in isolation.
+- **He pastes exact source text to work from** — e.g. handing over the literal bullet strings to
+  combine into a card, or a literal (sometimes garbled) preview line to use. Reproduce the real
+  bold-markup and figures from that text rather than paraphrasing from memory of the project copy.
+  If a fragment is genuinely unparseable (this session: "WILLQR 48 V, 80 Ah LiFePO₄" in a request),
+  infer the most sensible reading, use it, and say plainly what you guessed and why — he'll correct
+  it if wrong rather than wanting you to stop and ask. (That specific guess — reading it as a
+  "Battery:" label — went unchallenged, so treat it as settled, not still open.)
+- He describes symptoms precisely ("it expands the other 2 as well but they don't show any text")
+  — reproduce *exactly* what he describes rather than guessing at a nearby-sounding bug. This
+  session that level of precision was the key clue in a couple of real CSS bugs (see §7c).
+- He's comfortable with real changes (new libraries, downgrading a core dependency, reworking a
+  layout) as long as the reasoning is explained, and isn't precious about existing code.
+- **Report honestly, including what couldn't be verified.** See §5's Browser-pane caveats.
+- He uploads 3D models as files from his own tools, usually `Downloads\Motion Study\` or the chat
+  upload path. He describes the motion he wants in plain terms ("rotate the X subassembly 90° in
+  1 sec, pause, return in 1 sec, repeat") — see §7b for turning that into working code without
+  guessing the axis.
 
 ## 3. Commands
 
@@ -78,402 +82,341 @@ npm run model  -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize] [--no-instance]
 npm run video  -- <frames-dir> <out.mp4> [--fps 30] [--width 1280] [--crf 23] [--poster]
 ```
 
-- `--no-instance` (on `npm run model`) skips GPU-instancing repeated parts. Needed whenever a
-  model's built-in animation (or an `explode`/`transparentParts` config — see §7) looks up a part
-  by name and that part is duplicated elsewhere in the file — instancing collapses duplicates into
-  anonymous nodes with nothing left to find by name. Costs little to nothing in file size in
-  practice so far (every model built this way used it from the start once a repeated part was
-  spotted in the raw inspection step); default to trying *without* it first, re-read the
-  compressed file to confirm the part you need is still a named node, and only add the flag if it
-  isn't.
-- `npm run video` needs no system ffmpeg — it uses the bundled `ffmpeg-static` binary. Always
-  encodes H.264/MP4 (not WebM): the one format that plays natively everywhere, including iOS
-  Safari, so there's never a second `<source>` to maintain. The same bundled binary is also used
-  ad hoc (not through this script) for one-off jobs like trimming a video's start or grabbing a
-  new poster frame — see the toy-plane trim and coffee-cup-gripper video in the git log for the
-  exact `ffmpeg-static` invocation pattern (a small inline Node script via `execFileSync`, not a
-  new npm script, since it was a one-time edit, not a repeatable pipeline step).
-- Windows: a killed background `npm run dev` can leave vite still holding port 5173 — find it with
-  `Get-NetTCPConnection -LocalPort 5173` and stop that process.
+No new scripts this session. The model/video pipelines and their flags are unchanged — see §7b for
+the recipe. Windows note still applies: a killed background `npm run dev` can leave vite holding
+port 5173 — `Get-NetTCPConnection -LocalPort 5173` and stop that process.
 
 ## 4. Architecture
 
-Vite + React 19.2.8 (**pinned on purpose** — Framer Motion 13.4.0 crashes on React 19.3.0+;
-check Motion's compatibility before ever bumping React) + TypeScript + Tailwind v4, shadcn layout
-(`@/` → `src/`).
+Vite + React 19.2.8 (**pinned on purpose** — Framer Motion 13.4.0 crashes on React 19.3.0+) +
+TypeScript + Tailwind v4, shadcn layout (`@/` → `src/`).
 
 ```
-index.html                     shell, <html class="dark">
-src/main.tsx → src/App.tsx     Intro, About, Experience, BentoGrid, footer
+index.html                     shell, <html class="dark">, <link rel="icon" href="/favicon.svg">
+src/main.tsx → src/App.tsx     Intro, About, BentoGrid, footer (Experience section removed)
 src/data/projects.ts           THE content file — every project's copy, photos, models, animations
-src/data/experience.ts         work history shown in the About section — same data-driven pattern
-src/data/types.ts              field docs for both of the above — read this before adding a field
+src/data/types.ts              field docs — read this before adding a field to Step/MiniCard/StepModel
 src/components/
   BentoGrid.tsx                the grid: tiles, expand/collapse, scroll-follow, self-spinning covers
+  StepContent.tsx               body/stats/bullets, PLUS the mini-card and summary-card system (§8)
   StepVisual.tsx                a step's own visual inside an expanded tile
-  StepContent.tsx               body / stats / bullets — parses *single-asterisk* bold (see below)
   Photo.tsx                    responsive WebP <img>
-  sections/                    Intro (canvas), About, Experience, ContactLinks
-  ui/helix-chrono-matrix.tsx   user-supplied intro canvas
+  ui/
+    button.tsx                 shadcn Button (originui variant) — see §9
+    toggle.tsx                 shadcn Toggle, installed as a Button registry dependency — nothing
+                                 in the app actually renders it yet, it's just sitting there
+    helix-chrono-matrix.tsx    user-supplied intro canvas
+  icons/
+    RotateLeft03Icon.tsx       user-supplied icon, used as the model rotate-hint (§ current content)
+  sections/                    Intro (canvas), About, ContactLinks
   visuals/
-    ModelLayer.tsx             Three.js .glb viewer (see §7)
-    modelAnimations.ts         per-model built-in animations (see §7)
+    ModelLayer.tsx             Three.js .glb viewer (see §7) — now also handles pinch-to-zoom (§7d)
+    modelAnimations.ts         per-model built-in animations (see §7b) — 7 now, see §6
     EmbedLayer.tsx             HTML animation in an iframe
     VideoLayer.tsx             plain looping <video>
 src/hooks/                     useMotionAllowed, useSmoothScroll (Lenis), useScrollFade
-src/styles/site.css            all site CSS, in @layer base/components — see §7 for two real
-                                specificity/cascade bugs found in here this pass
+src/index.css                  Tailwind import + the shadcn theme-token @theme block (§9)
+src/styles/site.css            all site CSS, in @layer base/components
 content/photos/<project>/      source images (committed)
 content/models/                source .glb (GITIGNORED — can be huge)
 content/animations/<name>/     source frame sequences, e.g. .tga (GITIGNORED — can be 1 GB+)
 public/projects/, public/models/, public/animations/   generated/served assets (committed, small)
+public/favicon.svg             new this session — the site had no favicon before
 scripts/optimize-model.mjs     .glb -> compressed .glb
 scripts/optimize-video.mjs     numbered frame sequence -> compressed .mp4
 ```
 
-**The bento tile mechanic:** every project is the same size tile (`grid-column: span 2`,
-`grid-row: span 2` — the `featured` field in `projects.ts` no longer does anything, kept in case
-size tiers come back). Tapping one expands it in place; the expand/collapse animation is **Framer
-Motion, not GSAP** (`motion.article` + `layout`, `AnimatePresence` for the detail panel) — a
-deliberate choice after a hand-built GSAP Flip approach kept producing real, reproducible bugs.
-Opening or switching tiles also **scroll-follows**: `BentoGrid` re-measures the opening tile's
-position every frame and re-issues `lenis.scrollTo(..., {immediate:true})` until it holds steady,
-because a one-shot scroll measured mid-transition lands in the wrong place (`AnimatePresence` keeps
-the *previous* tile mounted through its own exit animation). Heavy visuals (models, embeds, video)
-wait for the expand animation's `onAnimationComplete` before actually mounting (`ready` prop), so
-loading them doesn't compete with the animation for frames — but the *sized wrapper* always renders
-immediately, or the tile measures short and jumps once the real content arrives.
+**The bento tile mechanic** is unchanged in its core (Framer Motion `layout` + `AnimatePresence` for
+expand/collapse, Lenis-aware scroll-follow re-measured every frame, heavy visuals deferred until
+`ready`) — see the previous version of this doc's description if you need the full FLIP-vs-Framer
+reasoning; it's still accurate. What *did* change this session:
 
-**Step headings can be blank.** `Step.label` is normally a heading string, but an **empty string**
-renders no `<h4>` at all (`BentoGrid.tsx`: `{step.label && <h4>...}`) — used when a project needs
-more visual "slots" than distinct headings (e.g. Cooling Unit's "How?" section needs two visuals —
-the airflow embed and a follow-up photo — but only one "How?" heading should show; the second step
-object has `label: ''` and its content just reads as a continuation). Because of this, **step keys
-are `${label}-${index}`, not just `label`** — two steps can legitimately share a label (including
-both being empty), and React needs a unique key regardless.
-
-**A step's visual:** `image`, `embed` (HTML animation, iframe), `video` (plain `<video>`), `model`
-(.glb), `stack` (several full-size, stacked), or `split` (several side by side, smaller). Priority
-when more than one is set: `split` > `stack` > `model` > `embed` > `video` > `image`. Reduced
-motion always shows `image` regardless of what else is set — always keep a step's original photo
-even after adding a model/video/embed to it, as the fallback.
-
-**Bold text in copy:** `StepContent.tsx` parses `*single asterisks*` in a step's `body`/`bullets`
-into `<strong>` (plain weight, no colour — "the site's existing bold styling"). This was added
-specifically because the full copy rewrite (§6) needed it; no project's copy used literal
-asterisks before, so this was safe to add without touching old content. **Don't confuse this with
-Experience's own convention**: `Experience.tsx` parses `**double asterisks**` in a highlight into a
-*gradient-coloured* `<strong>` (matching the stat-number gradient), a separate, deliberately
-different micro-syntax for a separate component/purpose.
-
-**Cover images:** a project's tile cover comes automatically from **every distinct model used
-across its steps**, not just the first one. `coverModels()` in `BentoGrid.tsx`: a `split`/`stack`
-on any step still wins outright and supplies every model in it; otherwise it walks every step's own
-single `model` field and collects one instance per distinct `src` (a project that repeats the same
-model on two steps — e.g. Cooling Unit, or the oiling tool's animated + exploded pair — only gets
-it once). This was a real fix, not the original design: reusing a project's cover-photo-via-first-
-image logic (`coverImage()`) the same way used to make a photo used on two different steps look
-"consumed by the cover" and get silently hidden on whichever step wasn't first — see §7. Several
-cover models sit side by side (`.bento-tile__model--row`); they **spin on their own**, not on
-hover, pausing while their tile is open or scrolled off-screen, still under reduced motion (unless
-a specific model has `autoRotate: false` — see §7, that's an opt-out per model, not global).
+- **The "+"/"×" toggle is now an animated hamburger-to-"×" SVG** (originui's pattern: three line
+  `<path>`s using Tailwind's `group-aria-expanded:` variants), not a plain "+" glyph CSS-rotated
+  45°. It's keyed off the hit button's own `aria-expanded` attribute — no React-driven CSS class
+  needed for the morph itself anymore. Styled via `buttonVariants({variant:'secondary',
+  size:'icon'})` (shadcn) + `rounded-full`, not bespoke CSS for shape/colour. See §9 for why the
+  hover/focus orange swap had to move to `group-hover:`/`group-focus-visible:` Tailwind variants
+  instead of a custom CSS rule.
+- **Cover models can now opt out**: `StepModel.excludeFromCover` (new field) skips a model when
+  `coverModels()` collects every distinct model across a project's steps for the tile cover. Added
+  because the conveyor cart's new crank-handle model (different `src` from its main model) was
+  otherwise joining the cover as an unintended second side-by-side model — see §6.
+- **Cover models pan the page normally on touch now.** `OrbitControls` sets `touch-action: none`
+  on its canvas unconditionally on connect, regardless of `enableRotate` — a non-interactive cover
+  (rotation already off) was still swallowing the scroll gesture. `ModelLayer.tsx` overrides
+  `touch-action` back to `pan-y` for non-interactive instances. The interactive, drag-to-rotate
+  model inside an *expanded* tile keeps `touch-action: none` on purpose (that's the intended
+  "swipe on the model rotates it" behaviour).
+- **A step's own interactive model supports pinch-to-zoom** (touch only — see §7d for why it's
+  gated to touch and not also the mouse wheel) and shows a small rotate-hint icon bottom-right
+  (`RotateLeft03Icon`, white, `.model-layer__rotate-hint`) once loaded, so the affordance is
+  visible without the visitor having to discover it by accident. Tile covers get neither.
 
 ## 5. Environment traps — read before spending time debugging "it doesn't work"
 
-- **The Browser pane pauses rendering when it isn't the actively displayed pane** — screenshots
-  come back blank, stale, or frozen mid-animation. Check DOM/JS state directly
-  (`getBoundingClientRect`, class lists, element counts, computed styles, or seeking a GSAP
-  timeline) before concluding something is broken from a screenshot alone. This pass had long
-  stretches (most of two separate tasks) where screenshots reliably came back blank even after
-  waiting; a **genuinely fresh tab** (`tabs_close` the stuck one, then `tabs_create` + `navigate` a
-  new one) was the most reliable unstick, but sometimes needed 2–3 tries before a screenshot
-  actually rendered. When it stays stuck, fall back to DOM/computed-style verification and say so
-  plainly rather than waiting indefinitely.
-- **`window.scrollTo()` / `element.scrollIntoView()` called from `javascript_exec` fights the
-  site's Lenis smooth-scroll** and gets snapped back almost immediately — it's not a reliable way
-  to bring something into view before a screenshot. Either drive scrolling with the Browser tool's
-  own wheel-scroll action (`computer` tool, `scroll` action — this goes through real wheel events,
-  which Lenis listens to correctly), or just click a tile's toggle and let `BentoGrid`'s own
-  scroll-follow (already Lenis-aware) bring it into view on its own.
-- **A `.click()` on a tile toggle, followed only by `javascript_exec`-based `setTimeout` waits, can
-  leave the Framer Motion expand animation stuck at `height: 0; opacity: 0` indefinitely** — the
-  detail panel never actually opens, which looks exactly like a real "tile won't expand" bug but
-  isn't one. Pairing the click with at least one `computer` tool `wait` + `screenshot` (even if the
-  screenshot itself comes back blank per the point above) reliably lets the animation actually
-  progress; a bare `javascript_exec` polling loop does not reliably do this in this environment.
-  Don't conclude the expand interaction is broken from a stuck `height: 0` without trying this
-  first — check `detail.style.height`/`opacity` directly if unsure whether it's genuinely stuck.
-- **Two screenshots taken even seconds apart can show a self-rotating model from different camera
-  angles**, making a real, correct move look reversed or unchanged. Trust a measured world-space
-  transform over a pixel comparison across separate tool calls; if a visual check matters, batch
-  the seek-and-screenshot pairs together (`browser_batch`) to minimize the gap.
-- **Repeatedly hot-reloading a component that gates content behind `ready`/`onAnimationComplete`
-  (e.g. editing `BentoGrid.tsx`) while a tab stays open can leave that gate permanently stuck**,
-  even for unrelated content on the same page — reproduced identically on a totally different
-  tile than the one being worked on. `location.reload()` alone did not reliably clear this. A
-  genuinely fresh tab (close + create + navigate) is the only reliable fix once it's happened.
-- WebGL canvases can't be pixel-inspected after their frame (no `preserveDrawingBuffer`) — don't
-  try to verify a render by reading canvas pixels.
-- Bash heredocs mangle backticks — use the Write/Edit tools for anything with backticks or
-  template literals, not `node -e` through bash.
-- `?reduced-motion` on the dev URL previews the reduced-motion layout (dev only).
-- **Don't poll the live production URL aggressively.** A background script checking the live site
-  every few seconds (even just a plain `curl`/`fetch` loop, meant well, to confirm a deploy had
-  landed) tripped Vercel's bot-mitigation and put up a challenge page for that traffic — a real,
-  if temporary, side effect, not just a theoretical risk. If you need to confirm a deployment
-  landed, check once, or space checks out by minutes; the real Browser pane (a genuine browser)
-  passes the challenge fine, `curl` does not.
-- **A push can sit "succeeded" but stale on Vercel for several minutes**, and the live page can
-  *look* unchanged while actually still serving the previous build. Don't judge "is my latest
-  commit live" from how the page looks — compare the deployed HTML's referenced main JS bundle
-  filename (it's content-hashed, e.g. `assets/index-C5k3pAVM.js`) against the filename your own
-  most recent local `npm run build` just produced. If they match, the latest commit is live; if
-  they don't, it isn't yet, regardless of how long ago you pushed.
-- Cross-checking real behavior sometimes needs his own report from his actual phone/desktop —
-  this environment's testing isn't always sufficient proof, and it's fine to say so.
+Everything from the previous version still applies (Browser-pane rendering pauses when not the
+displayed pane; `window.scrollTo`/`scrollIntoView` fights Lenis, use the `computer` tool's wheel
+scroll or let scroll-follow do it; a bare `.click()` + only `javascript_exec` waits can leave the
+Framer Motion expand stuck, pair it with a real `computer` `wait` + `screenshot`; two screenshots
+seconds apart can show a self-rotating model from different angles; WebGL canvases can't be
+pixel-inspected; don't poll the live production URL aggressively — it can trip Vercel's bot check;
+a push can sit stale on Vercel for several minutes, compare the deployed JS bundle's content hash
+to your own last local build to know for sure). One new, sharp-edged variant found this session:
+
+- **A CSS `transition`-driven value (not just a Framer Motion layout animation) can also freeze
+  mid-progress when the pane's rendering is paused — including a GSAP count-up tween's displayed
+  number.** After expanding a tile and immediately reading a `.stats__value`'s `textContent`, it
+  showed "1 s" / "17%" (genuinely mid-tween values, not the target) and **stayed** stuck there
+  across a 2-second `wait` and a re-check — because no real paint had happened in between, so the
+  tween's `requestAnimationFrame` never advanced. The fix was the same as always: close the tab,
+  open a fresh one, redo the interaction, and the values settled correctly on the next real paint.
+  If a value looks "stuck" instead of just "wrong", suspect the pane before suspecting the code.
 
 ## 6. Current content state
 
-All 10 projects now share a consistent **What? / How? / Results** heading pattern (Assembly Line
-Fixtures & Tooling is the one exception — its three headings are each tool's own name, by design,
-not What/How/Results). Every bullet was rewritten this pass with `*bold*` markers on the key
-figures (see §4). Visuals (images/models/embeds/video) were **not** changed by the copy rewrite
-itself — only by the separate, later requests noted below.
+All 10 projects still share the **What? / How? / Results** heading pattern (Fixtures & Tooling is
+still the one exception, three tool-name headings by design). What changed this session, project
+by project:
 
-| Project | Headings/visual per step | Cover |
-|---|---|---|
-| Mobile Harvest Buffer Cooling Unit | What?(model+image) · How?(embed+image) · How?→cont.(image, no heading) · Results(stats, no visual) | model |
-| Detachable Conveyor Belt Cart | What?(image) · How?(model, animated `conveyor-shaft`, +image) · How?→cont.(image, no heading) · Results(stats+image) | model |
-| Assembly Line Fixtures & Tooling | Shaft Removal Tool(model, `shaft-puller`) · Saw-Cut Fixture(model, `ptu-gear-cutting`) · Oiling Fixture(model, `oiling-sensor`) — each with its own image fallback | all 3 models, side by side |
-| Coffee Cup Gripper | What?(model+image) · How?(image) · Results(stats+image+**video**, the user's own phone recording) | model |
-| ANSYS Stress Analysis | What?/How?/Results, all image-only | **photo** (new transparent render, gallery-only — see §7) |
-| Spring-Loaded Inside-Out Oiling Tool | What?(model, animated `oiling-tool-coil`, +image) · How?(**second, static** model of the same file — exploded view, `autoRotate:false`, +image) · Results(stats+image) | model (the animated one; dedup by src — see §4) |
-| Autonomous Reef Rover | What?/How?/Results, all image-only | **photo** (new transparent render, gallery-only) |
-| Kinder Toy Plane | What?(model, animated `propeller-spin`, +image) · How?(video+image) · Results(image) | model |
-| Meccano Car Ball Launcher | What?(model, `rotation`-corrected, +image) · How?/Results(image) | model |
-| Reverse-Engineered Hydraulic Hand | What?/How?/Results, all image-only | **photo** (new transparent render, gallery-only) |
+| Project | What changed |
+|---|---|
+| Mobile Harvest Buffer Cooling Unit | "What?" bullets moved behind an expandable summary card (§8). "How?"'s old flat 5-bullet list is now 3 mini-cards: **Refrigeration Cycle**, **Battery and Power System** (one original bullet split into two), **Validation** (absorbed from the old unheaded continuation step, which no longer exists as a separate step). "What It Achieved" stats rounded (2.2 hr / 1600 W / 6 hours / $6,500 / 2 years) and its 7 bullets moved behind a plain "View Details" button (`bulletsCollapsed`, no summary card here — that's a deliberate difference from "What?", see §8). |
+| Detachable Conveyor Belt Cart | **3D model moved from "How?" to "What?"** (was requested standalone). "How?"'s two photos and its unheaded continuation step are **gone**, replaced by a new animated model of the crank handle sub-assembly (`crank-rotate`, §7b) plus 2 mini-cards (**Frame & Conveyor Fit**, **Attach/Detach Mechanism**). "What?" and "Results" both got the summary-card / collapsed-bullets treatment. The crank model has `excludeFromCover: true` (§4) — without it, it joined the tile cover unintentionally. |
+| Assembly Line Fixtures & Tooling | Untouched this session (still 3 tool-name headings, no cards, its own established pattern). |
+| Coffee Cup Gripper | "What?" and "Results" got summary-card / collapsed-bullets. "How?" is 2 mini-cards (**Drivetrain**, **Fabrication** — "Shop" spec now reads *CNC Tooling*, was "University shop"). Results cycle-time stat corrected to **5 s** (was 4 s, now matches the bullet text below it, which already said "5-second"). |
+| Spring-Loaded Inside-Out Oiling Tool | "What?" (1 bullet) got the summary-card treatment anyway, for consistency. "How?"'s 1 bullet (which actually covered two distinct mechanisms) split into 2 mini-cards (**Spring & Guides**, **Sponges**) the same way the cooling unit's battery bullet was split. "Results" bullets moved behind "View Details"; **its photo was replaced by a third model instance** of the same `oiling-tool.glb` — `autoRotate: false` (drag only), no `transparentParts`, no `explode` (a plain assembled view, unlike the other two instances). |
+| ANSYS Stress Analysis | Gained a stat box (`<2%`, "Error vs. theory") pulled from existing copy. No card treatment. |
+| Autonomous Reef Rover | Gained a stat box (`3rd`, "Place"). No card treatment. |
+| Kinder Toy Plane | Untouched. No stat box added — nothing quantifiable in its existing copy to pull without inventing a number. |
+| Meccano Car Ball Launcher | Gained a stat box (`2nd`, "Place"). No card treatment. |
+| Reverse-Engineered Hydraulic Hand | Gained a stat box (`200+`, "Parts modeled", pulled from its own "What?" copy). No card treatment. |
 
-Every model/video step keeps its original photo as the reduced-motion fallback. A "Choosing a
-concept" step existed on Cooling Unit once and was **deleted at the user's request** — don't
-reintroduce it.
+So: **4 projects now use the mini-card/summary-card system** (cooling unit, conveyor cart, coffee
+cup gripper, oiling tool); the other 6 still use plain bullets. That's simply where requests
+stopped this session, not a deliberate "these get it, those don't" split — a natural next ask if
+he wants visual consistency across every project (see §11; not currently on his stated list).
 
-Two photos are still low-resolution (PDF-extracted) and **he'll send replacements himself — don't
-chase him for them**: `hydraulic-hand/part-drawing`, `reef-rover/collection-mechanism`. (A third —
-`coffee-cup-gripper/built-gripper` — was still low-res as of the last full content pass; check
-before assuming, it may have been replaced along with the gripper's new video.)
+**7 model animations now exist** in `modelAnimations.ts`: `ptu-gear-cutting`, `oiling-sensor`,
+`conveyor-shaft`, `shaft-puller`, `propeller-spin`, `oiling-tool-coil`, and the newest,
+**`crank-rotate`** (the conveyor cart's crank handle, §7b).
 
-**6 model animations now exist** (all in `modelAnimations.ts`, one `case` each in
-`createModelAnimation`, one name in `ModelAnimationName`): `ptu-gear-cutting`, `oiling-sensor`,
-`conveyor-shaft`, `shaft-puller`, `propeller-spin`, and the newest, `oiling-tool-coil`.
+**9 live WebGL canvases at page load**, unchanged from before this session (Cooling Unit, Conveyor
+Cart, Fixtures & Tooling ×3, Coffee Cup Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank
+model briefly made it 10 until `excludeFromCover` fixed that; see §4.
 
 ## 7. Sensitive code — read before touching the expand animation, scroll-follow, 3D framing,
-##    the model script, or a model's built-in animation/config
-
-This is the section CLAUDE.md's own top banner and several inline comments point at as "§7" — if
-you found this doc via one of those pointers, you're in the right place.
+##    the model script, a model's built-in animation, or the card/toggle CSS
 
 ### 7a. The expand animation and scroll-follow
 
-Covered by §4's "bento tile mechanic" paragraph and §5's Framer-Motion/hot-reload bullets above —
-read both before changing `BentoGrid.tsx`'s toggle/scroll-follow logic. The short version: the
-expand transition is Framer Motion (not GSAP) on purpose, scroll-follow re-measures every frame
-because a one-shot measurement mid-transition is wrong, and this environment's own pane-pause
-quirks can make a perfectly working expand look stuck — verify with DOM state, not just a
-screenshot, before "fixing" it.
+Unchanged from before — Framer Motion (not GSAP) on purpose, scroll-follow re-measures every
+frame, this environment's own pane-pause quirks can make a working expand look stuck (§5).
 
-### 7b. 3D framing and the model script — the recipe that's worked every time
+### 7b. 3D framing and the model script — the recipe, still holding
 
-Across every model animation and config built so far, **skipping any of these steps has caused a
-real, reproducible bug**:
+The 8-step recipe from the previous version of this doc (copy the export into `content/models/`,
+never `public/`; inspect the raw node tree with a throwaway `@gltf-transform/core` script and
+delete it when done; **never guess a direction/axis from the node's placement transform, a
+screenshot, or a previous export of "the same" model** — derive it fresh from *this* file's own
+geometry every time; match node names as three.js actually sanitizes them, not as the raw file has
+them; compress with `npm run model`, try default settings first, re-inspect the *compressed*
+output before wiring anything up; verify by seeking the GSAP timeline, not by watching playback;
+check the browser console for render-loop errors; redraw once after every resize — is still
+exactly right and was followed for the new `crank-rotate` animation this session. One addition:
 
-1. **Copy the uploaded file into `content/models/<name>.glb`, never `public/`.** A raw export
-   landing directly in `public/` is a mistake to fix immediately (move it to `content/`), not a
-   place to build from — it'll get committed to the repo at full size otherwise.
-2. **Inspect the raw node tree first**, with a throwaway script using `@gltf-transform/core`'s
-   `NodeIO` (reads raw glTF names/transforms/bounds — *not* what three.js will actually load, see
-   step 4). A Draco-compressed source needs a decoder registered to even read it
-   (`draco3dgltf`'s `createDecoderModule()`, same as `optimize-model.mjs` does); a *compressed*
-   output (after `npm run model`) needs a **meshopt** decoder registered instead
-   (`meshoptimizer`'s `MeshoptDecoder`) — these are two different dependencies for two different
-   stages of the same file, easy to mix up. Delete the throwaway script when done; it's scratch
-   work, not part of the codebase.
-3. **Never guess a direction, axis, or spatial relationship from the node's placement transform,
-   from eyeballing a screenshot, or from a *previous* export of the "same" model.** Every real bug
-   in this project's model animations came from skipping this — and a model can be re-exported
-   with a changed node structure (the oiling tool's "Fix" group was later split into "Holder" +
-   "Fixed" in an updated export), so re-derive axes/relationships against *this* file's own
-   geometry every time, even for a model you've built before:
-   - **Find axes from the geometry itself**, not assumptions. A spin axis is usually the direction
-     with the *narrowest spread* of the mesh's own local vertex positions (not just min/max
-     range — a tapered part can make range misleading; use standard deviation per axis).
-   - **A "which way is up" or "which part sits above/below which" question** is answered by
-     computing actual **world-space bounding boxes** (compose each node's transform up through its
-     full ancestor chain, then find min/max of every vertex) and comparing them — not by reading a
-     single node's own local translation, which can be misleading in isolation (e.g. two parts can
-     have very similar local Y offsets from their *own* parent while one is still meaningfully
-     "above" the other once every ancestor transform is composed in). The oiling-tool coil's
-     "starts above and descends into the tool" direction, and the exploded view's whole ordering,
-     were both worked out this way, not from local transforms alone.
-   - **A described direction ("clockwise", "moves right", "down") is relative to a specific
-     viewing angle**, and the model auto-rotates, so ask which side he was actually looking from,
-     or find something in the file itself to anchor it — the `.glb`'s own embedded "current
-     camera" node (every SolidWorks export carries the viewport that was active on export) is a
-     reasonable proxy when the geometry gives no better cue.
-4. **Match node names as three.js will actually produce them, not as the raw file has them.**
-   `GLTFLoader` sanitizes every name on load: whitespace → `_`, and `[ ] . : /` are **deleted**,
-   not replaced. Two real, silent (`find()` → `undefined`, no thrown error) bugs came from this in
-   earlier work: comparing against a name with un-sanitized spaces, and assuming a slash-joined
-   path (which `dedup()` produces for a merged/deduped mesh) survives as separate segments — it
-   doesn't, the segments end up glued together with no separator. Match with `.includes()` on a
-   sanitized substring for a loose match (used by `sanitizedIncludes()` and `transparentParts`), or
-   with `baseName()`/`.startsWith()` when you specifically need to avoid matching a child whose own
-   label happens to contain the parent group's name — **this exact trap bit the `explode` feature**:
-   `transparentParts: ['Holder']` matching both the "Holder" group *and* its own child mesh named
-   "Design 2 Holder" is harmless there (idempotent — setting the same material property twice does
-   nothing extra), but the same loose match for `explode` (which *adds* a position offset) would
-   have shifted that child mesh **twice** — once directly, once again by inheriting its
-   already-shifted parent's position. `explode` matches with `.startsWith()` specifically because
-   of this; don't loosen it to `.includes()` without re-checking for the same trap.
-5. **Compress with `npm run model` and re-read the output before wiring anything up.** Try default
-   settings first; if the part you need has vanished into an anonymous instanced batch node, add
-   `--no-instance` and recompress (see §3). Re-inspect the *compressed* output specifically (not
-   just the raw source) before writing any code against its node names — compression can reshape
-   the hierarchy even without instancing being the cause.
-6. **Verify by seeking the GSAP timeline** (`tl.pause(); tl.time(t)` at several points, comparing
-   exact numeric values — e.g. millimetres of travel — against the spec), not by watching real-time
-   playback or comparing screenshots taken moments apart — see §5, the Browser pane's rendering
-   pauses and the self-rotating camera both make real-time/screenshot checks unreliable here in
-   ways that look exactly like a real bug but aren't. This caught a real bug directly: a GSAP
-   position-parameter mistake (`'<'` meant "align with the *first* tween added to the timeline",
-   not "align with whatever was just added") made three moves overlap instead of sequencing —
-   invisible on a quick screenshot glance, obvious immediately once the timeline was seeked to
-   each phase boundary and the numbers didn't match the spec.
-7. **Check the browser console, not just the DOM, when something new touches `ModelLayer`'s draw
-   loop.** A `RangeError: Maximum call stack size exceeded` inside `ModelLayer.tsx`, with the
-   model showing "Model unavailable", is what a JS-level bug in the render loop looks like — it
-   won't show up as a DOM/CSS problem, so `getBoundingClientRect` checks alone can miss it. This
-   happened once: adding an `OrbitControls` `'change'` listener (needed so a *non*-auto-rotating
-   model — see `autoRotate` below — still redraws while being dragged, since the render loop
-   otherwise only keeps re-scheduling itself while `autoRotate` or a built-in animation is active)
-   re-entered `draw()` from *inside* `draw()`'s own `controls.update()` call, because
-   `controls.update()` can synchronously fire `'change'` (it does, every single frame, for any
-   *other* model on the page that's still genuinely auto-rotating) before the loop had marked
-   itself "busy." Fixed by setting `frame` to a busy sentinel *before* calling `controls.update()`,
-   not after. If you add another listener or side effect to the draw loop, ask specifically
-   "can this re-enter `draw()` while `draw()` is already running, and does my in-progress guard
-   actually cover that window?"
-8. **A resize wipes the WebGL canvas**, and a still (non-spinning) cover model only draws once —
-   `ModelLayer.resize()` redraws after every resize, or a cover goes blank after its tile opens
-   and closes. Already fixed; don't reintroduce the bug if touching that code.
+**A rotation axis found in a node's own local space isn't automatically the axis to animate
+directly on that node** — worth understanding before you take a shortcut here. For the conveyor
+cart's crank handle, the shaft's mesh geometry (measured in the "rotate" group's own local frame)
+showed it was long along local Y. It would have been tempting to just tween that node's own
+`.rotation.y` directly. Instead the same **pivot-group pattern already used for `conveyor-shaft`**
+was followed: measure the shaft's world-space bounding box, create a fresh pivot `Group` at its
+centre, `pivot.attach(group)` to reparent without moving anything, then animate the *pivot's*
+rotation. This is more robust than editing the loaded node's own Euler rotation in place, because
+that node may already have a non-identity base rotation from the source export (this one did — a
+pure 90° rotation about X) and depends on the export's Euler decomposition working out cleanly
+(verified here with an actual `three.js` `Euler.setFromQuaternion` + matrix-composition check, not
+assumed — see the git history for `crankRotate` if you want the exact reasoning). The pivot
+approach sidesteps that entirely: it doesn't matter what the animated node's own starting
+orientation was, only where its geometry actually sits in world space. **Default to the pivot
+pattern**, not direct-node-rotation, even when the direct approach can be proven to work for one
+specific export.
 
-**`ModelLayer` / `StepModel` config knobs** (`src/data/types.ts` has the authoritative field docs —
-read them before adding a new one; several were added this pass and are genuinely generic, not
-one-off hacks, so reach for an existing knob before inventing a new mechanism):
-- `margin` — multiplier on camera distance, for a wide/low model whose near edge crops as it
-  spins (the auto-framing fits height and horizontal swing radius, not the camera's downward
-  tilt). Try 1.15–1.4 first depending on how squat/tall the model is.
-- `brightness` — multiplier on the shared tone-mapping exposure (0.68 default), for a model whose
-  pale parts wash out to white.
-- `rotation` — `[x, y, z]` Euler degrees, a one-time correction applied before centring/framing,
-  for a source export that wasn't saved upright.
-- `transparentParts` (+ `transparentOpacity`, default 0.3) — named parts (and everything nested
-  inside them) render see-through: `transparent = true`, reduced `opacity`, `depthWrite = false`
-  (so it doesn't hide what's behind it in the depth buffer regardless of draw order) and
-  `side = THREE.DoubleSide` (so the inside face still renders — a CAD export's shell is usually
-  front-face-only). Matched loosely (`.includes()`), which is fine here since it only ever sets
-  the same properties, idempotently, even on a double match.
-- `explode` — `{ part, offset: [x,y,z] }[]`, a **one-time static** position shift per named part,
-  applied once right after load, before centring/framing measures the model — for pulling a
-  model's assemblies apart into an exploded view. Matched with `.startsWith()`, not `.includes()`
-  (see point 4 above for why). Work out each offset from the parts' actual world-space bounding
-  boxes (heights and current positions), stacked with a consistent gap in the requested order —
-  don't eyeball it.
-- `autoRotate` — `false` turns off a model's own self-spin while leaving drag-to-rotate fully
-  working (default `true`, i.e. unchanged behaviour, when motion is allowed). For a model meant to
-  be inspected by hand rather than passively watched. The oiling tool's exploded view used this at
-  first, then was switched back to `true` (his request) so it spins like every other cover model —
-  no current user of `false` left, but the knob stays for whenever one comes up.
-- **A re-exported "same" model isn't guaranteed to need new code.** Swapping in an updated oiling
-  tool export (`oiling_tool_stand.glb`), the four parts' own heights and top-to-bottom stacking
-  order turned out identical to the previous export — confirmed by measuring each part's
-  world-space bounding box on the new file, not assumed from the filename or the fact it "looked
-  like the same tool" (rule 3 still applies: verify, don't carry over). Because the difference was
-  just a rigid shift of the whole assembly, the existing `oiling-tool-coil` animation and the
-  exploded view's `explode` offsets both worked unchanged. Compressing it still needed
-  `--no-instance`, though, for a reason beyond point 4's name-lookup case: the default instancing
-  pass pulled the repeated screws/springs out of the `Moving_Plate` group into anonymous top-level
-  nodes, which would have left them behind when `explode` moves the plate, even though nothing
-  looks them up by name.
-- Auto-rotate (when on) is **time-based** (12°/s, `controls.update(elapsedSeconds)`), so it's the
-  same speed regardless of the viewer's screen refresh rate — this was a real, reported bug (spun
-  2.4× faster on a 144 Hz monitor than a 60 Hz phone) before it was fixed. Any future per-frame
-  animation needs the same treatment: always pass elapsed time, never a fixed per-frame step.
+**A model you add to a step can silently join the tile's cover if it has a different `src` from
+that project's other models.** `coverModels()` collects every *distinct* model across a project's
+steps, deduped only by `src` — adding a second, differently-named model file to any step (even one
+meant as a small supplementary visual, not a "this represents the whole project" cover) makes it
+show up side by side on the collapsed tile. This bit the crank handle model directly. If a new
+model is a close-up/supplementary visual rather than a project-representative one, set
+`excludeFromCover: true` on it and *check the actual collapsed tile* afterward — don't assume a
+single new model addition is cover-neutral just because it "looks like a normal StepModel."
 
-### 7c. CSS gotchas found this pass (both silent — no error, just visibly wrong)
+### 7c. CSS gotchas found this session (all silent — no error, just visibly wrong)
 
-- **Two equal-specificity rules for the same property resolve by source order, not by which one
-  "sounds like" the override.** `.step-visual__img.is-transparent { background: none }` and
-  `.photo-visual__split-img.is-transparent { background: none }` were both defined *earlier* in
-  `site.css` than their corresponding "give this a white panel" base rules
-  (`.bento-tile__step .step-visual__img { background: var(--photo-bg) }` and
-  `.step-visual--split .photo-visual__split-img { ... }`) — both pairs have identical specificity
-  (two classes each), so the later-defined base rule silently won, and every "transparent" cut-out
-  photo shown as a plain step image or in a split row was quietly getting its white panel back.
-  This had been true for a while before it was noticed, because the bug is invisible unless you
-  already know the image *should* be transparent. Fixed by qualifying the override selectors with
-  the same context class the base rule uses, so the override structurally outranks it regardless
-  of where either is written in the file. If you add a new `background`/similar rule for an
-  existing class in a more specific context, check whether an `.is-transparent`-style override for
-  that same class exists elsewhere and would now lose to it.
-- **Tailwind's preflight sets `img { display: block }`**, so a layout that relies on a parent's
-  `text-align: center` to centre an `<img>` silently does nothing — text-align only affects inline
-  content, and `display: block` makes the browser ignore it for that element. `.step-visual__img`
-  was flush-left inside its (correctly centred) container for this reason; fixed with
-  `margin: auto` instead of relying on the inherited `text-align`. Worth checking anywhere else in
-  `site.css` that centres an `<img>` — this bug is easy to reintroduce by copying the "just use
-  text-align" pattern that works fine for actual inline/text content.
-- **`:hover` fires on tap on a touch device and stays "stuck" until something else is tapped** —
-  the bento tile's orange border-highlight and its `+`/`×` toggle's orange background were both on
-  `:hover` alongside `:focus-visible`, and he reported it interfering with scrolling on mobile.
-  Fixed by dropping `:hover` from those two rules, leaving only `:focus-visible` (keyboard nav
-  still gets the highlight; touch and mouse hover no longer change the accent colour). The photo
-  zoom and the scrim darken-on-hover effects were left alone — only the orange accent was reported
-  as a problem, not hover effects generally.
+Two from the previous version of this doc still stand (equal-specificity rules resolving by
+source order for `.is-transparent` overrides; Tailwind preflight's `img { display: block }`
+silently breaking `text-align: center` as a centring trick). New this session:
 
-## 8. Known debts
+- **CSS Grid stretches every item to the tallest one in its row by default** (`align-items:
+  stretch`), and an accordion-style expand/collapse card sitting in a grid will visibly "grow" its
+  row-mates even though their own content stays collapsed. This is exactly the bug he reported as
+  "when I click to expand one of the 3 cards, it expands the other 2 as well but they don't show
+  any text" — the sibling cards' *boxes* grew (to match the newly-tall opened card's row height),
+  while their own internal accordion panel correctly stayed at 0 height inside that now-taller
+  box. Fixed with `align-items: start` on `.mini-cards`. If you build another grid of
+  independently-expanding items, set this from the start rather than waiting for the same bug
+  report.
+- **A capture-phase event listener on the same element the event fires *at* does not run before a
+  bubble-phase listener already registered on that same element** — capture vs. bubble only
+  affects ordering across *ancestors* on the way down to the target; at the target itself,
+  listeners run in registration order regardless of the `capture` flag. This broke the
+  touch-vs-mouse toggle for pinch-zoom's `enableZoom`: a capture-phase `pointerdown` listener was
+  added directly on the model's `<canvas>` (the same element `OrbitControls`' own bubble-phase
+  listener was already on, registered first in its constructor), so it never actually ran first.
+  Moving the listener to `host` (the canvas's *actual parent* — a genuine ancestor) fixed it
+  immediately, since a capture-phase listener on a real ancestor does run before the target's own
+  listeners. If you need to intercept/modify state before a third-party library's own same-element
+  listener reads it, you need an ancestor, not just the `capture: true` flag on the same node.
+- **Tailwind's own `@layer utilities` always wins over this project's `@layer components`
+  (site.css), regardless of selector specificity** — CSS `@layer` order overrides specificity
+  entirely once *any* layers are in play. This meant the original custom-CSS approach for the
+  toggle's orange hover swap (`.bento-tile__hit:hover .bento-tile__toggle { background: ... }`,
+  living in `@layer components`) could never reliably beat a Tailwind background utility class
+  applied to the same element (`@layer utilities`), even though the custom rule looked more
+  specific by eye. Once the toggle started getting its base styling from `buttonVariants()`
+  (§9), the hover swap had to move to Tailwind's own `group-hover:`/`group-focus-visible:`
+  variants instead — pure Tailwind utilities, same layer, normal cascade rules apply. **Any time
+  you mix a Tailwind-utility-styled element with a custom `site.css` rule targeting the same
+  property, assume the Tailwind utility wins** and either express the whole thing in Tailwind
+  (`group-*:` variants, arbitrary values) or keep the custom CSS to properties Tailwind isn't
+  touching on that element (position, transitions on non-utility properties, etc. — see
+  `.mini-card__toggle`/`.bento-tile__toggle` in site.css for what's left to plain CSS there).
 
-- No Lighthouse/field performance run has been done. There are now **9 live WebGL canvases on the
-  page at load** (Cooling Unit, Conveyor Cart, Assembly Line Fixtures & Tooling ×3, Coffee Cup
-  Gripper, the Spring-Loaded Oiling Tool, Kinder Toy Plane, Meccano Car — ANSYS, Reef Rover and
-  Hydraulic Hand now use photo covers, not models), up from 8 before this pass (the oiling tool
-  gained a model). Browsers cap active WebGL contexts (~16) — measure phone performance before
-  adding more cover models, and keep this in mind if a future project's cover would push the count
-  much higher.
+### 7d. Why pinch-to-zoom is touch-only, not also the mouse wheel
+
+`OrbitControls.enableZoom` is a single flag gating *both* the mouse wheel and touch-pinch dolly —
+there's no separate flag per input method. Turning it on outright would let a desktop visitor's
+page-scroll wheel get captured by the model instead of scrolling the page whenever the cursor
+happens to be over it, the same class of bug as the tile-cover touch-action issue in §4. Instead,
+`ModelLayer.tsx` toggles `controls.enableZoom` per-gesture based on `PointerEvent.pointerType`,
+using a listener on `host` (the canvas's parent — see the capture/bubble note in §7c for why not
+the canvas itself). Verified end-to-end by dispatching real synthetic two-finger pinch gestures at
+the running code (not just reading it) and confirming the camera distance moves to the clamped
+`minDistance`/`maxDistance` bounds in both directions, and that a mouse `pointerdown` leaves
+`enableZoom` false. If you ever want wheel-zoom too, you'd need to intercept and stop propagation
+of wheel events specifically when the pointer *last seen* was a mouse, not just toggle the same
+flag — non-trivial, hasn't been attempted.
+
+## 8. The mini-card / expandable-summary content system
+
+New this session, and now the single biggest addition to the data-driven content model since the
+bento grid itself. Three related `Step` fields (full docs in `types.ts`), all optional, all
+composable independently:
+
+- **`cards?: MiniCard[]`** — a row of small, `.stats__item`-styled boxes (`MiniCard = { title,
+  preview?: Stat[], bullets: string[] }`), each collapsed to just its `title` until tapped, then
+  expanding in place to add its `bullets` below. `preview` (optional) is a few label/value spec
+  lines shown *even while collapsed* — plain text, not count-up animated like a `Stat` box in the
+  achievement grid, since most preview values aren't pure numbers ("R-290 (propane)", "Pulley
+  train"). Use this for a "How?" step's methodology bullets when there are 2+ natural subtopics —
+  group each subtopic's bullets under a short (2-4 word) title, and pull 1-4 crisp spec facts
+  already present in that subtopic's bullet text into `preview`. Rendered by `MiniCardItem` in
+  `StepContent.tsx`, styled by the `.mini-card*` classes in site.css (surface panel, hairline
+  gradient top border — matches `.stats__item`'s look, per his explicit request).
+- **`bulletsCollapsed?: boolean`** — hides `bullets` behind a plain "View Details" button (the
+  shadcn `Button`, §9) instead of always showing them. Use for a long, undifferentiated list (the
+  cooling unit's 7-bullet achievement rundown) that would otherwise dominate the step.
+- **`bulletsSummary?: string[]`** — only meaningful alongside `bulletsCollapsed: true`. Instead of
+  a plain button, renders a single `.mini-card`-styled box whose *always-visible* header is this
+  condensed version of `bullets`; tapping it adds the full `bullets` below (additive — the summary
+  doesn't disappear, matching how `cards`' own `preview` stays visible when its `bullets` open).
+  Use for a "What?" step: write 1-2 short bullets that compress the real ones (drop throat-
+  clearing like "Designed a mobile..." down to the concrete noun phrase, keep any bolded figures).
+
+**Which combination goes where** (the pattern he's asked to be mirrored across projects, §2):
+"What?" → `bulletsCollapsed` + `bulletsSummary` (a summary card). "How?" → `cards` (subtopic mini-
+cards, `preview` filled from real numbers/specs already in that subtopic's own bullet text — never
+invent a number). "Results"/"What It Achieved" → `bulletsCollapsed` alone (plain button, *no*
+`bulletsSummary` — that's the one deliberate asymmetry: a results rundown doesn't get a condensed
+teaser, it's just hidden until asked for). If a "How?" step only has one bullet but it actually
+covers two distinct ideas, split it into two short bullets across two `cards` entries rather than
+forcing one oversized card (done for both the cooling unit's battery/inverter bullet and the
+oiling tool's spring/sponges bullet).
+
+Both `MiniCardItem` and the summary card's panel share one small `ExpandPanel` component (the
+0fr→1fr CSS grid-row accordion trick, no JS height measurement) — reuse it for any future
+expand/collapse box rather than re-deriving the technique.
+
+## 9. shadcn / Tailwind integration
+
+The project had shadcn's `components.json` scaffolding (alias, `cn()` helper) from the start but
+had never actually had a component added — this session added the first one.
+
+- **`npx shadcn@latest add "https://21st.dev/r/<user>/<slug>"` needs an API key query param the
+  plain CLI doesn't have.** The `21st` CLI (`@21st-dev/cli`) knows the account's key, but its
+  `21st add` command has a bug in this environment — it tries to spawn `npx` as a child process
+  and fails (`spawn npx ENOENT`), a Windows-specific child-process quirk, not an auth problem.
+  **Workaround: `21st search <query>` for the item's numeric id, then `21st get <id> --json`**,
+  which prints the actual component source directly (no shell-out involved) — write that to
+  `src/components/ui/<name>.tsx` by hand. Works reliably; used for both `button.tsx` and
+  `toggle.tsx` this session.
+- **This project's dark palette (`--bg`, `--fg`, `--surface`, `--accent`, etc. in `site.css`) had
+  to be aliased into shadcn's expected token names** (`--color-primary`, `--color-secondary`, …)
+  via an `@theme inline` block added to `index.css`, since no shadcn component had ever been added
+  before and the usual `shadcn init` scaffolding that normally sets this up never ran. Mapping used:
+  `--color-primary` → `var(--accent)` (the orange), `--color-secondary`/`--color-accent` (shadcn's
+  own "accent" meaning — a neutral hover tint, *not* the site's own `--accent` brand colour, a
+  naming collision to keep straight) → `var(--surface)`, `--color-background` → `var(--bg)`,
+  `--color-ring` → `var(--accent)`. If you add another shadcn component that needs a token not yet
+  in that `@theme inline` block, add it there rather than inventing a new colour.
+- **`npm install <pkg>` on an already-present dependency (`lucide-react` was already there for the
+  intro canvas's Play/Pause icons) bumps it to latest and rewrites its `package.json` range even
+  if you only meant to *ensure* it's installed.** Harmless here (patch-level bump, nothing broke),
+  but don't be surprised by an unrelated version diff showing up in `git diff package.json` after
+  installing a batch of deps that happens to include something already present.
+- `toggle.tsx` (`@radix-ui/react-toggle`) was pulled in as a registry dependency of the Button
+  component and installed for completeness, but **nothing in the app renders a `Toggle` yet** —
+  don't assume it's wired up anywhere if you go looking for where it's used.
+
+## 10. Known debts
+
+- No Lighthouse/field performance run has been done, still. 9 live WebGL canvases at page load
+  (§6) — unchanged this session, but watch this number every time a model is added to any step;
+  it's easy to accidentally add a 10th via the cover-dedup mechanism (§7b) without meaning to.
 - Reduced-motion layout has never been checked in a real browser with the OS setting on, only via
   the dev flag and DOM checks.
-- The `motion` package adds ~30 KB gzip to the main bundle, not code-split (the expand interaction
-  is core to every page view, unlike the 3D chunk which only loads once a model is needed).
+- The `motion` package (~30 KB gzip) and now `class-variance-authority` + `@radix-ui/react-slot` +
+  `@radix-ui/react-toggle` (small, but not code-split) all sit in the main bundle.
+- Two low-res, PDF-extracted photos are still waiting on replacements he'll send himself:
+  `hydraulic-hand/part-drawing`, `reef-rover/collection-mechanism` — don't chase him for them.
+- `public/projects/conveyor-cart/drive-shaft-exploded-*.webp` and its source photo are now
+  **unreferenced** (the step that showed it was removed, §6) — left on disk, not deleted; low-
+  priority cleanup if you're ever tidying unused assets.
+- Only 4 of 10 projects use the mini-card/summary-card system (§8, §6) — not a bug, just not yet
+  asked for on the other 6.
 - On a phone (DPR 2), model boxes render taller than the desktop 4:3 (294×455 observed) — not
   inconsistent (every model box does this the same way), just worth knowing if it comes up.
-- Two low-res, PDF-extracted photos are still waiting on replacements he'll send himself (see §6)
-  — don't chase him for them.
 
-## 9. What's next
+## 11. What's next
 
-**His stated priorities, in no particular order (ask him which first if it matters):**
-1. **Replace the remaining low-res photos** once he sends them (§6/§8) — `hydraulic-hand/part-drawing`
-   and `reef-rover/collection-mechanism` for sure; double-check whether `coffee-cup-gripper/built-gripper`
-   still needs one too, it may already be covered by the new gripper video.
-2. **More 3D models/animations for the remaining photo-only projects.** ANSYS Stress Analysis,
-   Autonomous Reef Rover and Reverse-Engineered Hydraulic Hand are the ones left with no 3D model
-   (they got new transparent-render photo covers this pass, but that's not the same thing — see
-   §6). Follow the §7b recipe exactly if/when a model arrives for one of these; don't skip steps
-   just because it's been done several times now.
-3. **Custom domain** — deliberately the **final** step once everything else is done. Don't raise
-   it early.
+**His stated priorities, in order (confirmed this session — unchanged from before, minus the
+domain item, which is now done):**
+1. **Replace the remaining low-res photos** once he sends them (§10) — `hydraulic-hand/part-
+   drawing` and `reef-rover/collection-mechanism`.
+2. **More 3D models/animations for the remaining photo-only projects** — ANSYS Stress Analysis,
+   Autonomous Reef Rover and Reverse-Engineered Hydraulic Hand still have no 3D model (they have
+   stat boxes now, §6, but that's not the same thing). Follow §7b exactly when a model arrives for
+   one of these.
 
-**Already decided, not yet done:**
-- Replace `qtaha@uoguelph.ca` — he'll do this himself before graduating, no action needed unless
-  he brings it up.
-- Scroll-scrubbed SolidWorks image sequences (from the original brief) — **decided against, he
-  will not be doing this.** 3D models/animations are the path for CAD visuals now.
+**Done, no longer "next":**
+- ~~Custom domain~~ — **qtaha.com is registered, DNS points at Vercel, and the deploy is live
+  there.** Confirmed directly by him this session. No action needed; both `qtaha.com` and the
+  `.vercel.app` URL work.
+- Replace `qtaha@uoguelph.ca` — he'll do this himself before graduating, no action needed.
+- Scroll-scrubbed SolidWorks image sequences — decided against; 3D models/animations are the path
+  for CAD visuals now.
+
+**Not on his list, but worth knowing it's an option**: rolling the mini-card/summary-card system
+(§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been
+asking for it project-by-project on purpose, so wait for the ask rather than assuming he wants it
+everywhere at once.
