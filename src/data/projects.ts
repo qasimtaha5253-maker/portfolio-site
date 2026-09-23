@@ -240,6 +240,11 @@ export const projects: Project[] = [
     steps: [
       {
         label: 'What?',
+        bulletsCollapsed: true,
+        bulletsSummary: [
+          'A single-motor machine that grips a coffee cup and moves it *20 cm up, 30 cm across*.',
+          'Goal: precise pick-and-place motion from just one motor.',
+        ],
         bullets: [
           'Designed and fabricated a *single-motor machine* to grip a coffee cup and move it 20 cm vertically and 30 cm horizontally onto a platform.',
           'Goal: efficient, precise pick-and-place motion off just one motor.',
@@ -249,11 +254,29 @@ export const projects: Project[] = [
       },
       {
         label: 'How?',
-        bullets: [
-          'Converted single-motor RPM into *linear gripper motion* using a pulley train with an overall *1:8 ratio* to boost torque and control speed.',
-          'Modeled the drivetrain and motion path in SolidWorks, then fabricated the parts in the *university shop on standard machinery*, iterating for fit.',
-        ],
         image: { src: 'pulley-train', alt: 'Close-up render of the pulley train with 1, 2 and 4 inch pulleys labelled' },
+        cards: [
+          {
+            title: 'Drivetrain',
+            preview: [
+              { label: 'Mechanism', value: 'Pulley train' },
+              { label: 'Ratio', value: '1:8' },
+            ],
+            bullets: [
+              'Converted single-motor RPM into *linear gripper motion* using a pulley train with an overall *1:8 ratio* to boost torque and control speed.',
+            ],
+          },
+          {
+            title: 'Fabrication',
+            preview: [
+              { label: 'Software', value: 'SolidWorks' },
+              { label: 'Shop', value: 'University shop' },
+            ],
+            bullets: [
+              'Modeled the drivetrain and motion path in SolidWorks, then fabricated the parts in the *university shop on standard machinery*, iterating for fit.',
+            ],
+          },
+        ],
       },
       {
         label: 'Results',
@@ -261,6 +284,7 @@ export const projects: Project[] = [
           { value: '4 s', label: 'Cycle time' },
           { value: '98%', label: 'Grade' },
         ],
+        bulletsCollapsed: true,
         bullets: [
           'Achieved smooth, repeatable transport with a *5-second* cycle time.',
           'Earned a *98% grade* for performance and design quality.',
@@ -283,6 +307,8 @@ export const projects: Project[] = [
     steps: [
       {
         label: 'What?',
+        bulletsCollapsed: true,
+        bulletsSummary: ['Oils a part inside, outside, and its O-ring — rated for *300 uses per shift*.'],
         bullets: [
           'Designed a tool to fully oil a part’s inside and outside surfaces, including the O-ring on its stem, durable enough for *300 uses per shift*.',
         ],
@@ -297,8 +323,19 @@ export const projects: Project[] = [
       },
       {
         label: 'How?',
-        bullets: [
-          'Sized a spring for the right rate to give smooth linear motion, guided by shoulder bolts to keep it from bending sideways, and waterjet-cut sponges to the part’s exact dimensions for full-surface contact.',
+        cards: [
+          {
+            title: 'Spring & Guides',
+            preview: [{ label: 'Guide', value: 'Shoulder bolts' }],
+            bullets: [
+              'Sized a spring for the right rate to give smooth linear motion, guided by shoulder bolts to keep it from bending sideways.',
+            ],
+          },
+          {
+            title: 'Sponges',
+            preview: [{ label: 'Method', value: 'Waterjet-cut' }],
+            bullets: ['Waterjet-cut sponges to the part’s exact dimensions for full-surface contact.'],
+          },
         ],
         model: {
           src: 'models/oiling-tool.glb',
@@ -330,6 +367,7 @@ export const projects: Project[] = [
       {
         label: 'Results',
         stats: [{ value: '93%', label: 'Cycle time cut' }],
+        bulletsCollapsed: true,
         bullets: [
           'Spring compressed under light force while still supporting the part’s weight; sponges fully lubricated the inside/outside walls and O-ring.',
           'Cut oiling cycle time by *93%*.',
