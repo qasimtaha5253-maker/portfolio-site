@@ -318,6 +318,20 @@
   color: var(--muted);
 }
 
+/* Drag/pinch-to-interact hint, bottom right of a step's own model — purely
+   decorative (aria-hidden), so it can't intercept the drag/pinch it's
+   pointing at. */
+.model-layer__rotate-hint {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--muted);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 /* Cut-out (transparent) renders need no panel behind them. Qualified with
    .bento-tile__step (see the .photo-visual__split-img.is-transparent
    comment above) so it reliably outranks that context's own background. */

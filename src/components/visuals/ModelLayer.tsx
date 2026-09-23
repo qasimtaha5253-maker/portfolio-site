@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { StepModel } from '@/data/types';
 import type { ModelAnimation } from './modelAnimations';
+import { RotateLeft03Icon } from '@/components/icons/RotateLeft03Icon';
 
 const base = import.meta.env.BASE_URL;
 
@@ -413,6 +414,9 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       {status !== 'ready' && (
         <p className="model-layer__status">{status === 'loading' ? 'Loading 3D model…' : 'Model unavailable'}</p>
       )}
+      {/* Drag/pinch-to-interact hint — only where that's actually possible
+          (a step's own model, not the non-interactive bento tile cover). */}
+      {interactive && status === 'ready' && <RotateLeft03Icon className="model-layer__rotate-hint" aria-hidden="true" />}
     </div>
   );
 }
