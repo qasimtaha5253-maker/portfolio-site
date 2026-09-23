@@ -36,18 +36,20 @@ function coverImage(project: Project): ProjectImage | undefined {
  *  step's own single `model` is used, deduped by src (a project may repeat
  *  the same model on more than one step — the cover only needs it once) —
  *  so a project with several different model-bearing steps (e.g. Assembly
- *  Line Fixtures & Tooling) gets all of them side by side on its cover. */
+ *  Line Fixtures & Tooling) gets all of them side by side on its cover,
+ *  unless a model opts out with `excludeFromCover` (e.g. a close-up of one
+ *  small subsystem that isn't meant to stand in for the whole project). */
 function coverModels(project: Project): StepModel[] {
   for (const step of project.steps) {
     for (const items of [step.split, step.stack]) {
-      const models = items?.flatMap((item) => (item.model ? [item.model] : [])) ?? [];
+      const models = items?.flatMap((item) => (item.model && !item.model.excludeFromCover ? [item.model] : [])) ?? [];
       if (models.length) return models;
     }
   }
   const seen = new Set<string>();
   const models: StepModel[] = [];
   for (const step of project.steps) {
-    if (step.model && !seen.has(step.model.src)) {
+    if (step.model && !step.model.excludeFromCover && !seen.has(step.model.src)) {
       seen.add(step.model.src);
       models.push(step.model);
     }

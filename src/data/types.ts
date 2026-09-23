@@ -108,6 +108,15 @@ export interface StepModel {
    * model's parts apart into an exploded view.
    */
   explode?: { part: string; offset: [number, number, number] }[];
+  /**
+   * Leaves this model out of the tile cover, even though BentoGrid's
+   * coverModels() would otherwise show every distinct model used across a
+   * project's steps side by side. For a model added to a *step* that isn't
+   * meant to represent the whole project on the collapsed tile — e.g. a
+   * close-up of one small subsystem, when another step already has the
+   * model that should stand for the project as a whole.
+   */
+  excludeFromCover?: boolean;
 }
 
 export interface Stat {

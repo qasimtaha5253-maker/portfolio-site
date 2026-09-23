@@ -139,6 +139,10 @@ export const projects: Project[] = [
           src: 'models/conveyor-cart-rotate.glb',
           title: 'Animated 3D model of the cart’s crank handle, turning 90° and back',
           animation: 'crank-rotate',
+          // A close-up of one small mechanism, not the whole cart — the
+          // "What?" step's model already covers that job, so this one
+          // shouldn't also show up (side by side with it) on the tile cover.
+          excludeFromCover: true,
         },
         // Kept only as the reduced-motion fallback (every model/animation
         // step keeps its original photo for that — see CLAUDE.md); not
