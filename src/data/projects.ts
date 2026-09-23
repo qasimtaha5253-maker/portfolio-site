@@ -289,6 +289,7 @@ export const projects: Project[] = [
       },
       {
         label: 'Results',
+        stats: [{ value: '93%', label: 'Cycle time cut' }],
         bullets: [
           'Spring compressed under light force while still supporting the part’s weight; sponges fully lubricated the inside/outside walls and O-ring.',
           'Cut oiling cycle time by *93%*.',
@@ -322,6 +323,7 @@ export const projects: Project[] = [
       },
       {
         label: 'Results',
+        stats: [{ value: '<2%', label: 'Error vs. theory' }],
         bullets: [
           'Validated simulated K-values against theory within *<2% error*.',
         ],
@@ -354,6 +356,7 @@ export const projects: Project[] = [
       },
       {
         label: 'Results',
+        stats: [{ value: '3rd', label: 'Place' }],
         bullets: [
           'Functioning prototype completed the task and secured *3rd place*.',
         ],
@@ -432,6 +435,7 @@ export const projects: Project[] = [
       },
       {
         label: 'Results',
+        stats: [{ value: '2nd', label: 'Place' }],
         bullets: ['Successfully launched the ball onto target; placed *2nd* in the competitive evaluation.'],
         image: { src: 'chassis-wiring', alt: 'Car chassis with Arduino wiring' },
       },
@@ -462,6 +466,7 @@ export const projects: Project[] = [
       },
       {
         label: 'Results',
+        stats: [{ value: '200+', label: 'Parts modeled' }],
         bullets: [
           'Successfully replicated the toy hydraulic hand in SolidWorks, demonstrating strong understanding of hydraulic systems and complex assemblies.',
         ],
