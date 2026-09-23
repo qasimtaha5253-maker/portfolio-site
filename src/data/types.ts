@@ -113,12 +113,18 @@ export interface Stat {
   label: string;
 }
 
-/** A small stat-box-styled card, collapsed to just its title until tapped
- *  open to reveal its own bullet list — for grouping a cluster of detail
- *  bullets (e.g. one subsystem's worth) under a short heading, instead of
- *  dropping them all into one long undifferentiated list. */
+/** A small stat-box-styled card, collapsed to just its title (and, if set,
+ *  `preview`) until tapped open to reveal its own bullet list — for
+ *  grouping a cluster of detail bullets (e.g. one subsystem's worth) under
+ *  a short heading, instead of dropping them all into one long
+ *  undifferentiated list. */
 export interface MiniCard {
   title: string;
+  /** A few key label/value lines shown on the card at rest, before it's
+   *  expanded — e.g. the headline specs a visitor would want without
+   *  having to open the card at all. Plain text, not count-up animated
+   *  like a `Stat` box (most of these aren't pure numbers). */
+  preview?: Stat[];
   bullets: string[];
 }
 

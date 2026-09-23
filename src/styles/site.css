@@ -329,6 +329,35 @@
   transform: rotate(180deg);
 }
 
+/* Headline label/value pairs, visible at rest (unlike .mini-card__bullets
+   below, which only shows once the card is opened). */
+.mini-card__preview {
+  margin: 0;
+  padding: 0 0.85rem 0.75rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.mini-card__preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+}
+
+.mini-card__preview-item dt {
+  color: var(--muted);
+}
+
+.mini-card__preview-item dd {
+  margin: 0;
+  flex: none;
+  color: var(--fg);
+  font-weight: 600;
+  text-align: right;
+}
+
 /* A 0fr -> 1fr grid track animates height without JS measuring the content
    (the usual way to transition to/from "auto" height). */
 .mini-card__panel {

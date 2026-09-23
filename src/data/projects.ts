@@ -41,6 +41,12 @@ export const projects: Project[] = [
         cards: [
           {
             title: 'Refrigeration Cycle',
+            preview: [
+              { label: 'Refrigerant', value: 'R-290 (propane)' },
+              { label: 'Evaporator temperature', value: '−9 °C' },
+              { label: 'Capacity', value: '~2,010 W' },
+              { label: 'Design load', value: '1,640 W' },
+            ],
             bullets: [
               'Engineered a *vapour-compression refrigeration cycle* using *R-290 (propane) refrigerant (GWP = 3)* driven by a *variable-speed Secop SLVE18CN compressor*. It is rated at ~2,010 W at −9 °C, giving *23% capacity headroom* over the 1,640 W design load.',
               'Performed a full *thermal load analysis* covering forced convection, wall conduction, and lid infiltration. This showed that strawberry field heat accounts for *96.9%* of the load, and every downstream component was sized from that figure.',
@@ -50,6 +56,11 @@ export const projects: Project[] = [
           },
           {
             title: 'Battery and Power System',
+            preview: [
+              { label: 'Battery', value: '48 V, 80 Ah LiFePO₄' },
+              { label: 'Startup surge', value: '28% below inverter rating' },
+              { label: 'Runtime', value: '5.70 hours per charge' },
+            ],
             bullets: [
               'Designed the *off-grid power system*: a *48 V, 80 Ah LiFePO₄ battery* paired with a *4,000 W inverter*.',
               'Sized for a 4-hour session at 60% duty cycle with a *43% capacity margin* — the *2,890 W compressor startup surge* stays comfortably below the inverter rating.',
@@ -57,6 +68,7 @@ export const projects: Project[] = [
           },
           {
             title: 'Validation',
+            preview: [{ label: 'Method', value: 'ANSYS CFD airflow simulation' }],
             bullets: [
               'Validated cooling performance with *ANSYS CFD*, showing berry surface temperatures of ~13 °C at 30 minutes and ~1 °C at 2 hours. This agreed with the analytical cooling-time prediction.',
               'Modelled the enclosure around *standard vented strawberry flats* in SolidWorks. It uses a wagon-style chassis with front-wheel steering and thick-tread tires to move with pickers over rough field terrain.',

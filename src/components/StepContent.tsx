@@ -136,6 +136,16 @@ function MiniCardItem({ card }: { card: MiniCard }) {
         <span className="mini-card__title">{card.title}</span>
         <ChevronDown className="mini-card__chevron" aria-hidden="true" />
       </button>
+      {card.preview && card.preview.length > 0 && (
+        <dl className="mini-card__preview">
+          {card.preview.map((stat) => (
+            <div className="mini-card__preview-item" key={stat.label}>
+              <dt>{stat.label}</dt>
+              <dd>{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
       {/* Stays mounted (not conditionally rendered) even while closed — the
           grid-row height transition below needs the content present to
           animate open smoothly. aria-hidden keeps it out of the accessibility
