@@ -113,6 +113,15 @@ export interface Stat {
   label: string;
 }
 
+/** A small stat-box-styled card, collapsed to just its title until tapped
+ *  open to reveal its own bullet list — for grouping a cluster of detail
+ *  bullets (e.g. one subsystem's worth) under a short heading, instead of
+ *  dropping them all into one long undifferentiated list. */
+export interface MiniCard {
+  title: string;
+  bullets: string[];
+}
+
 export interface Step {
   /** Step heading, e.g. "How it works". An empty string shows no heading,
    *  for a step that continues the previous one's (e.g. a second visual
@@ -122,8 +131,14 @@ export interface Step {
   body?: string;
   /** List of points. */
   bullets?: string[];
+  /** Hides `bullets` behind a "View Details" button instead of always
+   *  showing them — for a long list (e.g. a full results rundown) that
+   *  would otherwise dominate the step before the visitor even asks for it. */
+  bulletsCollapsed?: boolean;
   /** Highlight numbers shown as boxes. */
   stats?: Stat[];
+  /** Small expandable cards, shown below `bullets` — see `MiniCard`. */
+  cards?: MiniCard[];
   /** Photo for this step. Also the fallback under reduced motion. */
   image?: ProjectImage;
   /** HTML animation for this step (needs motion allowed; reduced motion shows `image`). */

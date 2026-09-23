@@ -1,9 +1,12 @@
-import { useRef, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import { ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import type { Step } from '@/data/types';
+import type { MiniCard, Step } from '@/data/types';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -90,7 +93,67 @@ function StatValue({ value, ready }: { value: string; ready: boolean }) {
   return <dd className="stats__value" ref={ref} />;
 }
 
-/** A step's body, stats and bullets, shown in an expanded tile. */
+/** `step.bullets`, hidden behind a "View Details" button (`step.bulletsCollapsed`)
+ *  instead of always showing — for a long list that would otherwise dominate
+ *  the step before the visitor even asks for it. */
+function CollapsibleBullets({ bullets }: { bullets: string[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="step__details-toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        {open ? 'Hide Details' : 'View Details'}
+      </Button>
+      {open && (
+        <ul className="step__bullets">
+          {bullets.map((text) => (
+            <li key={text}>{renderBold(text)}</li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+/** One `step.cards` entry: a stat-box-styled card collapsed to just its
+ *  title, expanding in place to reveal its own bullet list when tapped. */
+function MiniCardItem({ card }: { card: MiniCard }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={cn('mini-card', open && 'mini-card--open')}>
+      <button
+        type="button"
+        className="mini-card__toggle"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="mini-card__title">{card.title}</span>
+        <ChevronDown className="mini-card__chevron" aria-hidden="true" />
+      </button>
+      {/* Stays mounted (not conditionally rendered) even while closed — the
+          grid-row height transition below needs the content present to
+          animate open smoothly. aria-hidden keeps it out of the accessibility
+          tree until then. */}
+      <div className="mini-card__panel" aria-hidden={!open}>
+        <div className="mini-card__panel-inner">
+          <ul className="mini-card__bullets">
+            {card.bullets.map((text) => (
+              <li key={text}>{renderBold(text)}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** A step's body, stats, bullets and mini cards, shown in an expanded tile. */
 export function StepContent({ step, ready }: { step: Step; ready: boolean }) {
   return (
     <>
@@ -108,11 +171,23 @@ export function StepContent({ step, ready }: { step: Step; ready: boolean }) {
       )}
 
       {step.bullets && step.bullets.length > 0 && (
-        <ul className="step__bullets">
-          {step.bullets.map((text) => (
-            <li key={text}>{renderBold(text)}</li>
+        step.bulletsCollapsed ? (
+          <CollapsibleBullets bullets={step.bullets} />
+        ) : (
+          <ul className="step__bullets">
+            {step.bullets.map((text) => (
+              <li key={text}>{renderBold(text)}</li>
+            ))}
+          </ul>
+        )
+      )}
+
+      {step.cards && step.cards.length > 0 && (
+        <div className="mini-cards">
+          {step.cards.map((card) => (
+            <MiniCardItem card={card} key={card.title} />
           ))}
-        </ul>
+        </div>
       )}
     </>
   );

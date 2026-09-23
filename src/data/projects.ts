@@ -36,34 +36,49 @@ export const projects: Project[] = [
       },
       {
         label: 'How?',
-        bullets: [
-          'Engineered a *vapour-compression refrigeration cycle* using *R-290 (propane) refrigerant (GWP = 3)* driven by a *variable-speed Secop SLVE18CN compressor*. It is rated at ~2,010 W at −9 °C, giving *23% capacity headroom* over the 1,640 W design load.',
-          'Performed a full *thermal load analysis* covering forced convection, wall conduction, and lid infiltration. This showed that strawberry field heat accounts for *96.9%* of the load, and every downstream component was sized from that figure.',
-          'Sized a *fin-and-tube evaporator coil* (83 fins at 5 fins/cm, 32.0 m² vs. 22.41 m² required) and verified a −9 °C evaporator temperature analytically. Heat is rejected through *twin fan-assisted microchannel condensers* at 40 °C.',
-          'Specified *1.6 in PIR foam insulation* (k = 0.023 W/m·K) over PUR, limiting wall and infiltration losses to only *3.1%* of the total load.',
-          'Designed the *off-grid power system*: a *48 V, 80 Ah LiFePO₄ battery* with a 4,000 W inverter. It was sized for a 4-hour session at 60% duty cycle with a *43% capacity margin*, and the 2,890 W compressor startup surge stays below the inverter rating.',
-        ],
         embed: { src: 'animations/cart-section.html?v=10', title: 'Animated section view: airflow over the strawberry flats and the R-290 refrigeration loop' },
         image: { src: 'refrigeration-cutaway', alt: 'Labelled section view: mechanical compartment with R-290 compressor and condenser, evaporator coil and fan, and airflow over six strawberry flats' },
+        cards: [
+          {
+            title: 'Refrigeration Cycle',
+            bullets: [
+              'Engineered a *vapour-compression refrigeration cycle* using *R-290 (propane) refrigerant (GWP = 3)* driven by a *variable-speed Secop SLVE18CN compressor*. It is rated at ~2,010 W at −9 °C, giving *23% capacity headroom* over the 1,640 W design load.',
+              'Performed a full *thermal load analysis* covering forced convection, wall conduction, and lid infiltration. This showed that strawberry field heat accounts for *96.9%* of the load, and every downstream component was sized from that figure.',
+              'Sized a *fin-and-tube evaporator coil* (83 fins at 5 fins/cm, 32.0 m² vs. 22.41 m² required) and verified a −9 °C evaporator temperature analytically. Heat is rejected through *twin fan-assisted microchannel condensers* at 40 °C.',
+              'Specified *1.6 in PIR foam insulation* (k = 0.023 W/m·K) over PUR, limiting wall and infiltration losses to only *3.1%* of the total load.',
+            ],
+          },
+          {
+            title: 'Battery and Power System',
+            bullets: [
+              'Designed the *off-grid power system*: a *48 V, 80 Ah LiFePO₄ battery* paired with a *4,000 W inverter*.',
+              'Sized for a 4-hour session at 60% duty cycle with a *43% capacity margin* — the *2,890 W compressor startup surge* stays comfortably below the inverter rating.',
+            ],
+          },
+          {
+            title: 'Validation',
+            bullets: [
+              'Validated cooling performance with *ANSYS CFD*, showing berry surface temperatures of ~13 °C at 30 minutes and ~1 °C at 2 hours. This agreed with the analytical cooling-time prediction.',
+              'Modelled the enclosure around *standard vented strawberry flats* in SolidWorks. It uses a wagon-style chassis with front-wheel steering and thick-tread tires to move with pickers over rough field terrain.',
+            ],
+          },
+        ],
       },
       {
         // No heading: continues the "How?" section above with a second visual.
         label: '',
-        bullets: [
-          'Validated cooling performance with *ANSYS CFD*, showing berry surface temperatures of ~13 °C at 30 minutes and ~1 °C at 2 hours. This agreed with the analytical cooling-time prediction.',
-          'Modelled the enclosure around *standard vented strawberry flats* in SolidWorks. It uses a wagon-style chassis with front-wheel steering and thick-tread tires to move with pickers over rough field terrain.',
-        ],
         image: { src: 'strawberry-flat', alt: 'CAD of the standard vented strawberry flat, empty and loaded' },
       },
       {
         label: 'What It Achieved',
         stats: [
-          { value: '2.17 hr', label: '30.5 → 1 °C' },
-          { value: '1,640 W', label: 'Cooling load' },
-          { value: '5.7 hr', label: 'Off-grid runtime' },
-          { value: '$6,515', label: 'Capital cost' },
-          { value: '~2 yr', label: 'Payback' },
+          { value: '2.2 hr', label: '30.5 → 1 °C' },
+          { value: '1600 W', label: 'Cooling load' },
+          { value: '6 hours', label: 'Off-grid runtime' },
+          { value: '$6,500', label: 'Capital cost' },
+          { value: '2 years', label: 'Payback' },
         ],
+        bulletsCollapsed: true,
         bullets: [
           'Cools a full *109 kg load (6 flats)* to 1 °C in *2.17 hours*, with *5.70 hours* of battery runtime per charge, enough for two full loads.',
           'Achieved a real system *COP of 2.09*, with the variable-speed compressor running at *81.6% partial load (~786 W)*.',
