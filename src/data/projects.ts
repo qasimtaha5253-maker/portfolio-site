@@ -126,15 +126,15 @@ export const projects: Project[] = [
           'Designed a *detachable transfer cart* to move parts between conveyor belts, replacing manual lifting and carrying with a wheeled, quick-attach handoff.',
           'Goal: reduce manual part handling and stay compatible with varying conveyor setups without permanent fixtures.',
         ],
-        image: { src: 'cart-cad', alt: 'SolidWorks model of the conveyor transfer cart on casters' },
-      },
-      {
-        label: 'How?',
         model: {
           src: 'models/conveyor-cart.glb',
           title: 'Animated 3D model of the conveyor transfer cart',
           animation: 'conveyor-shaft',
         },
+        image: { src: 'cart-cad', alt: 'SolidWorks model of the conveyor transfer cart on casters' },
+      },
+      {
+        label: 'How?',
         image: { src: 'shaft-assembly-render', alt: 'Render of the cart frame with drive shaft and mounting plate' },
         cards: [
           {
