@@ -117,6 +117,11 @@ export const projects: Project[] = [
     steps: [
       {
         label: 'What?',
+        bulletsCollapsed: true,
+        bulletsSummary: [
+          'A wheeled cart that docks between conveyors to move parts, replacing manual lifting.',
+          'Cuts manual handling while staying compatible with different conveyor setups.',
+        ],
         bullets: [
           'Designed a *detachable transfer cart* to move parts between conveyor belts, replacing manual lifting and carrying with a wheeled, quick-attach handoff.',
           'Goal: reduce manual part handling and stay compatible with varying conveyor setups without permanent fixtures.',
@@ -125,29 +130,47 @@ export const projects: Project[] = [
       },
       {
         label: 'How?',
-        bullets: [
-          'Reverse-engineered the existing conveyors on the floor to capture dimensions, materials, and interface points.',
-          'Built the frame from *T-slot aluminum extrusion*, mounted on casters for mobility across the shop floor.',
-        ],
         model: {
           src: 'models/conveyor-cart.glb',
           title: 'Animated 3D model of the conveyor transfer cart',
           animation: 'conveyor-shaft',
         },
         image: { src: 'shaft-assembly-render', alt: 'Render of the cart frame with drive shaft and mounting plate' },
+        cards: [
+          {
+            title: 'Frame & Conveyor Fit',
+            preview: [
+              { label: 'Frame material', value: 'T-slot aluminum extrusion' },
+              { label: 'Mobility', value: 'Casters' },
+            ],
+            bullets: [
+              'Reverse-engineered the existing conveyors on the floor to capture dimensions, materials, and interface points.',
+              'Built the frame from *T-slot aluminum extrusion*, mounted on casters for mobility across the shop floor.',
+            ],
+          },
+          {
+            title: 'Attach/Detach Mechanism',
+            preview: [
+              { label: 'Attach/detach', value: 'Drive shaft mechanism' },
+              { label: 'Pallet lock', value: 'Locking profile plates' },
+              { label: 'Drawing standard', value: 'ASME Y14.5 GD&T' },
+            ],
+            bullets: [
+              'Designed a *drive shaft mechanism* letting the operator attach and detach the cart from the conveyor system, paired with *locking profile plates* that lower and lock the pallet in place so parts don’t shift or fall in transit.',
+              'Produced detailed technical drawings in SolidWorks incorporating *ASME Y14.5 GD&T* standards.',
+            ],
+          },
+        ],
       },
       {
         // No heading: continues the "How?" section above with a second visual.
         label: '',
-        bullets: [
-          'Designed a *drive shaft mechanism* letting the operator attach and detach the cart from the conveyor system, paired with *locking profile plates* that lower and lock the pallet in place so parts don’t shift or fall in transit.',
-          'Produced detailed technical drawings in SolidWorks incorporating *ASME Y14.5 GD&T* standards.',
-        ],
         image: { src: 'drive-shaft-exploded', alt: 'Exploded view of the drive shaft coupling, handle and mounting flange' },
       },
       {
         label: 'Results',
         stats: [{ value: '70%', label: 'Less operator handling time' }],
+        bulletsCollapsed: true,
         bullets: [
           'Cart mated seamlessly with the existing conveyor lines on the assembly floor.',
           'Reduced operator handling time by *70%*.',
