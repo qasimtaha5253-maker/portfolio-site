@@ -325,9 +325,9 @@
   position: absolute;
   right: 0.6rem;
   bottom: 0.6rem;
-  width: 1.35rem;
-  height: 1.35rem;
-  color: var(--muted);
+  width: 1.7rem;
+  height: 1.7rem;
+  color: var(--fg);
   opacity: 0.6;
   pointer-events: none;
 }
