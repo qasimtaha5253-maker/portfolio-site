@@ -92,12 +92,13 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       // the tile opens) instead of decelerating for a few frames.
       controls.enableDamping = interactive;
       controls.enablePan = false;
-      controls.enableZoom = false;
       controls.enableRotate = interactive;
       // Drag to rotate with a mouse or a finger. A swipe that starts on the
       // model turns it instead of scrolling, so the page is scrolled from the
-      // text below it.
-      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.ROTATE };
+      // text below it. Two fingers pinch to zoom (DOLLY_PAN, not just
+      // DOLLY_ROTATE) — panning is off, so the "pan" half of that gesture is
+      // inert, leaving pinch as a clean, rotate-independent zoom.
+      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: interactive ? THREE.TOUCH.DOLLY_PAN : THREE.TOUCH.ROTATE };
       // 2 = one full turn every 30 s. The draw loop passes real elapsed time to
       // controls.update(), so this is the same on a 144 Hz monitor as on a 60 Hz
       // phone (without it OrbitControls turns a fixed step per frame).
@@ -109,6 +110,29 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         // tile cover never rotates from touch, so that was silently
         // swallowing the scroll gesture whenever it started on a cover.
         renderer.domElement.style.touchAction = 'pan-y';
+      }
+      // enableZoom is a single flag shared by OrbitControls for BOTH the
+      // mouse wheel and touch-pinch dolly — turning it on outright would let
+      // a desktop visitor's wheel scroll get captured by the model instead of
+      // scrolling the page whenever the cursor happens to be over it (the
+      // same class of bug as the tile-cover touch-action issue). Toggling it
+      // per-pointer-type keeps pinch-zoom for touch without ever enabling
+      // wheel-zoom — but it has to happen before OrbitControls' own
+      // pointerdown handler reads it for this same event, and a capture-phase
+      // listener on the canvas itself does NOT run first: for the element an
+      // event is dispatched *at*, capture vs. bubble doesn't order listeners,
+      // only registration order does, and OrbitControls (added in its own
+      // constructor, above) registered its handler first. Listening on
+      // `host` (canvas's *parent*) instead works, because a capture-phase
+      // listener on an actual ancestor genuinely runs before the target's own
+      // listeners, regardless of registration order.
+      controls.enableZoom = false;
+      let setZoomForPointer: ((e: PointerEvent) => void) | null = null;
+      if (interactive) {
+        setZoomForPointer = (e) => {
+          controls.enableZoom = e.pointerType === 'touch';
+        };
+        host.addEventListener('pointerdown', setZoomForPointer, { capture: true });
       }
 
       // Set once the model is loaded: how far the camera needs to sit back to
@@ -140,6 +164,11 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         camera.near = distance / 100;
         camera.far = distance * 10;
         camera.updateProjectionMatrix();
+        // How far pinch-zoom can pull the camera in/out, relative to the
+        // auto-framed distance — close enough to actually feel like zooming
+        // in, without letting the near plane clip through the model.
+        controls.minDistance = distance * 0.35;
+        controls.maxDistance = distance * 2.5;
         controls.update(0); // 0 s elapsed: re-frame without nudging the auto-rotation
       };
 
@@ -358,6 +387,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         observer.disconnect();
         visibility.disconnect();
         controls.removeEventListener('change', restart);
+        if (setZoomForPointer) host.removeEventListener('pointerdown', setZoomForPointer, { capture: true });
         controls.dispose();
         scene.traverse((obj) => {
           const mesh = obj as { geometry?: { dispose(): void }; material?: unknown };
