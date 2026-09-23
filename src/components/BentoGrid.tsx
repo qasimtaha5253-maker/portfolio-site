@@ -11,6 +11,7 @@ import { StepContent } from './StepContent';
 import { StepVisual } from './StepVisual';
 import { ModelLayer } from './visuals/ModelLayer';
 import type { StepModel } from '@/data/types';
+import { buttonVariants } from '@/components/ui/button';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -170,7 +171,14 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
           >
             <button
               type="button"
-              className="bento-tile__hit"
+              // `group` lets the toggle below react to this button's own
+              // hover/focus-visible (group-hover:/group-focus-visible:)
+              // instead of a custom CSS parent-hover selector — needed here
+              // because that selector would sit in @layer components, which
+              // Tailwind's own utility classes (@layer utilities) always
+              // beat regardless of specificity, so a plain custom rule can't
+              // reliably override the toggle's shadcn background classes.
+              className="bento-tile__hit group"
               aria-expanded={isExpanded}
               onClick={() => toggle(project.id)}
             >
@@ -208,8 +216,17 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                 {project.summary && !isExpanded && <p className="bento-tile__summary">{project.summary}</p>}
               </div>
               {/* Always "+"; CSS rotates it 45° when expanded so it morphs into a "×"
-                  instead of snapping between two different glyphs. */}
-              <span className="bento-tile__toggle" aria-hidden="true">
+                  instead of snapping between two different glyphs. The originui/shadcn
+                  Button's own shape/variant classes (rounded-full overriding its default
+                  rounded-lg) style it; group-hover/group-focus-visible swap it to the
+                  `primary` (orange) look while the tile itself is hovered/focused. */}
+              <span
+                className={cn(
+                  buttonVariants({ variant: 'secondary', size: 'icon' }),
+                  'bento-tile__toggle rounded-full group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground',
+                )}
+                aria-hidden="true"
+              >
                 +
               </span>
             </button>

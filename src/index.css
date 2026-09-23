@@ -9,3 +9,23 @@
  */
 @custom-variant dark (&:is(.dark *), &:where(.dark));
 @import './styles/site.css';
+
+/*
+ * shadcn components (e.g. src/components/ui/button.tsx) expect these
+ * standard tokens. Aliased to the site's own palette (site.css's :root)
+ * rather than a separate light/dark pair, since the site is always dark.
+ */
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-primary: var(--accent);
+  --color-primary-foreground: #1a1005;
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--fg);
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: var(--fg);
+  --color-input: var(--line);
+  --color-accent: var(--surface);
+  --color-accent-foreground: var(--fg);
+  --color-ring: var(--accent);
+}
