@@ -259,6 +259,12 @@
 .mini-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  /* Grid items stretch to the tallest item in their row by default — without
+     this, opening one card (taller) stretched its row-mates to match, which
+     looked like they'd opened too even though their own (still-collapsed)
+     content stayed at 0 height inside that stretched box. Each card now
+     sizes to its own content, independent of its row. */
+  align-items: start;
   gap: 0.5rem;
   margin-top: 0.75rem;
 }
