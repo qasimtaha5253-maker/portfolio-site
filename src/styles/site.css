@@ -517,22 +517,17 @@
 }
 
 /* Sizing/shape/colour come from the shadcn Button's own variant classes
-   (BentoGrid.tsx); this just positions it and handles the "+" -> "×" morph
-   that isn't expressible as a Tailwind variant (it's keyed to an ancestor
-   two levels up gaining a plain React-driven class, not a pseudo-class). */
+   (BentoGrid.tsx); this just positions it. The hamburger-to-"×" morph is
+   the inner SVG's own group-aria-expanded: Tailwind classes now, not a
+   React-driven class on this element, so nothing about *this* element
+   needs to change when the tile expands. */
 .bento-tile__toggle {
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
   border: 1px solid var(--line);
   pointer-events: none;
-  /* Always a "+" glyph — rotating it 45° reads as a close "×" instead of
-     swapping text, so it morphs smoothly rather than snapping. */
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, color 0.2s ease;
-}
-
-.bento-tile--expanded .bento-tile__toggle {
-  transform: rotate(45deg);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .bento-tile--expanded {

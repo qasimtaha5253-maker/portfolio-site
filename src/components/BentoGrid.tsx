@@ -215,11 +215,13 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                 <h3 className="bento-tile__title">{project.title}</h3>
                 {project.summary && !isExpanded && <p className="bento-tile__summary">{project.summary}</p>}
               </div>
-              {/* Always "+"; CSS rotates it 45° when expanded so it morphs into a "×"
-                  instead of snapping between two different glyphs. The originui/shadcn
-                  Button's own shape/variant classes (rounded-full overriding its default
-                  rounded-lg) style it; group-hover/group-focus-visible swap it to the
-                  `primary` (orange) look while the tile itself is hovered/focused. */}
+              {/* Hamburger-to-"×" morph (originui's animated menu-icon pattern): three
+                  lines that collapse to the middle and rotate into an X, driven purely by
+                  `group-aria-expanded:` off the hit button's own aria-expanded — no
+                  React-driven CSS class needed, unlike the old rotate-the-"+" version.
+                  The Button's own variant classes (rounded-full overriding its default
+                  rounded-lg) style the circle; group-hover/group-focus-visible swap it to
+                  the `primary` (orange) look while the tile itself is hovered/focused. */}
               <span
                 className={cn(
                   buttonVariants({ variant: 'secondary', size: 'icon' }),
@@ -227,7 +229,31 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
                 )}
                 aria-hidden="true"
               >
-                +
+                <svg
+                  className="pointer-events-none"
+                  width={16}
+                  height={16}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 12L20 12"
+                    className="origin-center -translate-y-[7px] transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-x-0 group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[315deg]"
+                  />
+                  <path
+                    d="M4 12H20"
+                    className="origin-center transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.8)] group-aria-expanded:rotate-45"
+                  />
+                  <path
+                    d="M4 12H20"
+                    className="origin-center translate-y-[7px] transition-all duration-300 [transition-timing-function:cubic-bezier(.5,.85,.25,1.1)] group-aria-expanded:translate-y-0 group-aria-expanded:rotate-[135deg]"
+                  />
+                </svg>
               </span>
             </button>
 
