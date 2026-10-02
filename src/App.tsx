@@ -1,3 +1,4 @@
+import { MousePointerClick } from 'lucide-react';
 import { projects } from '@/data/projects';
 import { cn } from '@/lib/utils';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
@@ -23,7 +24,10 @@ export default function App() {
           <h2 className="bento-section__title" id="work-title">
             What I&apos;ve built
           </h2>
-          <p className="bento-section__hint">Tap a project to see how it works.</p>
+          <p className="bento-section__hint">
+            <MousePointerClick className="bento-section__hint-icon" aria-hidden="true" />
+            <span className="bento-section__hint-text">Tap a project to see how it works.</span>
+          </p>
         </header>
 
         <BentoGrid projects={projects} animated={animated} lenisRef={lenisRef} />

@@ -535,9 +535,45 @@
   margin: 0 0 0.5rem;
 }
 
+/* A callout box in the same style as the stat tiles (.stats__item): surface
+   panel, hairline of the intro gradient across the top, and the navy-to-orange
+   gradient on the text, so the "tap a project" instruction is hard to miss. */
 .bento-section__hint {
-  color: var(--muted);
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
   margin: 0;
+  padding: 0.8rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.bento-section__hint::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--navy), var(--accent), transparent);
+}
+
+.bento-section__hint-text {
+  background: linear-gradient(100deg, #8fa8ff, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.bento-section__hint-icon {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: var(--accent);
 }
 
 .bento-grid {
