@@ -18,6 +18,25 @@ interface ModelLayerProps {
 }
 
 /**
+ * Warms the browser's cache for the 3D viewer: the three.js code and the given
+ * model files. Called once, when the browser is idle after page load, so that a
+ * cover starting up later (as it nears the screen) only has to build its view
+ * instead of also downloading and parsing all of this while the visitor scrolls.
+ */
+export function prefetchModelAssets(srcs: string[]) {
+  void Promise.all([
+    import('three'),
+    import('three/examples/jsm/loaders/GLTFLoader.js'),
+    import('three/examples/jsm/controls/OrbitControls.js'),
+    import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+    import('three/examples/jsm/environments/RoomEnvironment.js'),
+  ]).catch(() => {});
+  for (const src of new Set(srcs)) {
+    fetch(`${base}${src}`, { priority: 'low' } as RequestInit).catch(() => {});
+  }
+}
+
+/**
  * Real-time .glb viewer. Three.js and the loaders are imported on demand, so
  * the 3D code only reaches visitors who scroll to this step.
  *
@@ -423,7 +442,8 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         near.disconnect();
         void start();
       },
-      { rootMargin: '400px 0px' },
+      // Far enough ahead that a phone's fast scroll doesn't outrun it.
+      { rootMargin: '900px 0px' },
     );
     near.observe(host);
 

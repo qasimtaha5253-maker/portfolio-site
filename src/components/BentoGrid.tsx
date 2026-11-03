@@ -9,7 +9,7 @@ import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
 import { StepContent } from './StepContent';
 import { StepVisual } from './StepVisual';
-import { ModelLayer } from './visuals/ModelLayer';
+import { ModelLayer, prefetchModelAssets } from './visuals/ModelLayer';
 import type { StepModel } from '@/data/types';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -96,6 +96,20 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   // stay alive beside the step's own models; freeing it (after the 0.3 s fade
   // out) keeps the page lighter. It's rebuilt when the tile closes.
   const [coverFreed, setCoverFreed] = useState<string | null>(null);
+  // Once the page has loaded and the browser is idle, quietly fetch the 3D code
+  // and the cover models, so covers appear promptly as they scroll into range.
+  useEffect(() => {
+    const srcs = projects.flatMap((p) => coverModels(p).map((m) => m.src));
+    if (!srcs.length) return;
+    const run = () => prefetchModelAssets(srcs);
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(run, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = setTimeout(run, 2000);
+    return () => clearTimeout(id);
+  }, [projects]);
+
   useEffect(() => {
     setCoverFreed(null);
     if (!expanded) return;
