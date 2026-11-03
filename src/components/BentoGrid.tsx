@@ -91,6 +91,17 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   // animation to finish before mounting, so loading them doesn't compete
   // with it for frames — see `toggle` and the detail's onAnimationComplete.
   const [contentReady, setContentReady] = useState(true);
+  // The open tile whose cover 3D view has been released. The cover is hidden
+  // while a tile is open, but its WebGL context and render loop would otherwise
+  // stay alive beside the step's own models; freeing it (after the 0.3 s fade
+  // out) keeps the page lighter. It's rebuilt when the tile closes.
+  const [coverFreed, setCoverFreed] = useState<string | null>(null);
+  useEffect(() => {
+    setCoverFreed(null);
+    if (!expanded) return;
+    const timer = setTimeout(() => setCoverFreed(expanded), 400);
+    return () => clearTimeout(timer);
+  }, [expanded]);
 
   function toggle(id: string) {
     const opening = expanded !== id;
@@ -186,7 +197,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
             >
               {models.length > 0 ? (
                 <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row')}>
-                  {models.map((model) => (
+                  {coverFreed !== project.id && models.map((model) => (
                     <ModelLayer
                       key={model.src}
                       // A row of models wants each as big as it can be, and its tall,
