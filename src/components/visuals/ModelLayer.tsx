@@ -43,7 +43,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
     let disposed = false;
     let cleanup = () => {};
 
-    (async () => {
+    const start = async () => {
       const [THREE, { GLTFLoader }, { OrbitControls }, { MeshoptDecoder }, { RoomEnvironment }] = await Promise.all([
         import('three'),
         import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -57,7 +57,9 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       if (disposed) return;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // A tile cover is small and slow-turning, so it doesn't need the full
+      // phone pixel density — 1.5 is visually the same there and ~45% fewer pixels.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 2 : 1.5));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       host.append(renderer.domElement);
       renderer.domElement.style.width = '100%';
@@ -206,11 +208,19 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           anim?.setPlaying(false);
           return;
         }
+        const now = performance.now();
+        // Covers draw at ~30 fps: they turn at 12°/s, so 60 fps is invisible
+        // there, and up to nine of these run at once. (Skips the frame but keeps
+        // the loop alive; `lastDraw` only moves on a real draw, so the spin's
+        // elapsed time stays correct.)
+        if (!interactive && lastDraw && now - lastDraw < 30) {
+          frame = requestAnimationFrame(draw);
+          return;
+        }
         anim?.setPlaying(true);
         controls.autoRotate = state.current.animated && state.current.active && model.autoRotate !== false;
         // Real elapsed time, so the spin is the same speed at any frame rate. Capped so a
         // hiccup (or the first frame after being idle) can't make it jump.
-        const now = performance.now();
         const elapsed = lastDraw ? Math.min((now - lastDraw) / 1000, 0.1) : 0;
         // Marks a draw as in progress *before* controls.update(), which can
         // synchronously fire the 'change' listener below (e.g. rotating on
@@ -400,10 +410,26 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         renderer.dispose();
         renderer.domElement.remove();
       };
-    })();
+    };
+
+    // Don't build the renderer or fetch the model until the viewer is near the
+    // screen. Without this every tile cover (nine WebGL contexts) set itself up
+    // at page load, even for tiles far down the page.
+    let started = false;
+    const near = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || started) return;
+        started = true;
+        near.disconnect();
+        void start();
+      },
+      { rootMargin: '400px 0px' },
+    );
+    near.observe(host);
 
     return () => {
       disposed = true;
+      near.disconnect();
       cleanup();
     };
   }, [model.src]);
