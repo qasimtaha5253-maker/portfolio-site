@@ -159,14 +159,17 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   gltf-transform-based inspector script reports; see handoff.md §7, "Node names three.js actually
   produces" for two real bugs this caused. Add new animations as a case in `createModelAnimation`
   plus a name in `ModelAnimationName` (types.ts).
-- **3D performance (2026-11-09; full reasoning in handoff.md §7e — read it before touching how
-  covers mount).** A `ModelLayer` builds its renderer only once its host is within 900px of the
-  viewport, then stays alive; covers draw at ~30 fps and render at pixel ratio <= 1.5; a tile's cover
-  is released 400 ms after the tile opens and rebuilt on close (`coverFreed` in `BentoGrid`); and the
-  three.js code plus all cover models are prefetched when the browser is idle
-  (`prefetchModelAssets`). These pull against each other: the prefetch and the 900px margin exist
-  to fix covers being slow to appear on a phone, which the lazy set-up alone caused. Don't shrink
-  the margin without checking a phone.
+- **3D performance (2026-11-09; full reasoning in handoff.md §7e and §7f — read them before
+  touching how covers mount).** Every cover model is a **still image first**
+  (`public/models/stills/`, rendered by the dev tool at `tools/stills.html` — re-render after any
+  change to a cover model, its config, ModelLayer's camera/lighting or the tile shape). The live
+  `ModelLayer` is mounted over the still only while the tile is on screen (250 px margin), the most
+  visible tiles first, up to a per-device cap (`src/lib/device.ts`: 6 desktop / 4 phone, fewer on
+  weak devices, none on `lite` devices or under reduced motion), and disposed when the tile scrolls
+  away (with `forceContextLoss`, so the browser's 16-context limit isn't hit). Covers draw at ~30 fps
+  and a capped pixel ratio; a tile's cover is released 400 ms after the tile opens (`coverFreed`);
+  only the three.js code is prefetched, once the grid is within 1500 px — model files are not. A
+  lost WebGL context or failed load falls back to the step's photo (covers keep their still).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.
@@ -242,9 +245,13 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   live after he reported lag; unverified on a real phone. Pending his answer: removing the
   film-grain overlay's `mix-blend-mode` (`body::after` in site.css), the leading suspect for any
   remaining scroll lag (handoff.md §7e).
+- 2026-11-09, later — **branch `perf-pass`, not merged**: second performance pass (handoff.md §7f).
+  Cover stills + rationed live views, device tiers, lazy grid chunk, `preload="none"` videos,
+  lighter helix loop, WebGL context-loss fallback. Lighthouse mobile 79 -> 97, 4.1 MB -> 0.5 MB.
+  He is testing the Vercel preview on his phone; merge into `main` only when he says it's good.
 - Next up (see handoff.md §11 for detail): replace the two still-low-res photos once he sends
   them, then add 3D models/animations for the remaining photo-only projects (ANSYS, Reef Rover,
   Hydraulic Hand). The custom domain is done (qtaha.com, live) — no longer on this list.
-- Open debts (handoff.md §10): no Lighthouse/performance run yet; the 2026-11-09 performance pass
-  was never checked on a real phone; reduced-motion layout only checked via the dev flag and DOM, never a real
-  browser with the OS setting on.
+- Open debts (handoff.md §10): the perf-pass branch is unverified on a real phone (Lighthouse only);
+  reduced-motion layout only checked via the dev flag and DOM, never a real browser with the OS
+  setting on; still-image sizes not tuned; CSS is render-blocking.

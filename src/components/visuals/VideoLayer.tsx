@@ -41,7 +41,9 @@ export function VideoLayer({ video, active }: VideoLayerProps) {
       muted
       loop
       playsInline
-      preload="metadata"
+      // Nothing is fetched until play() is called (when this is the visual
+      // on screen); the poster stands in until then.
+      preload="none"
       className={cn('photo-visual__frame', active && 'is-active')}
     />
   );

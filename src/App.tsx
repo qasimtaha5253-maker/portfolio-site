@@ -1,9 +1,13 @@
+import { lazy, Suspense } from 'react';
 import { MousePointerClick } from 'lucide-react';
-import { projects } from '@/data/projects';
 import { cn } from '@/lib/utils';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
-import { BentoGrid } from '@/components/BentoGrid';
+
+// The grid (and the project data, Framer Motion and step content with it) is
+// its own chunk: it's below the full-screen intro, so it isn't needed for the
+// first paint. See BentoGridLazy.tsx.
+const BentoGrid = lazy(() => import('@/components/BentoGridLazy'));
 import { Intro } from '@/components/sections/Intro';
 import { About } from '@/components/sections/About';
 import { ContactLinks } from '@/components/sections/ContactLinks';
@@ -30,7 +34,9 @@ export default function App() {
           </p>
         </header>
 
-        <BentoGrid projects={projects} animated={animated} lenisRef={lenisRef} />
+        <Suspense fallback={<div className="bento-grid bento-grid--pending" aria-hidden="true" />}>
+          <BentoGrid animated={animated} lenisRef={lenisRef} />
+        </Suspense>
       </section>
 
       <footer className="footer" id="contact">

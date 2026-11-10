@@ -59,6 +59,9 @@ interface StepVisualProps {
  */
 export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepVisualProps) {
   const [ref, onScreen] = useOnScreen<HTMLDivElement>();
+  // The step's 3D model failed (couldn't load, or the browser took its WebGL
+  // context away) — show the step's photo instead of a blank box.
+  const [modelFailed, setModelFailed] = useState(false);
 
   if (!animated) {
     if (!step.image || step.image.src === coverSrc) return null;
@@ -122,9 +125,12 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
   }
 
   if (step.model) {
+    if (modelFailed && step.image) {
+      return <Photo projectId={projectId} image={step.image} sizes={SIZES} className="step-visual__img" />;
+    }
     return (
       <div className="step-visual" ref={ref}>
-        {ready && <ModelLayer model={step.model} active={onScreen} animated={animated} />}
+        {ready && <ModelLayer model={step.model} active={onScreen} animated={animated} onError={() => setModelFailed(true)} />}
       </div>
     );
   }

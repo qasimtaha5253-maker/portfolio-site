@@ -228,13 +228,16 @@ he wants visual consistency across every project (see §11; not currently on his
 `conveyor-shaft`, `shaft-puller`, `propeller-spin`, `oiling-tool-coil`, and the newest,
 **`crank-rotate`** (the conveyor cart's crank handle, §7b).
 
-**9 cover canvases exist in total** (Cooling Unit, Conveyor Cart, Fixtures & Tooling ×3, Coffee Cup
+**9 cover models exist in total** (Cooling Unit, Conveyor Cart, Fixtures & Tooling ×3, Coffee Cup
 Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank model briefly made it 10 until
-`excludeFromCover` fixed that; see §4. **They are no longer all live at page load**: since
-2026-11-09 each one only builds its renderer when it's within 900px of the viewport (so 0 at load
-on desktop, the first one or two at load on a phone), and a tile's cover is released while that tile
-is open. The number to watch is now "how many are live at once while scrolling", not "at load" —
-see §7e.
+`excludeFromCover` fixed that; see §4. **Since the perf-pass branch (2026-11-09, second pass) each
+cover is a still image first** (`public/models/stills/<model>[-row]-{wide,narrow}.webp`, 18 files,
+~325 KB in all), and the live 3D view is only mounted over it while the tile is on screen, rationed
+to a per-device cap and torn down when the tile scrolls away — see §7f. The number to watch is
+"how many are live at once" (the cap: 6 desktop / 4 phone on a full-tier device), not "how many
+exist". **Any change to a cover model, its config, ModelLayer's camera/lighting or the tile shape
+means re-rendering the stills** (§7f has the two-step recipe), or the live view fades in over a
+still that no longer matches it.
 
 ## 7. Sensitive code — read before touching the expand animation, scroll-follow, 3D framing,
 ##    the model script, a model's built-in animation, or the card/toggle CSS
@@ -399,6 +402,67 @@ back without checking a phone; the failure mode is exactly his third complaint.
   filenames aren't versioned, so a replaced model would go stale. It would need `?v=N` like the
   embeds).
 
+### 7f. Second performance pass (2026-11-09, branch `perf-pass`) — stills, rationed live views
+
+His brief: faster loading on slow laptops and phones, 3D first; design and content unchanged; a
+Lighthouse before/after. Baseline (mobile preset, production build, Chrome headless): **score 79,
+LCP 2.6 s, TBT 710 ms, 4.1 MB transferred, bootup 24 s** under Lighthouse's 4x CPU throttle. The two
+big costs were (a) the idle prefetch of all nine cover `.glb`s (3.7 MB, §7e item 5) and (b) the
+intro helix canvas running the whole trace (28 rings x 120 points, each projected twice per frame).
+After: **97, LCP 2.2 s, TBT 140 ms, 0.5 MB, bootup 8 s**. Everything verified in the Browser pane
+and by DOM counts; **not on a real phone** (that's what the preview branch is for).
+
+**How covers work now (replaces §7e items 1, 4 and 5 for covers; 2 and 3 still hold):**
+- `BentoGrid`'s `CoverModels` renders, per cover model, a `<picture>` still
+  (`public/models/stills/<model>[-row]-{wide,narrow}.webp`; `narrow` under 560 px) and, only while
+  the tile is `live`, a `ModelLayer` over it. `onReady` from every model in the row adds `is-live`,
+  which fades the still out (0.4 s). Both show the model at ModelLayer's seed angle
+  (`camera.position.set(0.75, 0.45, 0.95)`), so the handover is invisible; the viewer then spins.
+- **Who is live:** one `IntersectionObserver` over the model tiles (`rootMargin: 250px`,
+  thresholds every 0.2) feeds a `visibility` map; candidates sort by ratio (most visible first,
+  page order breaks ties) and take slots until `maxLiveCoverViews()` is reached — **6 on desktop, 4
+  at phone width on a `full` device; 3/2 on `mid`; 0 on `lite`** and 0 under reduced motion. A tile
+  that loses its slot unmounts its `ModelLayer`, whose cleanup now also calls
+  `renderer.forceContextLoss()` — without that, Chrome counts disposed contexts toward its
+  16-per-page limit until GC and starts killing *live* ones ("Too many active WebGL contexts",
+  seen while the stills tool ran 18 in a row). The open tile's cover still drops out via
+  `coverFreed` (400 ms after expanding), as before.
+- **Device tiers** (`src/lib/device.ts`): `lite` = Save-Data, or <= 2 GB / <= 2 cores; `mid` = <= 4 GB /
+  <= 4 cores; else `full`. Safari reports neither, so iPhones are `full`. Pixel-ratio caps come from
+  the same file: cover 1.5 / 1.25 / 1, step model 2 / 1.5 / 1. The helix canvas also reads the tier
+  (30 fps and DPR <= 1.5 off the `full` tier). Dev-only `?device=lite|mid|full` forces a tier, like
+  `?reduced-motion`.
+- **Context loss** (`webglcontextlost` on the canvas, or a failed load) calls `onError`: a step model
+  swaps to its `image` (`StepVisual`), a cover just keeps its still (its status text is hidden by
+  CSS). Tested by calling `WEBGL_lose_context.loseContext()` on an open tile's canvas: the photo
+  appeared, no console error.
+- **Prefetch:** only the three.js code, and only once the grid is within 1500 px (not at idle after
+  load). No model files are prefetched any more; the stills cover the load time.
+
+**Rendering the stills (do this after any change to a cover model, its config — margin,
+brightness, rotation, explode, transparentParts — ModelLayer's camera/lighting, or the tile
+shape/row overlap in site.css):**
+1. `npm run dev`, then open `http://localhost:5173/tools/stills.html` in a browser **that is
+   actually visible** (the Browser pane pauses rendering when hidden, and the capture waits on
+   two animation frames). `src/tools/stills.tsx` mounts each cover model once, at the box shape
+   `stillBoxSize()` in `src/lib/coverModels.ts` describes (540x316 wide / 343x364 narrow, times
+   the row overlap for a row), at 2x, with `animated={false}` and `snapshot` (which turns on
+   `preserveDrawingBuffer` — never set it on the site itself), and POSTs the PNG to `/__stills`.
+2. The dev-only Vite middleware (`stillsWriter` in `vite.config.ts`) writes the WebP with sharp.
+   The page title flips to `DONE`; the log lists each file's size. Commit `public/models/stills/`.
+   The box sizes must stay in step with `.bento-grid`'s rows (9.5 rem x 2 + gap; 11 rem under
+   560 px) and `.bento-tile__model--row .cover-model { margin: 0 -6% }`.
+
+**Other changes in the same pass:** the grid is a lazy chunk (`BentoGridLazy.tsx`; `App.tsx`
+wraps it in `Suspense` with a `.bento-grid--pending` placeholder, 42 rem, so the footer doesn't
+jump); videos are `preload="none"` (both have posters); the helix skips its second position pass
+outside a topology transition and the pointer maths while the pointer is off the canvas.
+
+**Gotchas met:** `site.css`, `handoff.md` and some components have CRLF line endings while others
+are LF — an exact-text patch that "can't find" obviously-present text is usually that. The Vite
+dev server serves any `.html` under the project root (hence `tools/stills.html` works in dev and
+is not in the build, which only has `index.html` as input).
+
 ## 8. The mini-card / expandable-summary content system
 
 New this session, and now the single biggest addition to the data-driven content model since the
@@ -472,19 +536,31 @@ had never actually had a component added — this session added the first one.
 
 ## 10. Known debts
 
-- No Lighthouse/field performance run has been done, still, and the 2026-11-09 performance pass
-  (§7e) was never checked on a real phone. Covers no longer all start at page load (§6), but up to
-  9 canvases can end up live as you scroll down, plus one per open tile's own model. Watch that
-  number every time a model is added to any step; it's easy to accidentally add a 10th via the
-  cover-dedup mechanism (§7b) without meaning to.
+- **The perf-pass branch (§7f) is unmerged and unverified on a real phone.** It was measured only
+  with Lighthouse (mobile preset, production build): 79 -> 97, LCP 2.6 s -> 2.2 s, TBT 710 ms -> 140
+  ms, 4.1 MB -> 0.5 MB transferred. Whether the covers' still -> live crossfade looks right on his
+  phone, and whether scrolling feels smoother, is what he's testing on the Vercel preview. Merge to
+  `main` only after he says so.
+- Live cover views are capped (src/lib/device.ts), so a new cover model no longer adds a permanent
+  context — but it does add a model to the cap's arithmetic (Fixtures' row of 3 takes 3 slots) and
+  needs its stills rendered (§7f). The cover-dedup mechanism (§7b) can still add one unintentionally.
+- Still-image quality/size wasn't tuned: Lighthouse's image-delivery insight suggests ~40 KB could
+  be saved across the stills (the biggest, `conveyor-cart-narrow.webp`, is 46 KB). Quality is set in
+  `vite.config.ts` (`stillsWriter`, WebP quality 82).
+- The CSS file (35 KB, 7.9 KB gzip) is render-blocking (~740 ms on Lighthouse's throttled mobile) —
+  Vite's default; inlining critical CSS wasn't attempted.
+- The `.glb` files were left as they are: already meshopt + quantized by `npm run model`, so
+  re-compressing wasn't a clear win, and they're no longer prefetched anyway.
 - **Open performance suspect: the film-grain `body::after` overlay** (§7e): proposed for removal,
   awaiting his answer, no measurement.
 - Vercel Web Analytics: code is in, but whether he enabled it in the Vercel dashboard is
   unconfirmed (§1).
 - Reduced-motion layout has never been checked in a real browser with the OS setting on, only via
   the dev flag and DOM checks.
-- The `motion` package (~30 KB gzip) and now `class-variance-authority` + `@radix-ui/react-slot` +
-  `@radix-ui/react-toggle` (small, but not code-split) all sit in the main bundle.
+- ~~The `motion` package ... all sit in the main bundle~~ — since the perf-pass branch the whole
+  grid (motion, project data, StepContent, the shadcn Button) is its own lazy chunk
+  (`BentoGridLazy.tsx`, 57 KB gzip); the main bundle is 127 KB gzip (was 182). GSAP + ScrollTrigger +
+  Lenis + the helix canvas stay in it because the intro needs them on first paint.
 - Two low-res, PDF-extracted photos are still waiting on replacements he'll send himself:
   `hydraulic-hand/part-drawing`, `reef-rover/collection-mechanism` — don't chase him for them.
 - `public/projects/conveyor-cart/drive-shaft-exploded-*.webp` and its source photo are now
@@ -514,9 +590,14 @@ domain item, which is now done):**
 - Scroll-scrubbed SolidWorks image sequences — decided against; 3D models/animations are the path
   for CAD visuals now.
 
-**Pending his reply (asked 2026-11-09):** remove the film-grain overlay's `mix-blend-mode`
-(§7e) if scrolling still feels laggy on his phone after the cover changes deploy. Also worth a
-quick "did it actually get smoother?" from him; the last three fixes were all verified off-device.
+**Pending his test (2026-11-09): the `perf-pass` branch** (§7f, §10). He asked for it on a branch, not
+`main`, so he can try the Vercel preview on his phone first. What to look for is in the final report
+of that session: covers appear instantly as stills, start turning shortly after, no blank tiles, no
+jump when a still hands over to the live view, tiles open/close as before. If he's happy, merge
+`perf-pass` into `main` (fast-forward) and delete the branch.
+
+**Still pending his reply (asked 2026-11-09):** remove the film-grain overlay's `mix-blend-mode`
+(§7e) if scrolling still feels laggy on his phone. Not touched in the perf pass, on purpose.
 
 **Not on his list, but worth knowing it's an option**: rolling the mini-card/summary-card system
 (§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been

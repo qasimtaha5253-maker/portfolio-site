@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -12,6 +12,10 @@ import { StepVisual } from './StepVisual';
 import { ModelLayer, prefetchModelAssets } from './visuals/ModelLayer';
 import type { StepModel } from '@/data/types';
 import { buttonVariants } from '@/components/ui/button';
+import { coverModels, coverModelConfig, stillSrc } from '@/lib/coverModels';
+import { deviceTier, maxLiveCoverViews } from '@/lib/device';
+
+const base = import.meta.env.BASE_URL;
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -30,34 +34,54 @@ function coverImage(project: Project): ProjectImage | undefined {
   return images.find((img) => img.src === project.cover) ?? images[0];
 }
 
-/** A project with a model on one of its steps shows it as its tile cover
- *  (rotating on hover) instead of a plain photo. A `split` row or `stack`
- *  on any step supplies every model in it, side by side. Otherwise, every
- *  step's own single `model` is used, deduped by src (a project may repeat
- *  the same model on more than one step — the cover only needs it once) —
- *  so a project with several different model-bearing steps (e.g. Assembly
- *  Line Fixtures & Tooling) gets all of them side by side on its cover,
- *  unless a model opts out with `excludeFromCover` (e.g. a close-up of one
- *  small subsystem that isn't meant to stand in for the whole project). */
-function coverModels(project: Project): StepModel[] {
-  for (const step of project.steps) {
-    for (const items of [step.split, step.stack]) {
-      const models = items?.flatMap((item) => (item.model && !item.model.excludeFromCover ? [item.model] : [])) ?? [];
-      if (models.length) return models;
-    }
-  }
-  const seen = new Set<string>();
-  const models: StepModel[] = [];
-  for (const step of project.steps) {
-    if (step.model && !step.model.excludeFromCover && !seen.has(step.model.src)) {
-      seen.add(step.model.src);
-      models.push(step.model);
-    }
-  }
-  return models;
+/**
+ * A tile's cover models. Each one is a pre-rendered still image (written by
+ * the dev tool at tools/stills.html) with, only while `live`, the real 3D viewer on top of it.
+ * The still shows at once and under reduced motion / on weak devices; the
+ * viewer starts at the same angle the still was taken from, so once every
+ * model in the row has drawn its first frame the still fades out beneath it
+ * without a visible jump. When the tile scrolls away, `live` drops, the
+ * viewer (and its WebGL context) is disposed of and the still is back.
+ */
+function CoverModels({ models, live, active, animated }: { models: StepModel[]; live: boolean; active: boolean; animated: boolean }) {
+  const [ready, setReady] = useState(0);
+  useEffect(() => {
+    if (!live) setReady(0);
+  }, [live]);
+  const onReady = useCallback(() => setReady((n) => n + 1), []);
+  const isLive = live && ready >= models.length;
+  return (
+    <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row', isLive && 'is-live')}>
+      {models.map((model) => (
+        <div className="cover-model" key={model.src}>
+          <picture>
+            <source media="(max-width: 560px)" srcSet={`${base}${stillSrc(model, 'narrow', models.length)}`} />
+            <img
+              className="cover-model__still"
+              src={`${base}${stillSrc(model, 'wide', models.length)}`}
+              alt={model.title}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+          {live && (
+            <ModelLayer
+              model={coverModelConfig(model, models.length)}
+              // Cover models turn on their own (not just on hover). They stop
+              // drawing while the tile is open, since the cover is hidden then.
+              active={active}
+              animated={animated}
+              interactive={false}
+              onReady={onReady}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
-interface BentoGridProps {
+export interface BentoGridProps {
   projects: Project[];
   /** Reveal tiles on scroll and animate the expand transition (false when reduced motion is preferred). */
   animated: boolean;
@@ -96,19 +120,69 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   // stay alive beside the step's own models; freeing it (after the 0.3 s fade
   // out) keeps the page lighter. It's rebuilt when the tile closes.
   const [coverFreed, setCoverFreed] = useState<string | null>(null);
-  // Once the page has loaded and the browser is idle, quietly fetch the 3D code
-  // and the cover models, so covers appear promptly as they scroll into range.
+
+  // Live 3D on the covers is rationed (src/lib/device.ts): only tiles on (or
+  // just off) screen get a viewer, up to `liveCap` WebGL contexts at once, and
+  // none at all on a weak device or under reduced motion — those keep the still
+  // images, and 3D appears only inside an opened tile.
+  const liveCap = animated ? maxLiveCoverViews(deviceTier()) : 0;
+  // How much of each model tile is within the screen (plus a margin), 0 = none.
+  const [visibility, setVisibility] = useState<ReadonlyMap<string, number>>(() => new Map());
   useEffect(() => {
-    const srcs = projects.flatMap((p) => coverModels(p).map((m) => m.src));
-    if (!srcs.length) return;
-    const run = () => prefetchModelAssets(srcs);
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(run, { timeout: 4000 });
-      return () => window.cancelIdleCallback(id);
+    const grid = gridRef.current;
+    if (!grid || !liveCap) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setVisibility((prev) => {
+          const next = new Map(prev);
+          for (const entry of entries) next.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
+          return next;
+        });
+      },
+      // A little ahead of the screen, so a viewer is usually drawing by the
+      // time its tile is in view, and so a tile hovering at the very edge
+      // doesn't flip between still and live. The thresholds keep the ratio
+      // roughly current, so the most visible tiles get the slots.
+      { rootMargin: '250px 0px', threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
+    );
+    grid.querySelectorAll<HTMLElement>('.bento-tile[data-cover-models]').forEach((tile) => observer.observe(tile));
+    return () => observer.disconnect();
+  }, [projects, liveCap]);
+  // Most visible tiles first (page order breaks ties); each takes as many
+  // slots as it has models, until the cap is reached.
+  const liveIds = new Set<string>();
+  if (liveCap) {
+    const candidates = projects
+      .map((project, order) => ({ project, order, ratio: visibility.get(project.id) ?? 0 }))
+      .filter(({ project, ratio }) => ratio > 0 && project.id !== coverFreed)
+      .sort((a, b) => b.ratio - a.ratio || a.order - b.order);
+    let used = 0;
+    for (const { project } of candidates) {
+      const count = coverModels(project).length;
+      if (!count || (used && used + count > liveCap)) continue;
+      liveIds.add(project.id);
+      used += count;
     }
-    const id = setTimeout(run, 2000);
-    return () => clearTimeout(id);
-  }, [projects]);
+  }
+
+  // Once the grid is coming up (not at page load: the intro and About come
+  // first), fetch the 3D code so the first cover doesn't wait for it. Model
+  // files are no longer prefetched — the stills cover the moment a viewer
+  // takes to load its model, and nine of them were nearly 4 MB per visit.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || !liveCap || !projects.some((p) => coverModels(p).length)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+        prefetchModelAssets();
+      },
+      { rootMargin: '1500px 0px' },
+    );
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [projects, liveCap]);
 
   useEffect(() => {
     setCoverFreed(null);
@@ -195,6 +269,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               'bento-tile',
               isExpanded && 'bento-tile--expanded',
             )}
+            data-cover-models={models.length > 0 ? models.length : undefined}
           >
             <button
               type="button"
@@ -210,22 +285,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               onClick={() => toggle(project.id)}
             >
               {models.length > 0 ? (
-                <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row')}>
-                  {coverFreed !== project.id && models.map((model) => (
-                    <ModelLayer
-                      key={model.src}
-                      // A row of models wants each as big as it can be, and its tall,
-                      // narrow canvases don't crop the way a step's wide box does, so the
-                      // extra `margin` set for the step view is left out here.
-                      model={models.length > 1 ? { ...model, margin: undefined } : model}
-                      // Cover models turn on their own (not just on hover). They stop
-                      // drawing while the tile is open, since the cover is hidden then.
-                      active={!isExpanded}
-                      animated={animated}
-                      interactive={false}
-                    />
-                  ))}
-                </div>
+                <CoverModels models={models} live={liveIds.has(project.id)} active={!isExpanded} animated={animated} />
               ) : (
                 cover && (
                   <Photo

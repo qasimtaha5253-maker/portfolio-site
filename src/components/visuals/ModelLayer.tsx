@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import type { StepModel } from '@/data/types';
 import type { ModelAnimation } from './modelAnimations';
 import { RotateLeft03Icon } from '@/components/icons/RotateLeft03Icon';
+import { pixelRatioCap } from '@/lib/device';
 
 const base = import.meta.env.BASE_URL;
 
@@ -15,6 +16,15 @@ interface ModelLayerProps {
   /** Drag-to-rotate with a mouse or finger. Off for the bento tile cover, so
    *  a tap there opens the project instead of being read as a rotate-drag. */
   interactive?: boolean;
+  /** The model has loaded and its first frame is drawn. */
+  onReady?: () => void;
+  /** The model could not be shown: it failed to load, or the browser took the
+   *  WebGL context away (too many live 3D views, GPU reset). The caller should
+   *  show a photo instead. */
+  onError?: () => void;
+  /** Keep the drawn frame readable through `canvas.toDataURL()` (costs memory;
+   *  only for the still-image capture tool, never on the site itself). */
+  snapshot?: boolean;
 }
 
 /**
@@ -23,7 +33,7 @@ interface ModelLayerProps {
  * cover starting up later (as it nears the screen) only has to build its view
  * instead of also downloading and parsing all of this while the visitor scrolls.
  */
-export function prefetchModelAssets(srcs: string[]) {
+export function prefetchModelAssets(srcs: string[] = []) {
   void Promise.all([
     import('three'),
     import('three/examples/jsm/loaders/GLTFLoader.js'),
@@ -43,9 +53,12 @@ export function prefetchModelAssets(srcs: string[]) {
  * The model turns slowly by itself and can be dragged with a mouse or a
  * finger, unless `interactive` is off.
  */
-export function ModelLayer({ model, active, animated, interactive = true }: ModelLayerProps) {
+export function ModelLayer({ model, active, animated, interactive = true, onReady, onError, snapshot = false }: ModelLayerProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  // Latest callbacks, readable from the (once-only) set-up effect below.
+  const callbacks = useRef({ onReady, onError });
+  callbacks.current = { onReady, onError };
   // Kept in a ref so the draw loop can read it without re-running the effect.
   const state = useRef({ active, animated });
   state.current = { active, animated };
@@ -75,10 +88,26 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
       ]);
       if (disposed) return;
 
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: snapshot });
       // A tile cover is small and slow-turning, so it doesn't need the full
-      // phone pixel density — 1.5 is visually the same there and ~45% fewer pixels.
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, interactive ? 2 : 1.5));
+      // phone pixel density — 1.5 is visually the same there and ~45% fewer
+      // pixels; weaker devices (src/lib/device.ts) get less still.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatioCap(interactive)));
+      // The browser drops a context when too many are live or the GPU resets.
+      // Rather than leave a blank box, give up on this view: the caller falls
+      // back to its photo (a cover keeps showing its still image).
+      const fail = () => {
+        if (disposed) return;
+        setStatus('error');
+        callbacks.current.onError?.();
+      };
+      const onContextLost = (e: Event) => {
+        e.preventDefault();
+        cancelAnimationFrame(frame);
+        frame = 0;
+        fail();
+      };
+      renderer.domElement.addEventListener('webglcontextlost', onContextLost);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       host.append(renderer.domElement);
       renderer.domElement.style.width = '100%';
@@ -394,6 +423,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           frameModel();
           setStatus('ready');
           draw();
+          callbacks.current.onReady?.();
 
           // Model with its own animation: load that code only now that it's
           // needed, then start drawing every frame (draw() plays/pauses it).
@@ -408,7 +438,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           }
         },
         undefined,
-        () => !disposed && setStatus('error'),
+        fail,
       );
 
       cleanup = () => {
@@ -419,6 +449,7 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
         controls.removeEventListener('change', restart);
         if (setZoomForPointer) host.removeEventListener('pointerdown', setZoomForPointer, { capture: true });
         controls.dispose();
+        renderer.domElement.removeEventListener('webglcontextlost', onContextLost);
         scene.traverse((obj) => {
           const mesh = obj as { geometry?: { dispose(): void }; material?: unknown };
           mesh.geometry?.dispose();
@@ -427,6 +458,10 @@ export function ModelLayer({ model, active, animated, interactive = true }: Mode
           else (material as { dispose?(): void } | undefined)?.dispose?.();
         });
         renderer.dispose();
+        // Covers come and go as the page scrolls: free the context now rather
+        // than when the browser gets round to it, or the per-page limit (16 in
+        // Chrome) is reached and the browser takes a *live* one away instead.
+        renderer.forceContextLoss();
         renderer.domElement.remove();
       };
     };

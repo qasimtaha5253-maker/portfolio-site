@@ -19,6 +19,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { deviceTier } from '@/lib/device';
+
+// Weaker devices (src/lib/device.ts) draw the canvas at ~30 fps and at most 1.5x
+// pixel density: 28 rings x 120 points is a lot of maths per frame for a phone.
+const lowPower = deviceTier() !== 'full';
 
 interface FiberPoint {
     x: number;
@@ -178,7 +183,7 @@ export function HelixChronoMatrix({
         const resize = (width: number, height: number) => {
             const current = dimensionsRef.current;
             if (width === current.width && height === current.height) return;
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1.5 : 2);
 
             dimensionsRef.current = { width, height };
             canvas.width = Math.floor(width * dpr);
@@ -274,6 +279,14 @@ export function HelixChronoMatrix({
 
             const centerX = width / 2;
             const centerY = height / 2;
+            // Pointer attraction only matters while the pointer is anywhere near
+            // the canvas (it lerps off to -2000 after leaving): skip the
+            // per-point distance maths otherwise, which is most of the time on a
+            // phone.
+            const pointerActive = pointer.x > -pointer.radius && pointer.y > -pointer.radius;
+            // Outside a topology transition both positions are the same point —
+            // no need to compute it twice per point.
+            const inTransition = trans.progress < 1;
 
             // Render fibers
             for (let rIdx = 0; rIdx < rings.length; rIdx++) {
@@ -310,7 +323,7 @@ export function HelixChronoMatrix({
                     };
 
                     const posFrom = getPos(trans.from);
-                    const posTo = getPos(trans.to);
+                    const posTo = inTransition ? getPos(trans.to) : posFrom;
                     const easeProgress = trans.progress < 0.5
                         ? 2 * trans.progress * trans.progress
                         : -1 + (4 - 2 * trans.progress) * trans.progress;
@@ -329,7 +342,7 @@ export function HelixChronoMatrix({
                     // Smooth pointer attraction field
                     const dx = projX - pointer.x;
                     const dy = projY - pointer.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const dist = pointerActive ? Math.sqrt(dx * dx + dy * dy) : Infinity;
 
                     if (dist < pointer.radius && dist > 0) {
                         const ratio = 1 - dist / pointer.radius;
@@ -439,6 +452,12 @@ export function HelixChronoMatrix({
         };
 
         const render = (now?: number) => {
+            // ~30 fps on weaker devices (the skipped time is made up for by
+            // drawFrame's elapsed-time scaling, so the motion's speed is unchanged).
+            if (lowPower && shouldAnimate && now !== undefined && now - lastFrame < 30) {
+                animId = requestAnimationFrame(render);
+                return;
+            }
             drawFrame(now);
             if (shouldAnimate) animId = requestAnimationFrame(render);
         };

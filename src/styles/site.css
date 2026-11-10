@@ -587,6 +587,12 @@
   gap: 0.75rem;
 }
 
+/* Placeholder while the grid's code (a separate chunk) is still loading, so the
+   footer doesn't sit up at the About section for a moment and then jump down. */
+.bento-grid--pending {
+  min-height: 42rem;
+}
+
 .bento-tile {
   position: relative;
   /* Every tile is the same size: two columns wide, two rows tall. */
@@ -646,16 +652,46 @@
   height: 100%;
 }
 
+/* One cover model: its still image, with the live 3D view (ModelLayer) on top
+   while the tile is on screen. The still fades out once the live view has
+   drawn — both show the model from the same angle, so this reads as the model
+   simply starting to turn. */
+.cover-model {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.cover-model__still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.4s ease;
+}
+
+.bento-tile__model.is-live .cover-model__still {
+  opacity: 0;
+}
+
+/* The still already stands in for a loading (or failed) cover view. */
+.cover-model .model-layer__status {
+  display: none;
+}
+
 /* Several cover models side by side, one canvas each. Each canvas is wider
    than its third of the tile and overlaps its neighbours (the negative side
    margins; the centres stay put): the canvases are transparent, and a model is
    far narrower than the circle it needs room to spin in, so this lets each one
-   be drawn bigger than a strict third of the width would allow. */
+   be drawn bigger than a strict third of the width would allow. (The still
+   images are rendered at this same box shape — see stillBoxSize() in
+   src/lib/coverModels.ts — so change both together.) */
 .bento-tile__model--row {
   display: flex;
 }
 
-.bento-tile__model--row .model-layer {
+.bento-tile__model--row .cover-model {
   flex: 1 1 0;
   min-width: 0;
   margin: 0 -6%;
