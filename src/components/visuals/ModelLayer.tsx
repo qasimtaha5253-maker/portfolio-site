@@ -7,6 +7,25 @@ import { pixelRatioCap } from '@/lib/device';
 
 const base = import.meta.env.BASE_URL;
 
+/**
+ * Model files fetched ahead of the viewer that will show them (the tile-cover
+ * scheduler asks for a tile's models as soon as the tile is near): downloads
+ * run in parallel and off the main thread, so by the time a viewer is built
+ * its model is usually already here. Each buffer is handed to the first
+ * viewer that wants it and then forgotten.
+ */
+const preloaded = new Map<string, Promise<ArrayBuffer>>();
+
+export function preloadModel(src: string) {
+  if (preloaded.has(src)) return;
+  const request = fetch(`${base}${src}`, { priority: 'low' } as RequestInit).then((response) => {
+    if (!response.ok) throw new Error(`${response.status} for ${src}`);
+    return response.arrayBuffer();
+  });
+  request.catch(() => {}); // a viewer falls back to loading it itself
+  preloaded.set(src, request);
+}
+
 interface ModelLayerProps {
   model: StepModel;
   /** Visible step: when false the viewer keeps its last frame and stops drawing. */
@@ -25,6 +44,10 @@ interface ModelLayerProps {
   /** Keep the drawn frame readable through `canvas.toDataURL()` (costs memory;
    *  only for the still-image capture tool, never on the site itself). */
   snapshot?: boolean;
+  /** Build the viewer as soon as this mounts instead of waiting until it is
+   *  near the screen. For tile covers, whose scheduler (src/lib/coverLive.ts)
+   *  already decides when — deliberately well before the tile is in view. */
+  eager?: boolean;
 }
 
 /**
@@ -36,23 +59,146 @@ interface ModelLayerProps {
  * same pixels, which takes a fraction of the time and looks identical.
  */
 let sharedEnvironment: { data: Uint16Array; width: number; height: number } | null = null;
+/** Set while one viewer is generating that map, so the others wait for it. */
+let environmentBusy: Promise<void> | null = null;
+
+type Three = typeof import('three');
+type Renderer = import('three').WebGLRenderer;
+type Material = import('three').Material;
 
 /**
- * Warms the browser's cache for the 3D viewer: the three.js code and the given
- * model files. Called once, when the browser is idle after page load, so that a
- * cover starting up later (as it nears the screen) only has to build its view
- * instead of also downloading and parsing all of this while the visitor scrolls.
+ * Resolves once the given materials' shader programs have finished linking.
+ * With KHR_parallel_shader_compile (nearly every browser) that happens on the
+ * GPU process's own threads, so waiting here instead of drawing straight away
+ * is what keeps the main thread from freezing on a first draw. Bounded: a lost
+ * context or a stuck driver must not leave a viewer waiting for ever.
  */
-export function prefetchModelAssets(srcs: string[] = []) {
-  void Promise.all([
-    import('three'),
-    import('three/examples/jsm/loaders/GLTFLoader.js'),
-    import('three/examples/jsm/controls/OrbitControls.js'),
-    import('three/examples/jsm/libs/meshopt_decoder.module.js'),
-    import('three/examples/jsm/environments/RoomEnvironment.js'),
-  ]).catch(() => {});
-  for (const src of new Set(srcs)) {
-    fetch(`${base}${src}`, { priority: 'low' } as RequestInit).catch(() => {});
+function whenCompiled(renderer: Renderer, materials: Iterable<Material>, limit = 4000) {
+  const pending = new Set(materials);
+  const deadline = performance.now() + limit;
+  return new Promise<void>((resolve) => {
+    const check = () => {
+      if (renderer.getContext().isContextLost() || performance.now() > deadline) return resolve();
+      for (const material of pending) {
+        const program = (renderer.properties.get(material) as { currentProgram?: { isReady(): boolean } }).currentProgram;
+        if (!program || program.isReady()) pending.delete(material);
+      }
+      if (pending.size) setTimeout(check, 16);
+      else resolve();
+    };
+    check();
+  });
+}
+
+/**
+ * Gets PMREMGenerator's shaders linked in the background *before* it is asked
+ * to render. `fromScene()` is synchronous and uses each of its five programs
+ * the moment it has created it, so on a cold shader cache the main thread sat
+ * waiting for all of them — a measured 0.4 s freeze on a fast desktop, once per
+ * visit. Creating the same programs first (same materials, same render state,
+ * so the same cache keys) and waiting for them off-thread removes that.
+ *
+ * This reaches into PMREMGenerator's private fields (three 0.186). If a future
+ * three renames them, the checks below fail quietly and `fromScene()` simply
+ * compiles its own shaders again, as slow as before but still correct.
+ */
+async function warmEnvironmentShaders(THREE: Three, renderer: Renderer, pmrem: object, room: import('three').Scene) {
+  const internals = pmrem as {
+    _setSize?: (size: number) => void;
+    _allocateTargets?: () => import('three').WebGLRenderTarget;
+    _ggxMaterial?: Material | null;
+    _blurMaterial?: Material | null;
+  };
+  if (typeof internals._setSize !== 'function' || typeof internals._allocateTargets !== 'function') return;
+  internals._setSize(256); // fromScene()'s default size
+  const target = internals._allocateTargets(); // also creates the two filter materials
+  // Stand-in for the planes fromScene() draws its filters on. It needs the
+  // same attributes they have: whether a geometry has `position` is part of
+  // the program's cache key (an empty geometry compiles a different program,
+  // which is then never used).
+  const plane = new THREE.BufferGeometry();
+  plane.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
+  plane.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2));
+  const box = new THREE.BoxGeometry();
+  // The same material fromScene() clears each cube face with.
+  const background = new THREE.MeshBasicMaterial({ side: THREE.BackSide, depthWrite: false, depthTest: false });
+  const camera = new THREE.PerspectiveCamera(90, 1, 0.1, 100);
+  const materials = new Set<Material>();
+  // Programs are keyed on the render state too: fromScene() draws into a
+  // render target with tone mapping off, so compile under the same.
+  const oldTarget = renderer.getRenderTarget();
+  const oldToneMapping = renderer.toneMapping;
+  renderer.setRenderTarget(target);
+  renderer.toneMapping = THREE.NoToneMapping;
+  try {
+    for (const m of renderer.compile(room, camera)) materials.add(m);
+    // These three are drawn on their own (no scene, so no lights), not as part of the room.
+    for (const material of [background, internals._ggxMaterial, internals._blurMaterial]) {
+      if (!material) continue;
+      const mesh = new THREE.Mesh(material === background ? box : plane, material);
+      for (const m of renderer.compile(mesh, camera)) materials.add(m);
+    }
+  } finally {
+    renderer.setRenderTarget(oldTarget);
+    renderer.toneMapping = oldToneMapping;
+  }
+  await whenCompiled(renderer, materials);
+  plane.dispose();
+  box.dispose();
+  target.dispose();
+}
+
+/**
+ * Gives `scene` its environment map: the shared pixels if a viewer has already
+ * made them, otherwise generated here (and shared for the next one).
+ */
+async function prepareEnvironment(
+  THREE: Three,
+  RoomEnvironment: typeof import('three/examples/jsm/environments/RoomEnvironment.js').RoomEnvironment,
+  renderer: Renderer,
+  scene: import('three').Scene,
+  gone: () => boolean,
+) {
+  // Another viewer is generating it right now: wait, then use its pixels.
+  while (!sharedEnvironment && environmentBusy) await environmentBusy;
+  if (gone()) return;
+  if (sharedEnvironment) {
+    // Same settings as the render target PMREMGenerator makes.
+    const { data, width, height } = sharedEnvironment;
+    const env = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.HalfFloatType);
+    env.mapping = THREE.CubeUVReflectionMapping;
+    env.magFilter = THREE.LinearFilter;
+    env.minFilter = THREE.LinearFilter;
+    env.generateMipmaps = false;
+    env.colorSpace = THREE.LinearSRGBColorSpace;
+    env.needsUpdate = true;
+    scene.environment = env;
+    return;
+  }
+  let release = () => {};
+  environmentBusy = new Promise<void>((resolve) => (release = resolve));
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  try {
+    const room = new RoomEnvironment();
+    await warmEnvironmentShaders(THREE, renderer, pmrem, room).catch(() => {});
+    if (gone()) return;
+    const target = pmrem.fromScene(room, 0.04);
+    scene.environment = target.texture;
+    // Keep the pixels for the viewers after this one. If the browser can't
+    // read them back (all zeros, or it throws), nothing is kept and each
+    // viewer simply makes its own.
+    try {
+      const { width, height } = target;
+      const data = new Uint16Array(width * height * 4);
+      renderer.readRenderTargetPixels(target, 0, 0, width, height, data);
+      if (!renderer.getContext().getError() && data.some((v) => v !== 0)) sharedEnvironment = { data, width, height };
+    } catch {
+      /* keep generating per viewer */
+    }
+  } finally {
+    pmrem.dispose();
+    environmentBusy = null;
+    release();
   }
 }
 
@@ -63,7 +209,16 @@ export function prefetchModelAssets(srcs: string[] = []) {
  * The model turns slowly by itself and can be dragged with a mouse or a
  * finger, unless `interactive` is off.
  */
-export function ModelLayer({ model, active, animated, interactive = true, onReady, onError, snapshot = false }: ModelLayerProps) {
+export function ModelLayer({
+  model,
+  active,
+  animated,
+  interactive = true,
+  onReady,
+  onError,
+  snapshot = false,
+  eager = false,
+}: ModelLayerProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   // Latest callbacks, readable from the (once-only) set-up effect below.
@@ -136,34 +291,11 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
 
       // Just enough reflection for the metal to read as metal — without it the
       // aluminium renders black, with too much it looks like chrome.
-      if (sharedEnvironment) {
-        // Same settings as the render target PMREMGenerator makes.
-        const { data, width, height } = sharedEnvironment;
-        const env = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.HalfFloatType);
-        env.mapping = THREE.CubeUVReflectionMapping;
-        env.magFilter = THREE.LinearFilter;
-        env.minFilter = THREE.LinearFilter;
-        env.generateMipmaps = false;
-        env.colorSpace = THREE.LinearSRGBColorSpace;
-        env.needsUpdate = true;
-        scene.environment = env;
-      } else {
-        const pmrem = new THREE.PMREMGenerator(renderer);
-        const target = pmrem.fromScene(new RoomEnvironment(), 0.04);
-        scene.environment = target.texture;
-        // Keep the pixels for the viewers after this one. If the browser
-        // can't read them back (all zeros, or it throws), nothing is kept and
-        // each viewer simply makes its own, as before.
-        try {
-          const { width, height } = target;
-          const data = new Uint16Array(width * height * 4);
-          renderer.readRenderTargetPixels(target, 0, 0, width, height, data);
-          if (!renderer.getContext().getError() && data.some((v) => v !== 0)) sharedEnvironment = { data, width, height };
-        } catch {
-          /* keep generating per viewer */
-        }
-        pmrem.dispose();
-      }
+      // It arrives asynchronously (see prepareEnvironment); the model is
+      // fetched meanwhile and only compiled and shown once this has settled.
+      const environmentReady = prepareEnvironment(THREE, RoomEnvironment, renderer, scene, () => disposed || failed).catch(
+        () => {},
+      );
       scene.environmentIntensity = 0.18;
 
       scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 1.2));
@@ -341,9 +473,10 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
       });
       visibility.observe(host);
 
-      new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(
-        `${base}${model.src}`,
-        (gltf) => {
+      const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+      const onLoaded = (
+        gltf: import('three/examples/jsm/loaders/GLTFLoader.js').GLTF,
+      ) => {
           if (disposed) return;
 
           // A source export that wasn't saved upright gets a one-time
@@ -461,7 +594,12 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
             resize(); // sizes the canvas, then frames the model for that shape
             frameModel();
             setStatus('ready');
-            draw();
+            // Always one frame, even if this viewer was built ahead of its
+            // tile coming on screen (draw() does nothing off screen): the
+            // still image fades out once we report ready, and the canvas
+            // under it must not be empty. The spin starts when it's in view.
+            if (onScreen && state.current.active) draw();
+            else renderer.render(scene, camera);
             callbacks.current.onReady?.();
 
             // Model with its own animation: load that code only now that it's
@@ -480,11 +618,31 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
           // background where the browser supports it (most do). Drawing
           // straight away instead makes the main thread wait for every shader
           // — the single biggest stall in a profile of scrolling the grid.
-          renderer.compileAsync(scene, camera).then(show, show);
-        },
-        undefined,
-        fail,
-      );
+          void environmentReady
+            .then(() => {
+              if (disposed || failed) return;
+              // (The environment has to be in place first: it is part of
+              // what the shaders are compiled for.)
+              return whenCompiled(renderer, renderer.compile(scene, camera));
+            })
+            .then(show, show);
+      };
+      const url = `${base}${model.src}`;
+      const loadItself = () => loader.load(url, onLoaded, undefined, fail);
+      const ahead = preloaded.get(model.src);
+      if (ahead) {
+        preloaded.delete(model.src);
+        ahead.then(
+          (buffer) => {
+            if (!disposed) loader.parse(buffer, '', onLoaded, fail);
+          },
+          () => {
+            if (!disposed) loadItself();
+          },
+        );
+      } else {
+        loadItself();
+      }
 
       cleanup = () => {
         cancelAnimationFrame(frame);
@@ -515,7 +673,8 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
     // Don't build the renderer or fetch the model until the viewer is near the
     // screen. Without this every tile cover (nine WebGL contexts) set itself up
     // at page load, even for tiles far down the page.
-    let started = false;
+    let started = eager;
+    if (eager) void start();
     const near = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting || started) return;

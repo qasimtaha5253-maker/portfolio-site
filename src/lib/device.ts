@@ -40,14 +40,15 @@ export function deviceTier(): DeviceTier {
   return (cached ??= detect());
 }
 
-/** How many WebGL contexts the tile covers may hold at once. Viewers are kept
- *  after their tile scrolls away (rebuilding one is what makes scrolling
- *  stutter — see src/lib/coverLive.ts) and only draw while on screen, so this
- *  is a memory limit, not a how-many-are-turning limit. The page has nine cover
- *  models: a good desktop keeps them all, a phone keeps fewer. */
+/** How many WebGL contexts the tile covers may hold at once. Viewers are built
+ *  ahead of the visitor and kept after their tile scrolls away (see
+ *  src/lib/coverLive.ts); they only draw while on screen, so this is a memory
+ *  limit, not a how-many-are-turning limit. The page has nine cover models: a
+ *  full-tier device keeps them all (as the site always did before the stills),
+ *  a mid-tier one keeps the nearest few. */
 export function maxLiveCoverViews(tier = deviceTier()): number {
   const phone = typeof matchMedia === 'function' && matchMedia('(max-width: 560px)').matches;
-  if (tier === 'full') return phone ? 6 : 9;
+  if (tier === 'full') return 9;
   if (tier === 'mid') return phone ? 3 : 4;
   return 0;
 }

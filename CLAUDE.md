@@ -163,14 +163,16 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   touching how covers mount).** Every cover model is a **still image first**
   (`public/models/stills/`, rendered by the dev tool at `tools/stills.html` — re-render after any
   change to a cover model, its config, ModelLayer's camera/lighting or the tile shape). The live
-  `ModelLayer` is built over the still only once the tile is on screen **and the page has stopped
-  scrolling** (`src/lib/coverLive.ts`: one tile at a time, most visible first), then kept — building
-  a viewer is the expensive part, so they are evicted only to stay under a per-device cap
-  (`src/lib/device.ts`: 9 desktop / 6 phone, fewer on weak devices, none on `lite` devices or under
-  reduced motion; disposal uses `forceContextLoss`, so the browser's 16-context limit isn't hit).
-  The scheduler is an external store read with `useSyncExternalStore`, so scrolling never re-renders
-  the grid; viewers share one environment map (read back from the first) and compile shaders
-  asynchronously (handoff.md §7g). Covers draw at ~30 fps
+  `ModelLayer` is built over the still **ahead of the visitor** — once the tile is within two
+  screens of the viewport, nearest first, one tile at a time, starting when the page has loaded and
+  gone idle (`src/lib/coverLive.ts`) — then kept. **He requires a model to be already turning when
+  its tile first appears; a still that is visible while scrolling is not acceptable** (handoff.md
+  §7h). Viewers are evicted only to stay under a per-device cap (`src/lib/device.ts`: 9 on a
+  full-tier device, 4/3 on `mid`, none on `lite` or under reduced motion; disposal uses
+  `forceContextLoss`). The scheduler is an external store read with `useSyncExternalStore`, so
+  scrolling never re-renders the grid. Viewers share one environment map (read back from the
+  first), whose shaders are pre-compiled in the background through PMREMGenerator's private fields
+  — re-check that after any three.js upgrade (handoff.md §7h). Covers draw at ~30 fps
   and a capped pixel ratio; a tile's cover is released 400 ms after the tile opens (`coverFreed`);
   only the three.js code is prefetched, once the grid is within 1500 px — model files are not. A
   lost WebGL context or failed load falls back to the step's photo (covers keep their still).
@@ -259,8 +261,13 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   never built the branch preview, so he was on the old site — but a scroll profile also showed the
   second pass rebuilt 3D viewers mid-scroll. Now: viewers build only at rest and are kept, shared
   environment map, async shader compile, the invisible film-grain overlay is gone (measured: at most
-  3/255 difference), helix capped near 60 fps. Offered and awaiting his answer: one shared WebGL
-  context for all covers (a big ModelLayer change).
+  3/255 difference), helix capped near 60 fps. (Its "build only at rest" rule was replaced in the
+  fourth pass, below.)
+- 2026-11-09, fourth pass on `perf-pass` (handoff.md §7h): he rejected the third pass's
+  stills-while-scrolling ("ruins the entire aesthetic"). Covers are now built ahead of the scroll
+  and model files preloaded in parallel; the first-viewer freeze is gone. Measured: every model
+  live at first sight after 3 s on the intro, zero long tasks while scrolling, Lighthouse 96, but
+  2.8 MB transferred on a phone's first load (models for the first tiles, in the background).
 - Open debts (handoff.md §10): the perf-pass branch is unverified on a real phone (Lighthouse only);
   reduced-motion layout only checked via the dev flag and DOM, never a real browser with the OS
   setting on; still-image sizes not tuned; CSS is render-blocking.

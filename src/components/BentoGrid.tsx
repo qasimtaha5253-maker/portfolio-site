@@ -9,7 +9,7 @@ import type { Project, ProjectImage } from '@/data/types';
 import { Photo } from './Photo';
 import { StepContent } from './StepContent';
 import { StepVisual } from './StepVisual';
-import { ModelLayer, prefetchModelAssets } from './visuals/ModelLayer';
+import { ModelLayer, preloadModel } from './visuals/ModelLayer';
 import type { StepModel } from '@/data/types';
 import { buttonVariants } from '@/components/ui/button';
 import { coverModels, coverModelConfig, stillSrc } from '@/lib/coverModels';
@@ -39,11 +39,13 @@ const noSubscribe = () => () => {};
 
 /**
  * A tile's cover models. Each one is a pre-rendered still image (written by
- * the dev tool at tools/stills.html) with, only while the scheduler says the
- * tile is live, the real 3D viewer on top of it. The still shows at once and
- * under reduced motion / on weak devices; the viewer starts at the same angle
- * the still was taken from, so once every model in the row has drawn its first
- * frame the still fades out beneath it without a visible jump. If the tile
+ * the dev tool at tools/stills.html) with, while the scheduler says the tile
+ * is live, the real 3D viewer on top of it. The scheduler builds viewers
+ * before their tile is in view, so normally the still is never seen: it is
+ * what shows if the visitor gets there first, under reduced motion and on
+ * weak devices. The viewer starts at the same angle the still was taken
+ * from, so once every model in the row has drawn its first frame the still
+ * fades out beneath it without a visible jump. If the tile
  * loses its turn (see CoverLiveScheduler) the viewer and its WebGL context are
  * disposed of and the still is back.
  *
@@ -98,6 +100,7 @@ function CoverModels({
               active={active}
               animated={animated}
               interactive={false}
+              eager
               onReady={onReady}
               onError={onError}
             />
@@ -148,12 +151,13 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   // out) keeps the page lighter. It's rebuilt when the tile closes.
   const [coverFreed, setCoverFreed] = useState<string | null>(null);
 
-  // Live 3D on the covers is rationed: a tile gets its viewers only once it is
-  // on screen and the page has stopped scrolling, up to `liveCap` WebGL
-  // contexts in total, and none at all on a weak device or under reduced
-  // motion — those keep the still images, and 3D appears only inside an opened
-  // tile. The scheduler (src/lib/coverLive.ts) holds that state outside React,
-  // so scrolling never re-renders this grid.
+  // Live 3D on the covers: each tile's viewers are built ahead of the visitor
+  // (once the tile is within a screen and a half), so the model is already
+  // turning when it comes into view, and kept — up to `liveCap` WebGL contexts
+  // in total, and none at all on a weak device or under reduced motion: those
+  // keep the still images, and 3D appears only inside an opened tile. The
+  // scheduler (src/lib/coverLive.ts) holds that state outside React, so
+  // scrolling never re-renders this grid.
   const liveCap = animated ? maxLiveCoverViews(deviceTier()) : 0;
   const scheduler = useMemo(() => {
     const tiles = new Map<string, number>();
@@ -161,7 +165,11 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
       const count = coverModels(project).length;
       if (count) tiles.set(project.id, count);
     }
-    return liveCap && tiles.size ? new CoverLiveScheduler(tiles, liveCap) : null;
+    if (!liveCap || !tiles.size) return null;
+    return new CoverLiveScheduler(tiles, liveCap, (id) => {
+      const project = projects.find((p) => p.id === id);
+      if (project) for (const model of coverModels(project)) preloadModel(model.src);
+    });
   }, [projects, liveCap]);
   useEffect(() => {
     const grid = gridRef.current;
@@ -171,35 +179,6 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   useEffect(() => {
     scheduler?.block(coverFreed);
   }, [scheduler, coverFreed]);
-
-  // Once the grid is coming up, fetch the 3D code so the first cover doesn't
-  // wait for it — but only when the browser is idle: on a phone the grid is
-  // already within this margin at page load, and parsing three.js right then
-  // would land on top of the page's own start-up. Model files are not
-  // prefetched — the stills cover the moment a viewer takes to load its
-  // model, and nine of them were nearly 4 MB per visit.
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid || !scheduler) return;
-    let idle = 0;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        observer.disconnect();
-        idle =
-          typeof requestIdleCallback === 'function'
-            ? requestIdleCallback(() => prefetchModelAssets(), { timeout: 4000 })
-            : window.setTimeout(() => prefetchModelAssets(), 2500); // Safari
-      },
-      { rootMargin: '1500px 0px' },
-    );
-    observer.observe(grid);
-    return () => {
-      observer.disconnect();
-      if (typeof cancelIdleCallback === 'function') cancelIdleCallback(idle);
-      else clearTimeout(idle);
-    };
-  }, [scheduler]);
 
   useEffect(() => {
     setCoverFreed(null);

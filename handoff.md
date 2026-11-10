@@ -232,10 +232,11 @@ he wants visual consistency across every project (see §11; not currently on his
 Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank model briefly made it 10 until
 `excludeFromCover` fixed that; see §4. **Since the perf-pass branch (2026-11-09, second pass) each
 cover is a still image first** (`public/models/stills/<model>[-row]-{wide,narrow}.webp`, 18 files,
-~325 KB in all), and the live 3D view is built over it only once the tile is on screen **and the
-page has stopped scrolling**, one tile at a time, then kept (up to a per-device cap: 9 desktop / 6
-phone on a full-tier device) — see §7f and §7g. The number to watch is that cap, not "how many
-exist". **Any change to a cover model, its config, ModelLayer's camera/lighting or the tile shape
+~325 KB in all), and the live 3D view is built over it **ahead of the visitor** (once the tile is
+within two screens of the viewport), one tile at a time, then kept (cap: 9 on a full-tier device)
+— see §7f, §7g and §7h. **He rejected stills that are visible while scrolling: a model must already
+be turning when its tile first appears** (§7h). The still is only the fallback for the moment
+before a viewer is ready, for weak devices and for reduced motion. **Any change to a cover model, its config, ModelLayer's camera/lighting or the tile shape
 means re-rendering the stills** (§7f has the two-step recipe), or the live view fades in over a
 still that no longer matches it.
 
@@ -418,8 +419,8 @@ and by DOM counts; **not on a real phone** (that's what the preview branch is fo
   the tile is `live`, a `ModelLayer` over it. `onReady` from every model in the row adds `is-live`,
   which fades the still out (0.4 s). Both show the model at ModelLayer's seed angle
   (`camera.position.set(0.75, 0.45, 0.95)`), so the handover is invisible; the viewer then spins.
-- **Who is live — superseded by §7g** (the scheduler; caps are now 9/6, 4/3, 0, and viewers are
-  kept, not torn down on scroll-away). What this pass did: one `IntersectionObserver` over the model tiles (`rootMargin: 250px`,
+- **Who is live — superseded by §7g and then §7h** (the scheduler; caps are now 9, 4/3, 0, and
+  viewers are built ahead and kept, not torn down on scroll-away). What this pass did: one `IntersectionObserver` over the model tiles (`rootMargin: 250px`,
   thresholds every 0.2) feeds a `visibility` map; candidates sort by ratio (most visible first,
   page order breaks ties) and take slots until `maxLiveCoverViews()` is reached — **6 on desktop, 4
   at phone width on a `full` device; 3/2 on `mid`; 0 on `lite`** and 0 under reduced motion. A tile
@@ -494,6 +495,8 @@ He reported the site "still laggy when it first loads and upon scrolling". Two f
 
 **What changed:**
 - **`src/lib/coverLive.ts` — `CoverLiveScheduler`** replaces the `visibility` state in BentoGrid.
+  (**Its "only at rest" policy below was rejected by him the same day and replaced — see §7h. The
+  external-store design and everything else in this list still stand.**)
   It builds a tile's viewers only when the page has been still for 180 ms, one tile at a time
   (next one starts 120 ms after the previous reports ready), most visible first; keeps them after
   the tile scrolls away (ModelLayer already stops drawing off screen); evicts only to stay under
@@ -521,7 +524,7 @@ He reported the site "still laggy when it first loads and upon scrolling". Two f
   is already lost (three logs a warning otherwise); `CoverModels` now passes `onError`, so a cover
   whose context dies *after* going live returns to its still instead of showing a blank canvas.
 
-**What is still there:** the *first* viewer of a visit pays for the PMREM once — one ~0.1 s task
+**What is still there (solved in §7h):** the *first* viewer of a visit pays for the PMREM once — one ~0.1 s task
 (~0.6 s under 6x throttle), while the page is at rest. Getting rid of it means either baking the
 environment map into a file (measured: 6.3 MB raw, 690 KB gzip, 210 KB brotli with a gradient
 predictor — not worth it) or generating it in a worker (a second copy of three.js). The bigger
@@ -532,6 +535,69 @@ contexts, shader compiles and environment maps a once-per-page cost.
 **FCP note:** Lighthouse's FCP went 1.4 s -> 2.2 s in this pass with LCP unchanged at 2.2 s. The
 old number was the grain overlay's background image counting as "first content"; real content
 (the headline) appears when it always did.
+
+### 7h. Fourth pass (2026-11-09, same branch) — "models sitting still ruins the aesthetic"
+
+He tried the §7g preview and rejected the one visible consequence of it: *"I dont like the models
+sitting still, ruins the entire aesthetic of the website, need them to be rotating when the user
+first sees it."* **Treat this as a standing design rule: a still cover must not be what a visitor
+normally sees.** So the scheduler's policy was turned round: instead of waiting for the page to
+rest, it builds viewers *before* their tile is in view.
+
+**How it works now (`src/lib/coverLive.ts`):**
+- A tile is "wanted" once it is within **two screens** of the viewport (`AHEAD = '200% 0px'`, an
+  IntersectionObserver root margin, both directions). Wanted tiles are built **nearest the screen
+  first, one tile at a time** (80 ms gap after each reports ready), scrolling or not, and kept.
+- Nothing starts until `window` has loaded **and** the browser is idle, so the page's own
+  start-up is left alone. From then on the first tiles build while the visitor is on the intro.
+- **Model files are fetched in parallel as soon as a tile is wanted** (`preloadModel()` in
+  ModelLayer.tsx: a `fetch` at low priority into a map of ArrayBuffers; the viewer that wants one
+  takes it with `GLTFLoader.parse()` and the buffer is forgotten). Downloads were what made
+  sequential builds too slow to stay ahead of a fast scroll.
+- Cap (`maxLiveCoverViews`): **9 on `full`** (all nine cover models, phone or desktop — what the
+  site did before the stills), 4 / 3 on `mid`, 0 on `lite` and under reduced motion. Over the
+  cap, the farthest off-screen tile goes, if it is at least 200 px farther than the newcomer.
+- **Failure handling:** a lost context / failed load lowers the cap to what was live without that
+  tile (browsers' WebGL context limits differ and aren't published; iOS is the unknown) and the
+  tile gets one retry; a second failure leaves it a still for good.
+
+**ModelLayer changes that make building ahead cheap:**
+- `eager` prop (covers pass it): skip the "within 900 px" gate, the scheduler decides.
+- **A first frame is always rendered when the model is ready, even off screen** (`draw()` does
+  nothing off screen). Without it, `is-live` would fade the still out over an empty canvas.
+- **`warmEnvironmentShaders()`** removes the once-per-visit freeze §7g left: PMREMGenerator's
+  `fromScene()` is synchronous and uses each of its programs the moment it creates it, so the main
+  thread waited ~0.4 s for the GPU to link them (measured un-throttled on a fast desktop — it is
+  GPU-bound, CPU throttling barely changes it). The helper creates the same programs first with
+  `renderer.compile()` (same materials, a render target bound and tone mapping off, so the same
+  cache keys), waits for them with `whenCompiled()`, then calls `fromScene()`: **335 ms -> 10 ms**.
+  It needs PMREMGenerator's **private** fields (`_setSize`, `_allocateTargets`, `_ggxMaterial`,
+  `_blurMaterial`, three 0.186); if a three upgrade renames them the guards fail quietly and
+  `fromScene()` just compiles synchronously again. **Gotcha that cost an hour:** the program cache
+  key includes `hasPositionAttribute`, so a warm-up mesh with an *empty* BufferGeometry compiles a
+  different program that is never used (three's own `_compileMaterial` has this flaw). The stand-in
+  geometry must have `position` (and `uv`). To check after a three upgrade: log
+  `renderer.info.programs.length` before and after `fromScene()` in dev — it must not grow.
+- `whenCompiled()` replaces `compileAsync()` for models too: same idea, but bounded (4 s, and it
+  gives up on a lost context) so a viewer can never wait for ever.
+- `prepareEnvironment()` is now async; viewers starting together wait on `environmentBusy` for the
+  first one's pixels instead of each generating the map.
+
+**Measured** (scratch scripts again; 4-6x CPU throttle, and 10 Mbit/s for the first-sight test):
+- *Was each model live when its tile first touched the screen?* After 3 s on the intro, then a
+  continuous 1500 px/s scroll to the bottom: **7 of 7 model tiles live, phone and desktop.** Worst
+  case, flicking at 3000 px/s half a second after load: stills first, models start as they finish.
+- Long tasks while scrolling the whole page down and up: **0** (live `main`: 14 / 1.8 s). The
+  builds have moved to the seconds after load: 8 tasks, ~1.0 s in total at 6x, worst after
+  start-up itself ~170 ms (i.e. ~30 ms real each) — while the visitor watches the intro.
+- Lighthouse mobile: **96**, TBT 120 ms, **2.8 MB transferred** (0.5 MB in §7g; 4.1 MB on old
+  `main`). The 2.2 MB is the models for the first three tiles on a phone, fetched at low priority
+  after load. That is the price of the rule above; `AHEAD` is the dial (150% would roughly halve
+  it and cost fast scrollers their head start).
+- All 18 stills re-rendered byte-identical again.
+
+**Not needed any more for smoothness:** the single-shared-WebGL-context idea from §7g. It would
+now only save memory; revisit only if phones lose contexts (the cap will visibly drop to stills).
 
 ## 8. The mini-card / expandable-summary content system
 
@@ -613,7 +679,10 @@ had never actually had a component added — this session added the first one.
 - **Vercel did not build a preview for the first perf-pass push** (§7g). Cause unknown from here
   (previews worked for `visual-polish` in September); if a later push is also ignored it is a
   setting in his Vercel dashboard (Settings -> Git / Environments -> Preview branch tracking).
-- The first 3D viewer of a visit still blocks the main thread once for the environment map (§7g).
+- `warmEnvironmentShaders()` (ModelLayer.tsx) leans on PMREMGenerator's private fields; after any
+  three.js upgrade run the check in §7h, or the 0.4 s first-viewer freeze quietly comes back.
+- Building covers ahead costs ~2.2 MB of model downloads in the background on a phone's first
+  load (§7h); his choice, but watch it if more cover models are added.
 - Live cover views are capped (src/lib/device.ts), so a new cover model no longer adds a permanent
   context — but it does add a model to the cap's arithmetic (Fixtures' row of 3 takes 3 slots) and
   needs its stills rendered (§7f). The cover-dedup mechanism (§7b) can still add one unintentionally.
@@ -665,11 +734,11 @@ domain item, which is now done):**
 `main`, so he can try the Vercel preview on his phone first. What to look for is in the final report
 of that session: covers appear instantly as stills, start turning shortly after, no blank tiles, no
 jump when a still hands over to the live view, tiles open/close as before. If he's happy, merge
-`perf-pass` into `main` (fast-forward) and delete the branch. Since §7g also: models stay still
-while he scrolls and start turning one by one about a quarter of a second after he stops.
+`perf-pass` into `main` (fast-forward) and delete the branch. Since §7h: every model should
+already be turning when its tile scrolls into view (he rejected stills-while-scrolling), unless he
+flicks down within a second or two of the page opening.
 
-**Offered, awaiting his answer (2026-11-09):** one shared WebGL context for all tile covers (§7g) —
-only worth doing if the preview still stutters on his phone when models start up.
+The shared-WebGL-context idea (§7g) was offered and is no longer needed for smoothness (§7h).
 
 **Not on his list, but worth knowing it's an option**: rolling the mini-card/summary-card system
 (§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been
