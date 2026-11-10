@@ -7,8 +7,10 @@
  *   lite  2 GB / 2 cores or fewer, or the visitor asked for data saving — tile
  *         covers stay as still images, 3D only appears inside an opened tile
  *
- * Safari exposes neither memory nor cores, so an iPhone always lands in `full`;
- * it is fast enough that this is fine. Dev only: `?device=lite` / `?device=mid`
+ * Only Chromium reports memory. Safari reports cores but clamps the number (an
+ * iPhone says 4 or fewer whatever it has), so without a memory figure the core
+ * count only pulls a device down to `mid`, and only below 4: iPhones land in
+ * `full`, which they are fast enough for. Dev only: `?device=lite` / `?device=mid`
  * in the URL forces a tier for testing.
  */
 export type DeviceTier = 'full' | 'mid' | 'lite';
@@ -26,8 +28,9 @@ function detect(): DeviceTier {
   if (nav.connection?.saveData) return 'lite';
   const memory = nav.deviceMemory;
   const cores = nav.hardwareConcurrency;
-  if ((memory !== undefined && memory <= 2) || (cores !== undefined && cores <= 2)) return 'lite';
-  if ((memory !== undefined && memory <= 4) || (cores !== undefined && cores <= 4)) return 'mid';
+  if (memory === undefined) return cores !== undefined && cores < 4 ? 'mid' : 'full';
+  if (memory <= 2 || (cores !== undefined && cores <= 2)) return 'lite';
+  if (memory <= 4 || (cores !== undefined && cores <= 4)) return 'mid';
   return 'full';
 }
 
@@ -37,13 +40,15 @@ export function deviceTier(): DeviceTier {
   return (cached ??= detect());
 }
 
-/** How many WebGL contexts the tile covers may hold at once. A phone-width
- *  screen shows only about two tiles, so it gets fewer than a desktop, which
- *  shows four to six. */
+/** How many WebGL contexts the tile covers may hold at once. Viewers are kept
+ *  after their tile scrolls away (rebuilding one is what makes scrolling
+ *  stutter — see src/lib/coverLive.ts) and only draw while on screen, so this
+ *  is a memory limit, not a how-many-are-turning limit. The page has nine cover
+ *  models: a good desktop keeps them all, a phone keeps fewer. */
 export function maxLiveCoverViews(tier = deviceTier()): number {
   const phone = typeof matchMedia === 'function' && matchMedia('(max-width: 560px)').matches;
-  if (tier === 'full') return phone ? 4 : 6;
-  if (tier === 'mid') return phone ? 2 : 3;
+  if (tier === 'full') return phone ? 6 : 9;
+  if (tier === 'mid') return phone ? 3 : 4;
   return 0;
 }
 

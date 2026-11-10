@@ -28,6 +28,16 @@ interface ModelLayerProps {
 }
 
 /**
+ * The environment map every viewer lights its metal with, as raw pixels read
+ * back from the first viewer that made it. Making it (three's PMREMGenerator
+ * renders a small room scene to a cube map and blurs it, compiling five
+ * shaders on the way) was the bulk of the main-thread stall each time a viewer
+ * started; WebGL contexts can't share textures, but they can each upload the
+ * same pixels, which takes a fraction of the time and looks identical.
+ */
+let sharedEnvironment: { data: Uint16Array; width: number; height: number } | null = null;
+
+/**
  * Warms the browser's cache for the 3D viewer: the three.js code and the given
  * model files. Called once, when the browser is idle after page load, so that a
  * cover starting up later (as it nears the screen) only has to build its view
@@ -96,8 +106,10 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
       // The browser drops a context when too many are live or the GPU resets.
       // Rather than leave a blank box, give up on this view: the caller falls
       // back to its photo (a cover keeps showing its still image).
+      let failed = false;
       const fail = () => {
         if (disposed) return;
+        failed = true;
         setStatus('error');
         callbacks.current.onError?.();
       };
@@ -124,10 +136,35 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
 
       // Just enough reflection for the metal to read as metal — without it the
       // aluminium renders black, with too much it looks like chrome.
-      const pmrem = new THREE.PMREMGenerator(renderer);
-      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      if (sharedEnvironment) {
+        // Same settings as the render target PMREMGenerator makes.
+        const { data, width, height } = sharedEnvironment;
+        const env = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.HalfFloatType);
+        env.mapping = THREE.CubeUVReflectionMapping;
+        env.magFilter = THREE.LinearFilter;
+        env.minFilter = THREE.LinearFilter;
+        env.generateMipmaps = false;
+        env.colorSpace = THREE.LinearSRGBColorSpace;
+        env.needsUpdate = true;
+        scene.environment = env;
+      } else {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        const target = pmrem.fromScene(new RoomEnvironment(), 0.04);
+        scene.environment = target.texture;
+        // Keep the pixels for the viewers after this one. If the browser
+        // can't read them back (all zeros, or it throws), nothing is kept and
+        // each viewer simply makes its own, as before.
+        try {
+          const { width, height } = target;
+          const data = new Uint16Array(width * height * 4);
+          renderer.readRenderTargetPixels(target, 0, 0, width, height, data);
+          if (!renderer.getContext().getError() && data.some((v) => v !== 0)) sharedEnvironment = { data, width, height };
+        } catch {
+          /* keep generating per viewer */
+        }
+        pmrem.dispose();
+      }
       scene.environmentIntensity = 0.18;
-      pmrem.dispose();
 
       scene.add(new THREE.HemisphereLight(0xdfe7ff, 0x0b0d14, 1.2));
       const key = new THREE.DirectionalLight(0xffffff, 1.25);
@@ -418,24 +455,32 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
           controls.target.set(0, centreY, 0);
           camera.position.set(0.75, 0.45, 0.95).add(controls.target);
 
-          loaded = true;
-          resize(); // sizes the canvas, then frames the model for that shape
-          frameModel();
-          setStatus('ready');
-          draw();
-          callbacks.current.onReady?.();
+          const show = () => {
+            if (disposed || failed) return;
+            loaded = true;
+            resize(); // sizes the canvas, then frames the model for that shape
+            frameModel();
+            setStatus('ready');
+            draw();
+            callbacks.current.onReady?.();
 
-          // Model with its own animation: load that code only now that it's
-          // needed, then start drawing every frame (draw() plays/pauses it).
-          if (model.animation && state.current.animated) {
-            void import('./modelAnimations').then(({ createModelAnimation }) => {
-              if (disposed) return;
-              anim = createModelAnimation(model.animation!, THREE, gltf.scene);
-              cancelAnimationFrame(frame);
-              frame = 0;
-              restart();
-            });
-          }
+            // Model with its own animation: load that code only now that it's
+            // needed, then start drawing every frame (draw() plays/pauses it).
+            if (model.animation && state.current.animated) {
+              void import('./modelAnimations').then(({ createModelAnimation }) => {
+                if (disposed) return;
+                anim = createModelAnimation(model.animation!, THREE, gltf.scene);
+                cancelAnimationFrame(frame);
+                frame = 0;
+                restart();
+              });
+            }
+          };
+          // Have the model's shaders compiled before the first draw, in the
+          // background where the browser supports it (most do). Drawing
+          // straight away instead makes the main thread wait for every shader
+          // — the single biggest stall in a profile of scrolling the grid.
+          renderer.compileAsync(scene, camera).then(show, show);
         },
         undefined,
         fail,
@@ -461,7 +506,8 @@ export function ModelLayer({ model, active, animated, interactive = true, onRead
         // Covers come and go as the page scrolls: free the context now rather
         // than when the browser gets round to it, or the per-page limit (16 in
         // Chrome) is reached and the browser takes a *live* one away instead.
-        renderer.forceContextLoss();
+        // (Unless the browser already took it: three would only log a warning.)
+        if (!renderer.getContext().isContextLost()) renderer.forceContextLoss();
         renderer.domElement.remove();
       };
     };

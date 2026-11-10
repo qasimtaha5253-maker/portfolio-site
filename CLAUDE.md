@@ -163,10 +163,14 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   touching how covers mount).** Every cover model is a **still image first**
   (`public/models/stills/`, rendered by the dev tool at `tools/stills.html` — re-render after any
   change to a cover model, its config, ModelLayer's camera/lighting or the tile shape). The live
-  `ModelLayer` is mounted over the still only while the tile is on screen (250 px margin), the most
-  visible tiles first, up to a per-device cap (`src/lib/device.ts`: 6 desktop / 4 phone, fewer on
-  weak devices, none on `lite` devices or under reduced motion), and disposed when the tile scrolls
-  away (with `forceContextLoss`, so the browser's 16-context limit isn't hit). Covers draw at ~30 fps
+  `ModelLayer` is built over the still only once the tile is on screen **and the page has stopped
+  scrolling** (`src/lib/coverLive.ts`: one tile at a time, most visible first), then kept — building
+  a viewer is the expensive part, so they are evicted only to stay under a per-device cap
+  (`src/lib/device.ts`: 9 desktop / 6 phone, fewer on weak devices, none on `lite` devices or under
+  reduced motion; disposal uses `forceContextLoss`, so the browser's 16-context limit isn't hit).
+  The scheduler is an external store read with `useSyncExternalStore`, so scrolling never re-renders
+  the grid; viewers share one environment map (read back from the first) and compile shaders
+  asynchronously (handoff.md §7g). Covers draw at ~30 fps
   and a capped pixel ratio; a tile's cover is released 400 ms after the tile opens (`coverFreed`);
   only the three.js code is prefetched, once the grid is within 1500 px — model files are not. A
   lost WebGL context or failed load falls back to the step's photo (covers keep their still).
@@ -242,9 +246,8 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   in the Vercel dashboard — unconfirmed). The "Tap a project to see how it works" hint is now a
   gradient callout box styled like the stat tiles. A performance pass on 3D loading and scrolling
   (lazy cover set-up, 30 fps covers, cover released while its tile is open, idle prefetch) went
-  live after he reported lag; unverified on a real phone. Pending his answer: removing the
-  film-grain overlay's `mix-blend-mode` (`body::after` in site.css), the leading suspect for any
-  remaining scroll lag (handoff.md §7e).
+  live after he reported lag; unverified on a real phone. (The film-grain overlay question raised
+  then is settled: it was removed on `perf-pass`, see the third-pass bullet below.)
 - 2026-11-09, later — **branch `perf-pass`, not merged**: second performance pass (handoff.md §7f).
   Cover stills + rationed live views, device tiers, lazy grid chunk, `preload="none"` videos,
   lighter helix loop, WebGL context-loss fallback. Lighthouse mobile 79 -> 97, 4.1 MB -> 0.5 MB.
@@ -252,6 +255,12 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
 - Next up (see handoff.md §11 for detail): replace the two still-low-res photos once he sends
   them, then add 3D models/animations for the remaining photo-only projects (ANSYS, Reef Rover,
   Hydraulic Hand). The custom domain is done (qtaha.com, live) — no longer on this list.
+- 2026-11-09, third pass on `perf-pass` (handoff.md §7g) after he said "still laggy": Vercel had
+  never built the branch preview, so he was on the old site — but a scroll profile also showed the
+  second pass rebuilt 3D viewers mid-scroll. Now: viewers build only at rest and are kept, shared
+  environment map, async shader compile, the invisible film-grain overlay is gone (measured: at most
+  3/255 difference), helix capped near 60 fps. Offered and awaiting his answer: one shared WebGL
+  context for all covers (a big ModelLayer change).
 - Open debts (handoff.md §10): the perf-pass branch is unverified on a real phone (Lighthouse only);
   reduced-motion layout only checked via the dev flag and DOM, never a real browser with the OS
   setting on; still-image sizes not tuned; CSS is render-blocking.

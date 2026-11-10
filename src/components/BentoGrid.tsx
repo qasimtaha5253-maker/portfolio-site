@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -13,6 +13,7 @@ import { ModelLayer, prefetchModelAssets } from './visuals/ModelLayer';
 import type { StepModel } from '@/data/types';
 import { buttonVariants } from '@/components/ui/button';
 import { coverModels, coverModelConfig, stillSrc } from '@/lib/coverModels';
+import { CoverLiveScheduler } from '@/lib/coverLive';
 import { deviceTier, maxLiveCoverViews } from '@/lib/device';
 
 const base = import.meta.env.BASE_URL;
@@ -34,22 +35,47 @@ function coverImage(project: Project): ProjectImage | undefined {
   return images.find((img) => img.src === project.cover) ?? images[0];
 }
 
+const noSubscribe = () => () => {};
+
 /**
  * A tile's cover models. Each one is a pre-rendered still image (written by
- * the dev tool at tools/stills.html) with, only while `live`, the real 3D viewer on top of it.
- * The still shows at once and under reduced motion / on weak devices; the
- * viewer starts at the same angle the still was taken from, so once every
- * model in the row has drawn its first frame the still fades out beneath it
- * without a visible jump. When the tile scrolls away, `live` drops, the
- * viewer (and its WebGL context) is disposed of and the still is back.
+ * the dev tool at tools/stills.html) with, only while the scheduler says the
+ * tile is live, the real 3D viewer on top of it. The still shows at once and
+ * under reduced motion / on weak devices; the viewer starts at the same angle
+ * the still was taken from, so once every model in the row has drawn its first
+ * frame the still fades out beneath it without a visible jump. If the tile
+ * loses its turn (see CoverLiveScheduler) the viewer and its WebGL context are
+ * disposed of and the still is back.
+ *
+ * Liveness is read straight from the scheduler rather than passed down as a
+ * prop, so that it changing re-renders this component only, not the grid.
  */
-function CoverModels({ models, live, active, animated }: { models: StepModel[]; live: boolean; active: boolean; animated: boolean }) {
+function CoverModels({
+  id,
+  models,
+  scheduler,
+  active,
+  animated,
+}: {
+  id: string;
+  models: StepModel[];
+  scheduler: CoverLiveScheduler | null;
+  active: boolean;
+  animated: boolean;
+}) {
+  const live = useSyncExternalStore(scheduler?.subscribe ?? noSubscribe, () => scheduler?.isLive(id) ?? false);
   const [ready, setReady] = useState(0);
   useEffect(() => {
     if (!live) setReady(0);
   }, [live]);
   const onReady = useCallback(() => setReady((n) => n + 1), []);
+  // Load failure or a lost WebGL context: back to the still, for good.
+  const onError = useCallback(() => scheduler?.failed(id), [scheduler, id]);
   const isLive = live && ready >= models.length;
+  // Tells the scheduler this tile is done building, so the next one can start.
+  useEffect(() => {
+    if (isLive) scheduler?.ready(id);
+  }, [isLive, scheduler, id]);
   return (
     <div className={cn('bento-tile__model', models.length > 1 && 'bento-tile__model--row', isLive && 'is-live')}>
       {models.map((model) => (
@@ -73,6 +99,7 @@ function CoverModels({ models, live, active, animated }: { models: StepModel[]; 
               animated={animated}
               interactive={false}
               onReady={onReady}
+              onError={onError}
             />
           )}
         </div>
@@ -121,68 +148,58 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
   // out) keeps the page lighter. It's rebuilt when the tile closes.
   const [coverFreed, setCoverFreed] = useState<string | null>(null);
 
-  // Live 3D on the covers is rationed (src/lib/device.ts): only tiles on (or
-  // just off) screen get a viewer, up to `liveCap` WebGL contexts at once, and
-  // none at all on a weak device or under reduced motion — those keep the still
-  // images, and 3D appears only inside an opened tile.
+  // Live 3D on the covers is rationed: a tile gets its viewers only once it is
+  // on screen and the page has stopped scrolling, up to `liveCap` WebGL
+  // contexts in total, and none at all on a weak device or under reduced
+  // motion — those keep the still images, and 3D appears only inside an opened
+  // tile. The scheduler (src/lib/coverLive.ts) holds that state outside React,
+  // so scrolling never re-renders this grid.
   const liveCap = animated ? maxLiveCoverViews(deviceTier()) : 0;
-  // How much of each model tile is within the screen (plus a margin), 0 = none.
-  const [visibility, setVisibility] = useState<ReadonlyMap<string, number>>(() => new Map());
-  useEffect(() => {
-    const grid = gridRef.current;
-    if (!grid || !liveCap) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        setVisibility((prev) => {
-          const next = new Map(prev);
-          for (const entry of entries) next.set(entry.target.id, entry.isIntersecting ? entry.intersectionRatio : 0);
-          return next;
-        });
-      },
-      // A little ahead of the screen, so a viewer is usually drawing by the
-      // time its tile is in view, and so a tile hovering at the very edge
-      // doesn't flip between still and live. The thresholds keep the ratio
-      // roughly current, so the most visible tiles get the slots.
-      { rootMargin: '250px 0px', threshold: [0, 0.2, 0.4, 0.6, 0.8, 1] },
-    );
-    grid.querySelectorAll<HTMLElement>('.bento-tile[data-cover-models]').forEach((tile) => observer.observe(tile));
-    return () => observer.disconnect();
-  }, [projects, liveCap]);
-  // Most visible tiles first (page order breaks ties); each takes as many
-  // slots as it has models, until the cap is reached.
-  const liveIds = new Set<string>();
-  if (liveCap) {
-    const candidates = projects
-      .map((project, order) => ({ project, order, ratio: visibility.get(project.id) ?? 0 }))
-      .filter(({ project, ratio }) => ratio > 0 && project.id !== coverFreed)
-      .sort((a, b) => b.ratio - a.ratio || a.order - b.order);
-    let used = 0;
-    for (const { project } of candidates) {
+  const scheduler = useMemo(() => {
+    const tiles = new Map<string, number>();
+    for (const project of projects) {
       const count = coverModels(project).length;
-      if (!count || (used && used + count > liveCap)) continue;
-      liveIds.add(project.id);
-      used += count;
+      if (count) tiles.set(project.id, count);
     }
-  }
-
-  // Once the grid is coming up (not at page load: the intro and About come
-  // first), fetch the 3D code so the first cover doesn't wait for it. Model
-  // files are no longer prefetched — the stills cover the moment a viewer
-  // takes to load its model, and nine of them were nearly 4 MB per visit.
+    return liveCap && tiles.size ? new CoverLiveScheduler(tiles, liveCap) : null;
+  }, [projects, liveCap]);
   useEffect(() => {
     const grid = gridRef.current;
-    if (!grid || !liveCap || !projects.some((p) => coverModels(p).length)) return;
+    if (!grid || !scheduler) return;
+    return scheduler.attach(grid);
+  }, [scheduler]);
+  useEffect(() => {
+    scheduler?.block(coverFreed);
+  }, [scheduler, coverFreed]);
+
+  // Once the grid is coming up, fetch the 3D code so the first cover doesn't
+  // wait for it — but only when the browser is idle: on a phone the grid is
+  // already within this margin at page load, and parsing three.js right then
+  // would land on top of the page's own start-up. Model files are not
+  // prefetched — the stills cover the moment a viewer takes to load its
+  // model, and nine of them were nearly 4 MB per visit.
+  useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || !scheduler) return;
+    let idle = 0;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
         observer.disconnect();
-        prefetchModelAssets();
+        idle =
+          typeof requestIdleCallback === 'function'
+            ? requestIdleCallback(() => prefetchModelAssets(), { timeout: 4000 })
+            : window.setTimeout(() => prefetchModelAssets(), 2500); // Safari
       },
       { rootMargin: '1500px 0px' },
     );
     observer.observe(grid);
-    return () => observer.disconnect();
-  }, [projects, liveCap]);
+    return () => {
+      observer.disconnect();
+      if (typeof cancelIdleCallback === 'function') cancelIdleCallback(idle);
+      else clearTimeout(idle);
+    };
+  }, [scheduler]);
 
   useEffect(() => {
     setCoverFreed(null);
@@ -285,7 +302,7 @@ export function BentoGrid({ projects, animated, lenisRef }: BentoGridProps) {
               onClick={() => toggle(project.id)}
             >
               {models.length > 0 ? (
-                <CoverModels models={models} live={liveIds.has(project.id)} active={!isExpanded} animated={animated} />
+                <CoverModels id={project.id} models={models} scheduler={scheduler} active={!isExpanded} animated={animated} />
               ) : (
                 cover && (
                   <Photo

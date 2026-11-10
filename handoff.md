@@ -232,9 +232,9 @@ he wants visual consistency across every project (see §11; not currently on his
 Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank model briefly made it 10 until
 `excludeFromCover` fixed that; see §4. **Since the perf-pass branch (2026-11-09, second pass) each
 cover is a still image first** (`public/models/stills/<model>[-row]-{wide,narrow}.webp`, 18 files,
-~325 KB in all), and the live 3D view is only mounted over it while the tile is on screen, rationed
-to a per-device cap and torn down when the tile scrolls away — see §7f. The number to watch is
-"how many are live at once" (the cap: 6 desktop / 4 phone on a full-tier device), not "how many
+~325 KB in all), and the live 3D view is built over it only once the tile is on screen **and the
+page has stopped scrolling**, one tile at a time, then kept (up to a per-device cap: 9 desktop / 6
+phone on a full-tier device) — see §7f and §7g. The number to watch is that cap, not "how many
 exist". **Any change to a cover model, its config, ModelLayer's camera/lighting or the tile shape
 means re-rendering the stills** (§7f has the two-step recipe), or the live view fades in over a
 still that no longer matches it.
@@ -383,7 +383,7 @@ phone row is ~376 px), then the 30 ms cover cap, then the 1.5 pixel ratio. Don't
 back without checking a phone; the failure mode is exactly his third complaint.
 
 **Not done, and why it matters for the next person:**
-- **The film-grain overlay is the strongest remaining suspect for scroll lag and is untouched.**
+- **(Resolved in §7g: the overlay was measured to be invisible and removed.)** ~~The film-grain overlay is the strongest remaining suspect for scroll lag and is untouched.~~
   `body::after` in site.css (~ lines 39-49) is a `position: fixed; inset: 0` full-screen layer
   with `mix-blend-mode: overlay` over everything, including the live canvases. The compositor
   must re-blend it with whatever is beneath on every scroll frame, a known cost that bites hardest
@@ -418,7 +418,8 @@ and by DOM counts; **not on a real phone** (that's what the preview branch is fo
   the tile is `live`, a `ModelLayer` over it. `onReady` from every model in the row adds `is-live`,
   which fades the still out (0.4 s). Both show the model at ModelLayer's seed angle
   (`camera.position.set(0.75, 0.45, 0.95)`), so the handover is invisible; the viewer then spins.
-- **Who is live:** one `IntersectionObserver` over the model tiles (`rootMargin: 250px`,
+- **Who is live — superseded by §7g** (the scheduler; caps are now 9/6, 4/3, 0, and viewers are
+  kept, not torn down on scroll-away). What this pass did: one `IntersectionObserver` over the model tiles (`rootMargin: 250px`,
   thresholds every 0.2) feeds a `visibility` map; candidates sort by ratio (most visible first,
   page order breaks ties) and take slots until `maxLiveCoverViews()` is reached — **6 on desktop, 4
   at phone width on a `full` device; 3/2 on `mid`; 0 on `lite`** and 0 under reduced motion. A tile
@@ -428,7 +429,9 @@ and by DOM counts; **not on a real phone** (that's what the preview branch is fo
   seen while the stills tool ran 18 in a row). The open tile's cover still drops out via
   `coverFreed` (400 ms after expanding), as before.
 - **Device tiers** (`src/lib/device.ts`): `lite` = Save-Data, or <= 2 GB / <= 2 cores; `mid` = <= 4 GB /
-  <= 4 cores; else `full`. Safari reports neither, so iPhones are `full`. Pixel-ratio caps come from
+  <= 4 cores; else `full`. Only Chromium reports memory; Safari reports a *clamped* core count, so
+  without a memory figure cores only pull a device down to `mid` (below 4) — iPhones are `full`
+  (fixed in §7g: the first version would have put an iPhone reporting 4 cores in `mid`). Pixel-ratio caps come from
   the same file: cover 1.5 / 1.25 / 1, step model 2 / 1.5 / 1. The helix canvas also reads the tier
   (30 fps and DPR <= 1.5 off the `full` tier). Dev-only `?device=lite|mid|full` forces a tier, like
   `?reduced-motion`.
@@ -436,8 +439,8 @@ and by DOM counts; **not on a real phone** (that's what the preview branch is fo
   swaps to its `image` (`StepVisual`), a cover just keeps its still (its status text is hidden by
   CSS). Tested by calling `WEBGL_lose_context.loseContext()` on an open tile's canvas: the photo
   appeared, no console error.
-- **Prefetch:** only the three.js code, and only once the grid is within 1500 px (not at idle after
-  load). No model files are prefetched any more; the stills cover the load time.
+- **Prefetch:** only the three.js code, once the grid is within 1500 px *and* the browser is idle
+  (`requestIdleCallback`; on a phone the grid is inside that margin at page load, §7g). No model files are prefetched any more; the stills cover the load time.
 
 **Rendering the stills (do this after any change to a cover model, its config — margin,
 brightness, rotation, explode, transparentParts — ModelLayer's camera/lighting, or the tile
@@ -462,6 +465,73 @@ outside a topology transition and the pointer maths while the pointer is off the
 are LF — an exact-text patch that "can't find" obviously-present text is usually that. The Vite
 dev server serves any `.html` under the project root (hence `tools/stills.html` works in dev and
 is not in the build, which only has `index.html` as input).
+
+### 7g. Third pass (2026-11-09, same branch) — he said "still laggy"; what a profile showed
+
+He reported the site "still laggy when it first loads and upon scrolling". Two findings:
+
+1. **He had almost certainly not seen the perf-pass build.** Vercel never built a preview for the
+   branch (no deployment or commit status on GitHub an hour and a half after the push; the branch
+   alias 404s), so qtaha.com was still the old `main`. Check
+   `gh api repos/<owner>/<repo>/commits/<branch>/status` **before** telling him a preview is ready.
+2. **But the second pass really had made scrolling worse in one way**, and Lighthouse can't see
+   it (it never scrolls). A scripted touch scroll through the whole page under 6x CPU throttle
+   (scratch scripts, not in the repo: puppeteer-core from the npx cache driving headless Chrome,
+   counting main-thread tasks over 50 ms):
+
+   | build | scroll down: long tasks / total | scroll back up |
+   |---|---|---|
+   | live `main` (9 viewers, never disposed) | 14 / 1760 ms | 0 |
+   | second pass (dispose on scroll-away) | 17 / 2470 ms | 15 / 1000 ms |
+   | this pass, flicking without stopping | 2 / 690 ms | 0 |
+   | this pass, stopping to look (0.9 s pauses) | 7 / 970 ms | 2 / 110 ms |
+
+   A CPU profile of the scroll put **half of all script time in three.js `onFirstUse`** (the main
+   thread waiting for a shader program to link) and another fifth in `PMREMGenerator.fromScene`
+   — i.e. *building a viewer* is the cost, and the second pass rebuilt them every time a tile came
+   back. The grid also re-rendered (ten Framer Motion `layout` tiles, each measured) on every
+   IntersectionObserver threshold.
+
+**What changed:**
+- **`src/lib/coverLive.ts` — `CoverLiveScheduler`** replaces the `visibility` state in BentoGrid.
+  It builds a tile's viewers only when the page has been still for 180 ms, one tile at a time
+  (next one starts 120 ms after the previous reports ready), most visible first; keeps them after
+  the tile scrolls away (ModelLayer already stops drawing off screen); evicts only to stay under
+  the cap, off-screen tiles first, least recently seen first. A failed/lost viewer marks its tile
+  dead (still image for good). `block(id)` is the old `coverFreed`. It's an external store:
+  `CoverModels` reads `isLive(id)` with `useSyncExternalStore`, so **scrolling never re-renders
+  BentoGrid**. Caps (`maxLiveCoverViews`): 9 desktop / 6 phone-width on `full`, 4 / 3 on `mid`.
+  Consequence to know: someone who never stops scrolling sees only stills. That is the point.
+- **Shared environment map** (`sharedEnvironment` in ModelLayer.tsx): the first viewer generates
+  the PMREM as before, then reads its pixels back (`readRenderTargetPixels`, 768x1024 half-float);
+  every later viewer uploads those as a `DataTexture` (`CubeUVReflectionMapping`) instead of
+  regenerating. If the readback fails or is all zeros, each viewer generates its own as before.
+  Verified identical: re-rendering all 18 stills with it gave **byte-identical files**.
+- **`renderer.compileAsync(scene, camera)` before the first draw** — model shaders link in the
+  background (KHR_parallel_shader_compile) instead of blocking the first frame.
+- **Film-grain overlay removed** (site.css `body::after`). Pixel comparison of the page with and
+  without it, at seven scroll positions: max difference 3/255 at phone size, 1/255 at desktop —
+  `mix-blend-mode: overlay` on a near-black page does almost nothing, while costing a full-screen
+  blend every composited frame. This had been "pending his answer"; the measurement settled it. A
+  comment in site.css says where it was and how to bring a *visible* grain back without a blend mode.
+- **Helix capped at ~60-80 fps** on high-refresh screens (skips frames under 12 ms apart). This
+  machine's monitor is 240 Hz+, which is also why Lighthouse's "bootup time" here is inflated: it
+  counts every rAF frame. Lighthouse after this pass: 97, TBT 20 ms, bootup 2.5 s.
+- three.js prefetch moved to `requestIdleCallback`; `forceContextLoss()` skipped when the context
+  is already lost (three logs a warning otherwise); `CoverModels` now passes `onError`, so a cover
+  whose context dies *after* going live returns to its still instead of showing a blank canvas.
+
+**What is still there:** the *first* viewer of a visit pays for the PMREM once — one ~0.1 s task
+(~0.6 s under 6x throttle), while the page is at rest. Getting rid of it means either baking the
+environment map into a file (measured: 6.3 MB raw, 690 KB gzip, 210 KB brotli with a gradient
+predictor — not worth it) or generating it in a worker (a second copy of three.js). The bigger
+structural option, **not done because it is a large change to ModelLayer and he asked to be told
+first**: one shared WebGL context for all covers, each drawn into a 2D canvas, which would make
+contexts, shader compiles and environment maps a once-per-page cost.
+
+**FCP note:** Lighthouse's FCP went 1.4 s -> 2.2 s in this pass with LCP unchanged at 2.2 s. The
+old number was the grain overlay's background image counting as "first content"; real content
+(the headline) appears when it always did.
 
 ## 8. The mini-card / expandable-summary content system
 
@@ -536,11 +606,14 @@ had never actually had a component added — this session added the first one.
 
 ## 10. Known debts
 
-- **The perf-pass branch (§7f) is unmerged and unverified on a real phone.** It was measured only
-  with Lighthouse (mobile preset, production build): 79 -> 97, LCP 2.6 s -> 2.2 s, TBT 710 ms -> 140
-  ms, 4.1 MB -> 0.5 MB transferred. Whether the covers' still -> live crossfade looks right on his
-  phone, and whether scrolling feels smoother, is what he's testing on the Vercel preview. Merge to
-  `main` only after he says so.
+- **The perf-pass branch (§7f, §7g) is unmerged and unverified on a real phone.** Measured with
+  Lighthouse (mobile preset, production build: 79 -> 97, TBT 710 -> 20 ms, 4.1 MB -> 0.5 MB) and a
+  scripted scroll under CPU throttle (§7g table) — both on a fast desktop GPU, so **GPU cost on a
+  phone is unmeasured**. Merge to `main` only after he says the preview feels right.
+- **Vercel did not build a preview for the first perf-pass push** (§7g). Cause unknown from here
+  (previews worked for `visual-polish` in September); if a later push is also ignored it is a
+  setting in his Vercel dashboard (Settings -> Git / Environments -> Preview branch tracking).
+- The first 3D viewer of a visit still blocks the main thread once for the environment map (§7g).
 - Live cover views are capped (src/lib/device.ts), so a new cover model no longer adds a permanent
   context — but it does add a model to the cap's arithmetic (Fixtures' row of 3 takes 3 slots) and
   needs its stills rendered (§7f). The cover-dedup mechanism (§7b) can still add one unintentionally.
@@ -551,8 +624,6 @@ had never actually had a component added — this session added the first one.
   Vite's default; inlining critical CSS wasn't attempted.
 - The `.glb` files were left as they are: already meshopt + quantized by `npm run model`, so
   re-compressing wasn't a clear win, and they're no longer prefetched anyway.
-- **Open performance suspect: the film-grain `body::after` overlay** (§7e): proposed for removal,
-  awaiting his answer, no measurement.
 - Vercel Web Analytics: code is in, but whether he enabled it in the Vercel dashboard is
   unconfirmed (§1).
 - Reduced-motion layout has never been checked in a real browser with the OS setting on, only via
@@ -594,10 +665,11 @@ domain item, which is now done):**
 `main`, so he can try the Vercel preview on his phone first. What to look for is in the final report
 of that session: covers appear instantly as stills, start turning shortly after, no blank tiles, no
 jump when a still hands over to the live view, tiles open/close as before. If he's happy, merge
-`perf-pass` into `main` (fast-forward) and delete the branch.
+`perf-pass` into `main` (fast-forward) and delete the branch. Since §7g also: models stay still
+while he scrolls and start turning one by one about a quarter of a second after he stops.
 
-**Still pending his reply (asked 2026-11-09):** remove the film-grain overlay's `mix-blend-mode`
-(§7e) if scrolling still feels laggy on his phone. Not touched in the perf pass, on purpose.
+**Offered, awaiting his answer (2026-11-09):** one shared WebGL context for all tile covers (§7g) —
+only worth doing if the preview still stutters on his phone when models start up.
 
 **Not on his list, but worth knowing it's an option**: rolling the mini-card/summary-card system
 (§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been

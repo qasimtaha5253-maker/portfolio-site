@@ -32,21 +32,15 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* A faint film-grain texture over the whole page, so the large flat dark
-     areas (tiles, footer) don't read as flat/sterile. Static (a tiled SVG
-     turbulence pattern, not an animated one) and `pointer-events: none`, so
-     it's pure decoration — nothing to gate behind reduced motion. */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    pointer-events: none;
-    opacity: 0.035;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
-  }
+  /* There used to be a film-grain overlay here: a fixed, full-screen
+     `body::after` with `mix-blend-mode: overlay` at 3.5% opacity. Removed
+     2026-11-09: a blend-mode layer over the whole page makes the browser
+     re-blend every pixel on every scrolled frame (costly on phones), and on
+     this near-black page "overlay" left it invisible anyway — a pixel
+     comparison with and without it differed by at most 3/255 on a phone
+     screen and 1/255 on a desktop. The rule is in git history (commit fcb81bc
+     still has it) if a visible grain is ever wanted; do that with a plain
+     semi-transparent layer, not a blend mode. */
 
   h1,
   h2,

@@ -454,7 +454,10 @@ export function HelixChronoMatrix({
         const render = (now?: number) => {
             // ~30 fps on weaker devices (the skipped time is made up for by
             // drawFrame's elapsed-time scaling, so the motion's speed is unchanged).
-            if (lowPower && shouldAnimate && now !== undefined && now - lastFrame < 30) {
+            // Everywhere else at most ~60-80 fps: a 120-240 Hz screen would
+            // otherwise redraw all 28 rings two to four times as often, for a
+            // slow drift that looks the same.
+            if (shouldAnimate && now !== undefined && now - lastFrame < (lowPower ? 30 : 12)) {
                 animId = requestAnimationFrame(render);
                 return;
             }
