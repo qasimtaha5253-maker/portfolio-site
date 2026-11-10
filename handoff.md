@@ -4,11 +4,12 @@ Written for a fresh Claude Code / Cowork session picking this up cold. Read `CLA
 (project rules, architecture, stack) — this doc is the "how we got here and what to watch for"
 companion to it, not a replacement.
 
-Last updated: 2026-09-23. Full rewrite — the previous version covered up through the bento-grid
-build-out and the first round of 3D-model animations; this one folds that history in condensed
-form and adds everything from the session that followed (visual polish, the expandable mini-card
-content system, the shadcn integration, several project-content passes). Section numbers changed
-again — trust *this* file's numbers over memory of an older one.
+Last updated: 2026-11-09. Full rewrite on 2026-09-23 (bento-grid build-out, the expandable
+mini-card content system, the shadcn integration, several project-content passes), plus an
+incremental update on 2026-11-09 for the session that added Vercel Web Analytics, a restyled
+"Tap a project" hint, and a round of scroll/3D-loading performance work — see §4 (what changed),
+§7e (the performance reasoning, read before touching `ModelLayer` or the cover mounting) and
+§10/§11 (what's still open). Section numbers are unchanged from the September version.
 
 ---
 
@@ -25,7 +26,13 @@ project is a same-sized tile; tapping one expands it in place to show its steps.
   it back, OneDrive syncing `node_modules` caused file locks).
 - **Old versions, tagged, not deleted:** `pinned-chapter-version` (the block-by-block scrollytelling
   layout the bento grid replaced), `vanilla-js-version` (the original pre-React build).
-- The About area's **Experience section (work history) was removed** at his request this session —
+- **Vercel Web Analytics is wired in** (2026-11-09): `@vercel/analytics` is a dependency and
+  `<Analytics />` is rendered in `src/main.tsx`. Code-side that's all it needs. **He still has to
+  switch it on in the Vercel dashboard** (project → Analytics tab → Enable) — that's an account
+  setting nothing in the repo can do, and I never confirmed he did. If he asks why the Analytics
+  tab is empty, check that first. It's cookie-free (no consent banner needed) and does nothing on
+  localhost (dev console just logs "[Vercel Web Analytics] Debug mode… No requests will be sent").
+- The About area's **Experience section (work history) was removed** at his request (earlier session) —
   don't reintroduce it. The component (`Experience.tsx`), its data file (`experience.ts`) and CSS
   were deleted outright, not just unmounted. Page order is now: Intro → About → BentoGrid (`#work`)
   → footer (`#contact`).
@@ -93,7 +100,7 @@ TypeScript + Tailwind v4, shadcn layout (`@/` → `src/`).
 
 ```
 index.html                     shell, <html class="dark">, <link rel="icon" href="/favicon.svg">
-src/main.tsx → src/App.tsx     Intro, About, BentoGrid, footer (Experience section removed)
+src/main.tsx → src/App.tsx     main.tsx also renders <Analytics /> (§1); App = Intro, About, BentoGrid, footer
 src/data/projects.ts           THE content file — every project's copy, photos, models, animations
 src/data/types.ts              field docs — read this before adding a field to Step/MiniCard/StepModel
 src/components/
@@ -110,7 +117,9 @@ src/components/
     RotateLeft03Icon.tsx       user-supplied icon, used as the model rotate-hint (§ current content)
   sections/                    Intro (canvas), About, ContactLinks
   visuals/
-    ModelLayer.tsx             Three.js .glb viewer (see §7) — now also handles pinch-to-zoom (§7d)
+    ModelLayer.tsx             Three.js .glb viewer (see §7) — pinch-to-zoom (§7d); sets up lazily
+                                 near the viewport, covers capped at 30 fps (§7e); also exports
+                                 prefetchModelAssets()
     modelAnimations.ts         per-model built-in animations (see §7b) — 7 now, see §6
     EmbedLayer.tsx             HTML animation in an iframe
     VideoLayer.tsx             plain looping <video>
@@ -138,6 +147,14 @@ reasoning; it's still accurate. What *did* change this session:
   size:'icon'})` (shadcn) + `rounded-full`, not bespoke CSS for shape/colour. See §9 for why the
   hover/focus orange swap had to move to `group-hover:`/`group-focus-visible:` Tailwind variants
   instead of a custom CSS rule.
+- **The "Tap a project to see how it works" hint is now a callout box** (2026-11-09), at his
+  request ("more visible, like the gradient coloured box"): `.bento-section__hint` in site.css is
+  styled like `.stats__item` (surface panel, navy→orange hairline across the top, gradient text)
+  with a lucide `MousePointerClick` icon in `App.tsx`. Pure presentation; copy unchanged.
+- **3D loading/scroll performance pass** (2026-11-09) — three changes to `ModelLayer.tsx` and
+  `BentoGrid.tsx`, reasoning and the open question in §7e: covers set up lazily, covers draw at
+  30 fps with a lower pixel ratio, a tile's cover is freed while the tile is open, and the 3D code
+  plus cover models are prefetched when the browser is idle.
 - **Cover models can now opt out**: `StepModel.excludeFromCover` (new field) skips a model when
   `coverModels()` collects every distinct model across a project's steps for the tile cover. Added
   because the conveyor cart's new crank-handle model (different `src` from its main model) was
@@ -172,6 +189,16 @@ to your own last local build to know for sure). One new, sharp-edged variant fou
   tween's `requestAnimationFrame` never advanced. The fix was the same as always: close the tab,
   open a fresh one, redo the interaction, and the values settled correctly on the next real paint.
   If a value looks "stuck" instead of just "wrong", suspect the pane before suspecting the code.
+- **A cold dev-server load can leave covers on "Loading 3D model..." for several seconds** (Vite serves
+  three.js and its examples as many unbundled dev modules). It looked like a regression from the lazy
+  set-up change and wasn't: canvases appeared after waiting ~8 s. Wait, then re-check the DOM
+  (`.bento-tile canvas` count, `.model-layer__status`) before debugging.
+- `mcp__Claude_Browser__computer` `scroll` with a `coordinate` needs a prior `screenshot` call in
+  the same tab ("no screenshot dimensions cached"), or it errors; `scroll_to` a ref can land short
+  because Lenis owns the scroll position.
+- The dev console showed `GL_INVALID_OPERATION: glTexStorage2D: Texture is immutable` warnings after
+  a hot-reload of `BentoGrid`/`ModelLayer`. Seen once, after HMR only; not seen on a fresh load. Not
+  investigated; probably HMR re-running an effect against a live context, but unconfirmed.
 
 ## 6. Current content state
 
@@ -201,9 +228,13 @@ he wants visual consistency across every project (see §11; not currently on his
 `conveyor-shaft`, `shaft-puller`, `propeller-spin`, `oiling-tool-coil`, and the newest,
 **`crank-rotate`** (the conveyor cart's crank handle, §7b).
 
-**9 live WebGL canvases at page load**, unchanged from before this session (Cooling Unit, Conveyor
-Cart, Fixtures & Tooling ×3, Coffee Cup Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank
-model briefly made it 10 until `excludeFromCover` fixed that; see §4.
+**9 cover canvases exist in total** (Cooling Unit, Conveyor Cart, Fixtures & Tooling ×3, Coffee Cup
+Gripper, Oiling Tool, Toy Plane, Meccano Car) — the crank model briefly made it 10 until
+`excludeFromCover` fixed that; see §4. **They are no longer all live at page load**: since
+2026-11-09 each one only builds its renderer when it's within 900px of the viewport (so 0 at load
+on desktop, the first one or two at load on a phone), and a tile's cover is released while that tile
+is open. The number to watch is now "how many are live at once while scrolling", not "at load" —
+see §7e.
 
 ## 7. Sensitive code — read before touching the expand animation, scroll-follow, 3D framing,
 ##    the model script, a model's built-in animation, or the card/toggle CSS
@@ -307,6 +338,67 @@ the running code (not just reading it) and confirming the camera distance moves 
 of wheel events specifically when the pointer *last seen* was a mouse, not just toggle the same
 flag — non-trivial, hasn't been attempted.
 
+### 7e. 3D loading and scroll performance (2026-11-09) — what was found, what was done, what's open
+
+He reported, in order: "website lagging and loading models takes a while" -> "scrolling is still
+laggy" -> "on mobile as I scroll down the cover cards take too long to load". Read this before
+changing how covers mount, because **the fixes pull against each other** and the last one exists
+only to repair a side effect of the first.
+
+**Diagnosis.** Model files are small (9 covers ~ 4 MB, the largest 712 KB), so download size was
+*not* the problem. The problem was that every `ModelLayer` builds its own `WebGLRenderer`, a
+`PMREMGenerator` environment, lights and a model parse, and all 9 cover instances did that at
+page load, even for tiles far down the page. `onScreen` only stopped *drawing*, not *setting up*.
+
+**What's in place now:**
+1. **Lazy set-up.** `ModelLayer` wraps its async set-up in `start()` and only calls it once an
+   `IntersectionObserver` (`rootMargin: '900px 0px'`) first sees the host near the viewport.
+   Once started, a viewer stays alive (it just pauses drawing off-screen); it is never torn down
+   on scroll-away, so the live count only ever grows toward 9 as you scroll down.
+2. **Covers (`interactive: false`) draw at ~30 fps.** An early return in `draw()` while
+   `now - lastDraw < 30`. `lastDraw` only advances on a real draw, so the spin's elapsed-time
+   maths stays correct; the loop itself keeps re-scheduling so it never stalls. Covers turn at
+   12 deg/s so 60 fps is invisible. Interactive step models are unthrottled.
+3. **Covers render at pixel ratio <= 1.5** (step models keep <= 2).
+4. **A tile's cover is released while the tile is open.** `coverFreed` state in `BentoGrid.tsx`,
+   set 400 ms after expanding (the cover's own opacity fade is 0.3 s, so it doesn't pop out) and
+   cleared immediately on any `expanded` change. The cover remounts when the tile closes (a brief
+   "Loading 3D model..." can show). The step's own model is a second renderer, so without this an
+   open tile held two contexts. (He said "yes" to this when I offered it.)
+5. **Idle prefetch.** `prefetchModelAssets(srcs)` (exported from `ModelLayer.tsx`) imports the
+   same three.js modules and `fetch`es every cover model with `priority: 'low'`; `BentoGrid` calls
+   it from `requestIdleCallback` (2 s `setTimeout` fallback) after load. This exists **because
+   item 1 alone made covers slow to appear on a phone** (the code download, parse and glb fetch
+   all happened as the tile reached the 400 px margin; that was his third complaint). Item 1's
+   margin was raised 400 -> 900 px for the same reason. Verified at 375 px wide: all 9 glbs plus
+   three.js already fetched ~8 s after load with 0 canvases live, the first cover built before any
+   scroll, and after one scroll the tiles up to ~870 px ahead were ready.
+
+**Tuning knobs, in the order to reach for them:** the `rootMargin` (bigger = covers appear sooner
+but more contexts live at once; at 900 px on a phone that's roughly 2-3 covers ahead, because each
+phone row is ~376 px), then the 30 ms cover cap, then the 1.5 pixel ratio. Don't lower the margin
+back without checking a phone; the failure mode is exactly his third complaint.
+
+**Not done, and why it matters for the next person:**
+- **The film-grain overlay is the strongest remaining suspect for scroll lag and is untouched.**
+  `body::after` in site.css (~ lines 39-49) is a `position: fixed; inset: 0` full-screen layer
+  with `mix-blend-mode: overlay` over everything, including the live canvases. The compositor
+  must re-blend it with whatever is beneath on every scroll frame, a known cost that bites hardest
+  on phones. At `opacity: 0.035` it is almost invisible, so removing `mix-blend-mode` (or the layer)
+  should barely change the look. I proposed this and **asked him; he hasn't answered**, so don't
+  remove it unprompted. Ask once more if scrolling is still a complaint. (I tried to *measure*
+  frame times with the overlay on vs. off via a JS snippet in the Browser pane; he declined that
+  tool call, so there is **no measurement behind the suspicion**. If you do measure, remember the
+  pane pauses rendering (section 5) and `scrollBy` fights Lenis.)
+- Everything above was verified in the Browser pane and by DOM counts, **never on a real phone**.
+  Whether scrolling actually feels better is unconfirmed.
+- Other candidates not investigated: `ScrollTrigger.batch` tile reveal, the always-on Lenis plus
+  `gsap.ticker.lagSmoothing(0)`, the Intro helix canvas (documented as pausing off-screen; not
+  re-verified), and unhashed model filenames defeating long caching (Vercel serves `/public` with
+  `max-age=0, must-revalidate`; a `vercel.json` header block could cache `/models/*` hard, but the
+  filenames aren't versioned, so a replaced model would go stale. It would need `?v=N` like the
+  embeds).
+
 ## 8. The mini-card / expandable-summary content system
 
 New this session, and now the single biggest addition to the data-driven content model since the
@@ -380,9 +472,15 @@ had never actually had a component added — this session added the first one.
 
 ## 10. Known debts
 
-- No Lighthouse/field performance run has been done, still. 9 live WebGL canvases at page load
-  (§6) — unchanged this session, but watch this number every time a model is added to any step;
-  it's easy to accidentally add a 10th via the cover-dedup mechanism (§7b) without meaning to.
+- No Lighthouse/field performance run has been done, still, and the 2026-11-09 performance pass
+  (§7e) was never checked on a real phone. Covers no longer all start at page load (§6), but up to
+  9 canvases can end up live as you scroll down, plus one per open tile's own model. Watch that
+  number every time a model is added to any step; it's easy to accidentally add a 10th via the
+  cover-dedup mechanism (§7b) without meaning to.
+- **Open performance suspect: the film-grain `body::after` overlay** (§7e): proposed for removal,
+  awaiting his answer, no measurement.
+- Vercel Web Analytics: code is in, but whether he enabled it in the Vercel dashboard is
+  unconfirmed (§1).
 - Reduced-motion layout has never been checked in a real browser with the OS setting on, only via
   the dev flag and DOM checks.
 - The `motion` package (~30 KB gzip) and now `class-variance-authority` + `@radix-ui/react-slot` +
@@ -415,6 +513,10 @@ domain item, which is now done):**
 - Replace `qtaha@uoguelph.ca` — he'll do this himself before graduating, no action needed.
 - Scroll-scrubbed SolidWorks image sequences — decided against; 3D models/animations are the path
   for CAD visuals now.
+
+**Pending his reply (asked 2026-11-09):** remove the film-grain overlay's `mix-blend-mode`
+(§7e) if scrolling still feels laggy on his phone after the cover changes deploy. Also worth a
+quick "did it actually get smoother?" from him; the last three fixes were all verified off-device.
 
 **Not on his list, but worth knowing it's an option**: rolling the mini-card/summary-card system
 (§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been

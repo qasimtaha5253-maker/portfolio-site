@@ -159,6 +159,14 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   gltf-transform-based inspector script reports; see handoff.md §7, "Node names three.js actually
   produces" for two real bugs this caused. Add new animations as a case in `createModelAnimation`
   plus a name in `ModelAnimationName` (types.ts).
+- **3D performance (2026-11-09; full reasoning in handoff.md §7e — read it before touching how
+  covers mount).** A `ModelLayer` builds its renderer only once its host is within 900px of the
+  viewport, then stays alive; covers draw at ~30 fps and render at pixel ratio <= 1.5; a tile's cover
+  is released 400 ms after the tile opens and rebuilt on close (`coverFreed` in `BentoGrid`); and the
+  three.js code plus all cover models are prefetched when the browser is idle
+  (`prefetchModelAssets`). These pull against each other: the prefetch and the 900px margin exist
+  to fix covers being slow to appear on a phone, which the lazy set-up alone caused. Don't shrink
+  the margin without checking a phone.
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.
@@ -171,8 +179,9 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   animation later.
 - The saw fixture model there is animated (`animation: 'ptu-gear-cutting'`; see Step visuals).
 - Small Fixtures & Tooling has three 3D models (shaft tool, saw fixture, oiling fixture) stacked
-  full size on its first step and side by side on its cover. Six WebGL canvases are live on the page at
-  load, so measure phone performance before adding more cover models.
+  full size on its first step and side by side on its cover. Up to nine cover canvases end up live
+  as you scroll down the page (see "3D performance" under Step visuals), so measure phone performance
+  before adding more cover models.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
 - Contact on the public site: LinkedIn + email only (no phone number). The email
   (`qtaha@uoguelph.ca`) will be replaced before he graduates; not urgent.
@@ -226,9 +235,16 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   animated 3D model (its crank handle) and moved its main model to the "What?" step. (See
   handoff.md §6 for the current state of each project, §7 for the model-animation recipe and the
   bugs found this pass, §8–9 for the two new systems.)
+- 2026-11-09: Vercel Web Analytics added (`<Analytics />` in `main.tsx`; he must still enable it
+  in the Vercel dashboard — unconfirmed). The "Tap a project to see how it works" hint is now a
+  gradient callout box styled like the stat tiles. A performance pass on 3D loading and scrolling
+  (lazy cover set-up, 30 fps covers, cover released while its tile is open, idle prefetch) went
+  live after he reported lag; unverified on a real phone. Pending his answer: removing the
+  film-grain overlay's `mix-blend-mode` (`body::after` in site.css), the leading suspect for any
+  remaining scroll lag (handoff.md §7e).
 - Next up (see handoff.md §11 for detail): replace the two still-low-res photos once he sends
   them, then add 3D models/animations for the remaining photo-only projects (ANSYS, Reef Rover,
   Hydraulic Hand). The custom domain is done (qtaha.com, live) — no longer on this list.
-- Open debts (handoff.md §10): no Lighthouse/performance run yet; still 9 WebGL canvases live on
-  the page at load; reduced-motion layout only checked via the dev flag and DOM, never a real
+- Open debts (handoff.md §10): no Lighthouse/performance run yet; the 2026-11-09 performance pass
+  was never checked on a real phone; reduced-motion layout only checked via the dev flag and DOM, never a real
   browser with the OS setting on.
