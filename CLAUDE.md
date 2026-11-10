@@ -250,10 +250,12 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   (lazy cover set-up, 30 fps covers, cover released while its tile is open, idle prefetch) went
   live after he reported lag; unverified on a real phone. (The film-grain overlay question raised
   then is settled: it was removed on `perf-pass`, see the third-pass bullet below.)
-- 2026-11-09, later — **branch `perf-pass`, not merged**: second performance pass (handoff.md §7f).
+- 2026-11-09, later — branch `perf-pass` (**merged into `main` the same day, at his say-so, after
+  the fourth pass below**): second performance pass (handoff.md §7f).
   Cover stills + rationed live views, device tiers, lazy grid chunk, `preload="none"` videos,
   lighter helix loop, WebGL context-loss fallback. Lighthouse mobile 79 -> 97, 4.1 MB -> 0.5 MB.
-  He is testing the Vercel preview on his phone; merge into `main` only when he says it's good.
+  (The stills-first behaviour described here was changed twice more before the merge; the bullets
+  below and handoff.md §7h describe what is live.)
 - Next up (see handoff.md §11 for detail): replace the two still-low-res photos once he sends
   them, then add 3D models/animations for the remaining photo-only projects (ANSYS, Reef Rover,
   Hydraulic Hand). The custom domain is done (qtaha.com, live) — no longer on this list.
@@ -268,6 +270,7 @@ verified. `?reduced-motion` on the dev URL previews the reduced-motion layout.
   and model files preloaded in parallel; the first-viewer freeze is gone. Measured: every model
   live at first sight after 3 s on the intro, zero long tasks while scrolling, Lighthouse 96, but
   2.8 MB transferred on a phone's first load (models for the first tiles, in the background).
-- Open debts (handoff.md §10): the perf-pass branch is unverified on a real phone (Lighthouse only);
+- Open debts (handoff.md §10): the performance work is live but was measured only in headless
+  Chrome on a fast desktop, never profiled on a real phone (he tried the preview and said to merge);
   reduced-motion layout only checked via the dev flag and DOM, never a real browser with the OS
   setting on; still-image sizes not tuned; CSS is render-blocking.

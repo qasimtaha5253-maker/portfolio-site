@@ -672,10 +672,11 @@ had never actually had a component added — this session added the first one.
 
 ## 10. Known debts
 
-- **The perf-pass branch (§7f, §7g) is unmerged and unverified on a real phone.** Measured with
-  Lighthouse (mobile preset, production build: 79 -> 97, TBT 710 -> 20 ms, 4.1 MB -> 0.5 MB) and a
-  scripted scroll under CPU throttle (§7g table) — both on a fast desktop GPU, so **GPU cost on a
-  phone is unmeasured**. Merge to `main` only after he says the preview feels right.
+- **The performance passes (§7f-§7h) are live on `main` (merged 2026-11-09 when he said "Merge
+  it" after seeing the fourth-pass preview) but were never profiled on a real phone.** Measured with
+  Lighthouse (mobile preset, production build) and scripted scrolls under CPU throttle (§7g, §7h)
+  — all on a fast desktop GPU, so **GPU cost on a phone is unmeasured**. If he reports lag again,
+  ask which device and start there.
 - **Vercel did not build a preview for the first perf-pass push** (§7g). Cause unknown from here
   (previews worked for `visual-polish` in September); if a later push is also ignored it is a
   setting in his Vercel dashboard (Settings -> Git / Environments -> Preview branch tracking).
@@ -730,13 +731,11 @@ domain item, which is now done):**
 - Scroll-scrubbed SolidWorks image sequences — decided against; 3D models/animations are the path
   for CAD visuals now.
 
-**Pending his test (2026-11-09): the `perf-pass` branch** (§7f, §10). He asked for it on a branch, not
-`main`, so he can try the Vercel preview on his phone first. What to look for is in the final report
-of that session: covers appear instantly as stills, start turning shortly after, no blank tiles, no
-jump when a still hands over to the live view, tiles open/close as before. If he's happy, merge
-`perf-pass` into `main` (fast-forward) and delete the branch. Since §7h: every model should
-already be turning when its tile scrolls into view (he rejected stills-while-scrolling), unless he
-flicks down within a second or two of the page opening.
+**Done 2026-11-09: `perf-pass` merged into `main`** (fast-forward) after he saw the fourth-pass
+preview (§7h) and said "Merge it". The branch still exists on GitHub and locally, fully merged; it
+can be deleted. What is live: every model should already be turning when its tile scrolls into
+view (he rejected stills-while-scrolling), unless the visitor flicks down within a second or two
+of the page opening.
 
 The shared-WebGL-context idea (§7g) was offered and is no longer needed for smoothness (§7h).
 
