@@ -65,7 +65,7 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `src/components/visuals/` — `ModelLayer.tsx` (Three.js .glb viewer), `EmbedLayer.tsx`
   (HTML animation in an iframe) and `VideoLayer.tsx` (a plain looping `<video>`).
 - `src/components/sections/` — `Intro` (uses HelixChronoMatrix, headline "Qasim Taha", no
-  controls), `About`, `ContactLinks`.
+  controls), `About`, `ContactLinks`, `ResumePreview`.
 - `src/components/ui/helix-chrono-matrix.tsx` — the intro canvas component (user-supplied),
   with added `showControls` and `children` props, off-screen pause and reduced-motion still frame.
 - `src/hooks/` — `useMediaQuery`/`useMotionAllowed` (dev-only `?reduced-motion` URL flag
@@ -199,9 +199,12 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   footer) opens `public/Qasim-Taha-Resume.pdf`, built by `npm run resume` from
   `content/resume/resume.tex`. That .tex is the web copy of his own LaTeX resume with the phone
   number removed and a PDF title added; his standard version (with phone) stays off the repo.
-  To update: apply his edits to the web .tex (keep the phone out), `npm run resume`, commit both.
-  Needs `pdflatex`; a cloud session must install it (`texlive-latex-extra texlive-fonts-extra
-  texlive-plain-generic tex-gyre` via apt; output was checked text- and font-identical to his PDF).
+  About also shows a thumbnail card of the top of page 1 (`ResumePreview.tsx`,
+  `public/resume-preview-{400,800}.webp`), rendered from the PDF by the same script.
+  To update: apply his edits to the web .tex (keep the phone out), `npm run resume`, commit the
+  .tex, PDF and both previews. Needs `pdflatex` and `pdftoppm`; a cloud session must install them
+  (`texlive-latex-extra texlive-fonts-extra texlive-plain-generic tex-gyre poppler-utils` via apt;
+  output was checked text- and font-identical to his PDF).
 - Text is condensed from the user's PDF; keep steps short.
 - Custom domain is deliberately the last step; don't raise it early.
 - Kinder Toy Plane's "Process" step has a video of the assembly exploding apart (from a SolidWorks

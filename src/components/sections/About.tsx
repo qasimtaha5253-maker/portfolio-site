@@ -1,6 +1,7 @@
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import { useScrollFade } from '@/hooks/useScrollFade';
 import { ContactLinks } from './ContactLinks';
+import { ResumePreview } from './ResumePreview';
 
 export function About() {
   const animated = useMotionAllowed();
@@ -23,6 +24,7 @@ export function About() {
           and clear design intent.
         </p>
         <ContactLinks />
+        <ResumePreview />
       </div>
     </section>
   );
