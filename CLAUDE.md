@@ -198,7 +198,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   as you scroll down the page (see "3D performance" under Step visuals), so measure phone performance
   before adding more cover models.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
-- Contact on the public site: LinkedIn, Resume, email (`qasim.taha5253@gmail.com`, switched from
+- Contact links are centred, in About and the footer. About: LinkedIn + email (the resume preview
+  card covers the resume there). Footer: LinkedIn, Resume, email (`qasim.taha5253@gmail.com`, switched from
   his Guelph address at his request 2026-11-12). **No phone number** anywhere on the site.
 - **Resume** (added 2026-11-12): the "Resume" link (in `ContactLinks`, so it shows in About and the
   footer) opens `public/Qasim-Taha-Resume.pdf`, built by `npm run resume` from

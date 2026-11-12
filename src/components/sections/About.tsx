@@ -24,7 +24,7 @@ export function About() {
             engineering-grade materials. It’s given me a practical feel for designing parts that print, fit and hold
             up. Having worked on the manufacturing side, I design with how things actually get made in mind.
           </p>
-          <ContactLinks />
+          <ContactLinks showResume={false} />
         </div>
         <ResumePreview />
         <Certifications />
