@@ -833,9 +833,10 @@ pinned at 19.2.8, see CLAUDE.md). New photos are possible if he uploads them: pu
 `content/photos/<project>/` and run `npm run images` (pure Node + sharp, no GPU) — commit both.
 
 **The round trip:**
-1. Cloud work ends with a push to GitHub. Note the branch: a cloud session may have worked on its
-   own branch rather than `main`; if so, it needs merging into `main` (a pull request, or a merge
-   in the next session) before it's live.
+1. Cloud work ends with a push to **`main`** (his standing instruction, 2026-11-12: "always push
+   on main"). A cloud session is handed its own branch; it may commit there, but once a change
+   builds and passes checks it merges that into `main` and pushes `main`, same as on the PC. Only
+   3D/scrolling/animation changes still go to a preview branch first (§2).
 2. On his PC, before starting: `git checkout main` then `git pull`. Start a fresh local session in
    the project folder; it reads CLAUDE.md and this doc.
 3. Do the local-only work, `npm run build`, push. Vercel deploys `main` to qtaha.com as usual.

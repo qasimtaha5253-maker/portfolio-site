@@ -221,6 +221,10 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   Vercel can take several minutes to publish. Exception: changes he'll judge by feel on his phone
   (3D, scrolling, animation) go to a preview branch first and are merged when he says so
   (handoff.md §2).
+- **Always push to `main`, in cloud sessions too** (his standing instruction, 2026-11-12: "always
+  push on main"). A cloud session is handed its own branch; this is his explicit permission to
+  override that: once a change builds and passes checks, merge it into `main` and push `main` so
+  it goes live. The preview-branch exception above still applies.
 - Work can happen in a cloud session or on his PC; GitHub is the meeting point. Some jobs need his
   PC (model exports, cover stills, GPU checks) — **handoff.md §12** says which. Read it first if
   you are a cloud session.
