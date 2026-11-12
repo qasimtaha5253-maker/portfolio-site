@@ -174,8 +174,9 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   first), whose shaders are pre-compiled in the background through PMREMGenerator's private fields
   — re-check that after any three.js upgrade (handoff.md §7h). Covers draw at ~30 fps
   and a capped pixel ratio; a tile's cover is released 400 ms after the tile opens (`coverFreed`);
-  only the three.js code is prefetched, once the grid is within 1500 px — model files are not. A
-  lost WebGL context or failed load falls back to the step's photo (covers keep their still).
+  there is no separate prefetch — the scheduler preloads the model files of tiles it is about to
+  build (`preloadModel()` in ModelLayer.tsx). A lost WebGL context or failed load falls back to
+  the step's photo (covers keep their still).
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.
@@ -210,7 +211,12 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 - Project lives at `C:\Users\qasim\Documents\portfolio-site` (moved out of OneDrive; don't
   move it back — OneDrive syncing `node_modules` caused file locks).
 - Push automatically once a change builds and passes checks, then report what went live.
-  Vercel can take several minutes to publish.
+  Vercel can take several minutes to publish. Exception: changes he'll judge by feel on his phone
+  (3D, scrolling, animation) go to a preview branch first and are merged when he says so
+  (handoff.md §2).
+- Work can happen in a cloud session or on his PC; GitHub is the meeting point. Some jobs need his
+  PC (model exports, cover stills, GPU checks) — **handoff.md §12** says which. Read it first if
+  you are a cloud session.
 
 ## Commands
 - `npm run dev` — dev server, exposed on the local network (open from phone)

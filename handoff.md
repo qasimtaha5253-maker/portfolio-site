@@ -4,12 +4,16 @@ Written for a fresh Claude Code / Cowork session picking this up cold. Read `CLA
 (project rules, architecture, stack) — this doc is the "how we got here and what to watch for"
 companion to it, not a replacement.
 
-Last updated: 2026-11-09. Full rewrite on 2026-09-23 (bento-grid build-out, the expandable
-mini-card content system, the shadcn integration, several project-content passes), plus an
-incremental update on 2026-11-09 for the session that added Vercel Web Analytics, a restyled
-"Tap a project" hint, and a round of scroll/3D-loading performance work — see §4 (what changed),
-§7e (the performance reasoning, read before touching `ModelLayer` or the cover mounting) and
-§10/§11 (what's still open). Section numbers are unchanged from the September version.
+Last updated: 2026-11-11. Full rewrite on 2026-09-23 (bento-grid build-out, the expandable
+mini-card content system, the shadcn integration, several project-content passes), plus
+incremental updates on 2026-11-09 (Vercel Web Analytics, a restyled "Tap a project" hint, and four
+rounds of scroll/3D-loading performance work, now merged and live — **§7h describes what is live**;
+§7e-§7g are the history that led there) and 2026-11-11 (**§12: working across cloud and local
+sessions**, and the user's working rules that until then lived only in one PC's Claude memory,
+now in §2). Section numbers are unchanged from the September version.
+
+**If you are a cloud session:** read §12 before doing anything. Some work here needs his PC (a real
+GPU, the gitignored source files, the browser pane); §12 says which, and what to do instead.
 
 ---
 
@@ -21,7 +25,9 @@ project is a same-sized tile; tapping one expands it in place to show its steps.
 
 - **Live:** https://qtaha.com — his own domain, DNS pointed at Vercel, deploy is live there.
   https://portfolio-site-qasim-1db5.vercel.app/ still works too (Vercel's own domain, unchanged).
-- **Repo:** https://github.com/qasimtaha5253-maker/portfolio-site — work directly on `main`.
+- **Repo:** https://github.com/qasimtaha5253-maker/portfolio-site — work directly on `main`,
+  except for changes he'll judge by feel on his phone (3D, scrolling, animation): those go to a
+  preview branch first (§2).
 - **Local:** `C:\Users\qasim\Documents\portfolio-site` (moved off OneDrive on purpose — don't move
   it back, OneDrive syncing `node_modules` caused file locks).
 - **Old versions, tagged, not deleted:** `pinned-chapter-version` (the block-by-block scrollytelling
@@ -73,6 +79,27 @@ project is a same-sized tile; tapping one expands it in place to show its steps.
 - He's comfortable with real changes (new libraries, downgrading a core dependency, reworking a
   layout) as long as the reasoning is explained, and isn't precious about existing code.
 - **Report honestly, including what couldn't be verified.** See §5's Browser-pane caveats.
+- **Design rule (2026-11-09, his words): tile-cover models must already be turning when a tile
+  first comes into view.** A pass that showed still images while scrolling and started the models
+  after the scroll stopped measured smoother and was rejected outright: *"I dont like the models
+  sitting still, ruins the entire aesthetic of the website, need them to be rotating when the user
+  first sees it."* The moving models are the look of the site to him. Performance work has to fit
+  around that (§7h builds them ahead of the scroll), and more generally: **don't trade a visible
+  part of the design for a performance number without asking him first.**
+- **Changes he'll judge by feel on his phone (3D, scrolling, animation) go to a preview branch
+  first**, not straight to `main`: push the branch, give him the Vercel preview URL and a short
+  "what to check on your phone" list, and merge only when he says so ("Merge it" for `perf-pass`).
+  Everything else still follows the push-automatically rule above.
+- **Confirm a Vercel preview actually exists before telling him it's ready.** On 2026-11-09 the
+  first push of `perf-pass` produced no deployment at all, he tested the old live site, and
+  reported it "still laggy". Check
+  `gh api repos/qasimtaha5253-maker/portfolio-site/commits/<branch>/status` for a `Vercel success`
+  status, and that `https://portfolio-site-git-<branch>-qasim-1db5.vercel.app` loads. The
+  pattern behind that bug: **before acting on a "how it feels" report, establish which build he
+  was actually looking at.**
+- **He asks big-picture tool questions too** ("can I convert this session to cloud? what will I
+  lose?"). Answer plainly with what carries over and what doesn't; he then decides. §12 is the
+  written-down answer for this project.
 - He uploads 3D models as files from his own tools, usually `Downloads\Motion Study\` or the chat
   upload path. He describes the motion he wants in plain terms ("rotate the X subassembly 90° in
   1 sec, pause, return in 1 sec, repeat") — see §7b for turning that into working code without
@@ -89,8 +116,10 @@ npm run model  -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize] [--no-instance]
 npm run video  -- <frames-dir> <out.mp4> [--fps 30] [--width 1280] [--crf 23] [--poster]
 ```
 
-No new scripts this session. The model/video pipelines and their flags are unchanged — see §7b for
-the recipe. Windows note still applies: a killed background `npm run dev` can leave vite holding
+The model/video pipelines and their flags are unchanged — see §7b for the recipe. Since 2026-11-09
+there is also a **dev-only page, `http://localhost:5173/tools/stills.html`** (with `npm run dev`
+running), that re-renders the tile-cover still images into `public/models/stills/`; it needs a
+visible browser with a real GPU, so it's a his-PC job (§7f has the recipe, §12 the why). Windows note still applies: a killed background `npm run dev` can leave vite holding
 port 5173 — `Get-NetTCPConnection -LocalPort 5173` and stop that process.
 
 ## 4. Architecture
@@ -117,12 +146,18 @@ src/components/
     RotateLeft03Icon.tsx       user-supplied icon, used as the model rotate-hint (§ current content)
   sections/                    Intro (canvas), About, ContactLinks
   visuals/
-    ModelLayer.tsx             Three.js .glb viewer (see §7) — pinch-to-zoom (§7d); sets up lazily
-                                 near the viewport, covers capped at 30 fps (§7e); also exports
-                                 prefetchModelAssets()
+    ModelLayer.tsx             Three.js .glb viewer (see §7) — pinch-to-zoom (§7d); covers at 30 fps;
+                                 `eager` prop for covers; shared environment map + background
+                                 shader compile (§7h); also exports preloadModel()
     modelAnimations.ts         per-model built-in animations (see §7b) — 7 now, see §6
     EmbedLayer.tsx             HTML animation in an iframe
     VideoLayer.tsx             plain looping <video>
+  BentoGridLazy.tsx            the grid as its own lazy chunk (App.tsx wraps it in Suspense, §7f)
+src/lib/
+  coverLive.ts                 CoverLiveScheduler: which covers get a live 3D viewer, and when (§7h)
+  coverModels.ts               which models a tile cover shows; still-image names and box sizes (§7f)
+  device.ts                    device tier (full/mid/lite), live-cover cap, pixel-ratio caps (§7f/§7h)
+src/tools/stills.tsx + tools/stills.html   dev-only cover-still renderer, not in the build (§7f)
 src/hooks/                     useMotionAllowed, useSmoothScroll (Lenis), useScrollFade
 src/index.css                  Tailwind import + the shadcn theme-token @theme block (§9)
 src/styles/site.css            all site CSS, in @layer base/components
@@ -130,6 +165,7 @@ content/photos/<project>/      source images (committed)
 content/models/                source .glb (GITIGNORED — can be huge)
 content/animations/<name>/     source frame sequences, e.g. .tga (GITIGNORED — can be 1 GB+)
 public/projects/, public/models/, public/animations/   generated/served assets (committed, small)
+public/models/stills/          pre-rendered cover stills, two layouts per cover model (§7f)
 public/favicon.svg             new this session — the site had no favicon before
 scripts/optimize-model.mjs     .glb -> compressed .glb
 scripts/optimize-video.mjs     numbered frame sequence -> compressed .mp4
@@ -151,10 +187,9 @@ reasoning; it's still accurate. What *did* change this session:
   request ("more visible, like the gradient coloured box"): `.bento-section__hint` in site.css is
   styled like `.stats__item` (surface panel, navy→orange hairline across the top, gradient text)
   with a lucide `MousePointerClick` icon in `App.tsx`. Pure presentation; copy unchanged.
-- **3D loading/scroll performance pass** (2026-11-09) — three changes to `ModelLayer.tsx` and
-  `BentoGrid.tsx`, reasoning and the open question in §7e: covers set up lazily, covers draw at
-  30 fps with a lower pixel ratio, a tile's cover is freed while the tile is open, and the 3D code
-  plus cover models are prefetched when the browser is idle.
+- **3D loading/scroll performance passes** (2026-11-09, four rounds, all merged and live). What
+  is live is §7h; §7e-§7g are the history. The first round's idle prefetch of every cover model was
+  removed in the second and replaced by the scheduler's build-ahead preloading in the fourth.
 - **Cover models can now opt out**: `StepModel.excludeFromCover` (new field) skips a model when
   `coverModels()` collects every distinct model across a project's steps for the tile cover. Added
   because the conveyor cart's new crank-handle model (different `src` from its main model) was
@@ -369,7 +404,8 @@ page load, even for tiles far down the page. `onScreen` only stopped *drawing*, 
    cleared immediately on any `expanded` change. The cover remounts when the tile closes (a brief
    "Loading 3D model..." can show). The step's own model is a second renderer, so without this an
    open tile held two contexts. (He said "yes" to this when I offered it.)
-5. **Idle prefetch.** `prefetchModelAssets(srcs)` (exported from `ModelLayer.tsx`) imports the
+5. **(Superseded: removed in §7f, replaced by `preloadModel()` + the scheduler in §7h.)**
+   **Idle prefetch.** `prefetchModelAssets(srcs)` (exported from `ModelLayer.tsx`) imports the
    same three.js modules and `fetch`es every cover model with `priority: 'low'`; `BentoGrid` calls
    it from `requestIdleCallback` (2 s `setTimeout` fallback) after load. This exists **because
    item 1 alone made covers slow to appear on a phone** (the code download, parse and glb fetch
@@ -440,7 +476,9 @@ and by DOM counts; **not on a real phone** (that's what the preview branch is fo
   swaps to its `image` (`StepVisual`), a cover just keeps its still (its status text is hidden by
   CSS). Tested by calling `WEBGL_lose_context.loseContext()` on an open tile's canvas: the photo
   appeared, no console error.
-- **Prefetch:** only the three.js code, once the grid is within 1500 px *and* the browser is idle
+- **Prefetch (superseded by §7h — there is no separate prefetch any more; the scheduler starts
+  building covers once the page has loaded and gone idle, and preloads their model files):** only
+  the three.js code, once the grid is within 1500 px *and* the browser is idle
   (`requestIdleCallback`; on a phone the grid is inside that margin at page load, §7g). No model files are prefetched any more; the stills cover the load time.
 
 **Rendering the stills (do this after any change to a cover model, its config — margin,
@@ -520,7 +558,7 @@ He reported the site "still laggy when it first loads and upon scrolling". Two f
 - **Helix capped at ~60-80 fps** on high-refresh screens (skips frames under 12 ms apart). This
   machine's monitor is 240 Hz+, which is also why Lighthouse's "bootup time" here is inflated: it
   counts every rAF frame. Lighthouse after this pass: 97, TBT 20 ms, bootup 2.5 s.
-- three.js prefetch moved to `requestIdleCallback`; `forceContextLoss()` skipped when the context
+- three.js prefetch moved to `requestIdleCallback` (later removed, §7h); `forceContextLoss()` skipped when the context
   is already lost (three logs a warning otherwise); `CoverModels` now passes `onError`, so a cover
   whose context dies *after* going live returns to its still instead of showing a blank canvas.
 
@@ -693,7 +731,9 @@ had never actually had a component added — this session added the first one.
 - The CSS file (35 KB, 7.9 KB gzip) is render-blocking (~740 ms on Lighthouse's throttled mobile) —
   Vite's default; inlining critical CSS wasn't attempted.
 - The `.glb` files were left as they are: already meshopt + quantized by `npm run model`, so
-  re-compressing wasn't a clear win, and they're no longer prefetched anyway.
+  re-compressing wasn't a clear win. Since §7h the nearest tiles' models are downloaded in the
+  background after load (~2.2 MB on a phone), so shrinking them would now pay off directly — a
+  possible future job, needs his PC and his source exports (§12).
 - Vercel Web Analytics: code is in, but whether he enabled it in the Vercel dashboard is
   unconfirmed (§1).
 - Reduced-motion layout has never been checked in a real browser with the OS setting on, only via
@@ -743,3 +783,64 @@ The shared-WebGL-context idea (§7g) was offered and is no longer needed for smo
 (§8) out to the other 6 projects, for visual consistency. Don't do this unprompted — he's been
 asking for it project-by-project on purpose, so wait for the ask rather than assuming he wants it
 everywhere at once.
+
+## 12. Working across cloud and local sessions (added 2026-11-11)
+
+He asked whether this work could move to a Claude Code cloud session and what would be lost. The
+answer, written down so either kind of session can pick up from here:
+
+**GitHub is the meeting point.** Work can move between his PC and the cloud as often as he likes,
+as long as each side pushes before the other starts. The live site deploys from `main` on GitHub
+regardless of where the push came from.
+
+**What exists only on his PC** (not in git, so a cloud session can't see it):
+- `content/models/` — his original model exports, the input to `npm run model`. Gitignored on
+  purpose (they can be huge). The compressed output in `public/models/` *is* in git.
+- `content/animations/` — raw frame sequences for `npm run video` (can be 1 GB+). Output in
+  `public/animations/` is in git.
+- Claude's per-project memory notes on that PC. Everything in them as of 2026-11-11 is copied into
+  §2 of this doc, so nothing is lost; future rules should go into this doc too, not only memory.
+- The scratch measurement scripts used for §7g/§7h (temp folder, not kept). They were small Node
+  scripts driving headless Chrome through `puppeteer-core` (found in the npx cache after running
+  `npx lighthouse`) at a phone viewport with CPU throttling (`Emulation.setCPUThrottlingRate`),
+  scrolling with touch events, and counting main-thread tasks over 50 ms with a `longtask`
+  PerformanceObserver; one variant recorded, per model tile, whether its cover had `is-live` the
+  moment the tile first intersected the viewport. Rebuild from that description if needed. The
+  numbers only mean anything on a machine with a real GPU.
+
+**Needs his PC — don't attempt these from the cloud; tell him it's a local job instead:**
+- **Adding or replacing a 3D model**: needs his export (`content/models/`), then `npm run model`,
+  then framing/animation checks by eye in a browser (§7b).
+- **Re-rendering cover stills** (`tools/stills.html`, §7f): needs a visible browser with a real
+  GPU. Required after any change to a cover model, its config (`margin`, `brightness`,
+  `rotation`, `explode`, `transparentParts`...), ModelLayer's camera or lighting, or the tile
+  shape in site.css. **A cloud session that makes one of those changes must say plainly that the
+  stills need re-rendering on his PC before it goes live**, or the still fades into a live model
+  that no longer matches it.
+- **A new video** from a frame sequence (`content/animations/`).
+- **Performance measurements** and anything judged by how 3D looks or moves — cloud machines very
+  likely have no GPU (not verified; check before relying on it either way).
+- **Testing on his phone over Wi-Fi** (`npm run dev`, LAN address) and the desktop app's browser
+  pane. From the cloud, the phone check is a Vercel preview branch instead (§2).
+
+**Fine from the cloud:** copy and project-text edits in `src/data/projects.ts`, new tiles or steps
+using photos already in `public/projects/`, the §8 card system rolled out to more projects (when
+he asks), CSS/layout tweaks that don't change the tile shape, docs, dependency checks (React stays
+pinned at 19.2.8, see CLAUDE.md). New photos are possible if he uploads them: put them in
+`content/photos/<project>/` and run `npm run images` (pure Node + sharp, no GPU) — commit both.
+
+**The round trip:**
+1. Cloud work ends with a push to GitHub. Note the branch: a cloud session may have worked on its
+   own branch rather than `main`; if so, it needs merging into `main` (a pull request, or a merge
+   in the next session) before it's live.
+2. On his PC, before starting: `git checkout main` then `git pull`. Start a fresh local session in
+   the project folder; it reads CLAUDE.md and this doc.
+3. Do the local-only work, `npm run build`, push. Vercel deploys `main` to qtaha.com as usual.
+4. **Never have cloud and local editing at the same time.** If both change the same file before
+   either pushes, git refuses the second push until the conflict is resolved. One side finishes and
+   pushes; the other pulls before it starts.
+
+State when this section was written: `main` at the "Docs: perf-pass merged into main" commit plus
+this update, nothing uncommitted. The `perf-pass` branch (fully merged) still exists locally and on
+GitHub and can be deleted; `bento-layout` and `visual-polish` are older branches, both merged
+or superseded long ago — leave them unless he asks.
