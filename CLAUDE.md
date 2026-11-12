@@ -65,7 +65,8 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `src/components/visuals/` — `ModelLayer.tsx` (Three.js .glb viewer), `EmbedLayer.tsx`
   (HTML animation in an iframe) and `VideoLayer.tsx` (a plain looping `<video>`).
 - `src/components/sections/` — `Intro` (uses HelixChronoMatrix, headline "Qasim Taha", no
-  controls), `About`, `ContactLinks`, `ResumePreview`.
+  controls), `About`, `ContactLinks`, `ResumePreview`, `Certifications` (data in
+  `src/data/certifications.ts`).
 - `src/components/ui/helix-chrono-matrix.tsx` — the intro canvas component (user-supplied),
   with added `showControls` and `children` props, off-screen pause and reduced-motion still frame.
 - `src/hooks/` — `useMediaQuery`/`useMotionAllowed` (dev-only `?reduced-motion` URL flag
@@ -206,6 +207,14 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   .tex, PDF and both previews. Needs `pdflatex` and `pdftoppm`; a cloud session must install them
   (`texlive-latex-extra texlive-fonts-extra texlive-plain-generic tex-gyre poppler-utils` via apt;
   output was checked text- and font-identical to his PDF).
+- **About text** was rewritten by him 2026-11-12 (one paragraph: Guelph 2027, CSWP, design loop,
+  3D-printing side business, manufacturing side). Use his wording; don't re-add the old second
+  paragraph.
+- **Certifications** (added 2026-11-12) sit under About in a row of cards: CSWP plus three
+  SOLIDWORKS Associate certificates (Electrical Design, Sustainability, Additive Manufacturing).
+  Each card has its badge (cut from the certificate by `scripts/extract-cert-badge.py`), a link to
+  the certificate PDF (`public/certifications/<slug>.pdf`) and "Verify", the issuer's page from the
+  certificate's QR code. His CSWA (Nov. 2023, on his resume) isn't shown: no certificate file yet.
 - Text is condensed from the user's PDF; keep steps short.
 - Custom domain is deliberately the last step; don't raise it early.
 - Kinder Toy Plane's "Process" step has a video of the assembly exploding apart (from a SolidWorks

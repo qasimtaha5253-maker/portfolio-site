@@ -2,6 +2,7 @@ import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import { useScrollFade } from '@/hooks/useScrollFade';
 import { ContactLinks } from './ContactLinks';
 import { ResumePreview } from './ResumePreview';
+import { Certifications } from './Certifications';
 
 export function About() {
   const animated = useMotionAllowed();
@@ -16,17 +17,17 @@ export function About() {
             About me
           </h2>
           <p className="hero__lede">
-            I’m a final-year Mechanical Engineering co-op student with a strong interest in mechanical design,
-            especially robotics and automation. I enjoy taking ideas from early concepts to working hardware through
-            CAD, prototyping, testing and iteration.
-          </p>
-          <p className="hero__lede hero__lede--secondary">
-            These projects show how I design, build and refine — with a focus on real-world performance, reliability
-            and clear design intent.
+            I’m a mechanical engineering student at the University of Guelph, graduating in 2027, and a Certified
+            SOLIDWORKS Professional (CSWP). I enjoy the full design loop: modeling a part, checking it against real
+            constraints like fit, tolerances and manufacturability, and refining it until it’s ready to build. Outside
+            school, 3D printing is my hobby and a small side business, where I make functional parts in
+            engineering-grade materials. It’s given me a practical feel for designing parts that print, fit and hold
+            up. Having worked on the manufacturing side, I design with how things actually get made in mind.
           </p>
           <ContactLinks />
         </div>
         <ResumePreview />
+        <Certifications />
       </div>
     </section>
   );
