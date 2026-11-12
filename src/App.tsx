@@ -11,6 +11,7 @@ const BentoGrid = lazy(() => import('@/components/BentoGridLazy'));
 import { Intro } from '@/components/sections/Intro';
 import { About } from '@/components/sections/About';
 import { ContactLinks } from '@/components/sections/ContactLinks';
+import { SectionIndicator } from '@/components/SectionIndicator';
 
 export default function App() {
   // Reduced motion: no tile reveal animation, everything shown at once.
@@ -21,6 +22,7 @@ export default function App() {
     <main className={cn('site', animated && 'is-animated')}>
       <Intro />
       <About />
+      <SectionIndicator />
 
       <section className="bento-section" id="work" aria-labelledby="work-title">
         <header className="bento-section__header">

@@ -62,6 +62,10 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `src/components/StepContent.tsx` — body / stats / bullets. `Photo.tsx` — responsive lazy WebP
   `<img>`; widths in `src/image-widths.json` (shared with the image script); adds
   `is-transparent` from `src/transparent-photos.json`.
+- `src/components/SectionIndicator.tsx` — the "About me — Projects" pill fixed to the bottom of
+  the screen while About is being read (added 2026-11-12 at his request, so visitors know to keep
+  scrolling). Shown only while About crosses the middle of the screen and the projects don't;
+  "Projects" is a plain `#work` link, which Lenis's `anchors: true` turns into a smooth scroll.
 - `src/components/visuals/` — `ModelLayer.tsx` (Three.js .glb viewer), `EmbedLayer.tsx`
   (HTML animation in an iframe) and `VideoLayer.tsx` (a plain looping `<video>`).
 - `src/components/sections/` — `Intro` (uses HelixChronoMatrix, headline "Qasim Taha", no
