@@ -1,0 +1,195 @@
+%----------------------------------------------------------------------------------------
+% QASIM TAHA — RESUME
+% Web version (qtaha.com): same as the standard version minus the phone number.
+% Build: npm run resume  ->  public/Qasim-Taha-Resume.pdf
+%----------------------------------------------------------------------------------------
+
+\documentclass[11pt, letterpaper]{article}
+
+%----------------------------------------------------------------------------------------
+% PACKAGES
+%----------------------------------------------------------------------------------------
+\usepackage[top=0.3in, bottom=0.3in, left=0.3in, right=0.3in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{multicol}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{tabularx}
+
+%----------------------------------------------------------------------------------------
+% HYPERLINK SETUP
+%----------------------------------------------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    urlcolor=blue,
+    linkcolor=blue,
+    pdfborder={0 0 0},
+    pdftitle={Qasim Taha \textendash\ Resume},
+    pdfauthor={Qasim Taha}
+}
+
+%----------------------------------------------------------------------------------------
+% PAGE STYLE
+%----------------------------------------------------------------------------------------
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+%----------------------------------------------------------------------------------------
+% SECTION FORMATTING — thick rule above, matching PDF style
+%----------------------------------------------------------------------------------------
+\titleformat{\section}
+  {\normalfont\normalsize\bfseries\uppercase}
+  {}{0em}{}
+  [\vspace{0.5pt}\titlerule\vspace{0.5pt}]
+
+\titlespacing{\section}{0pt}{6pt}{4pt}
+
+%----------------------------------------------------------------------------------------
+% CUSTOM COMMANDS
+%----------------------------------------------------------------------------------------
+
+% Header entry: Role | Organization \hfill Date (date on right, same line)
+\newcommand{\resumeEntry}[2]{%
+  \noindent\textbf{#1} \hfill #2\vspace{0.5pt}
+}
+
+% Work entry: line 1 = bold title + date flush right; line 2 = location (italic)
+\newcommand{\workEntry}[3]{%
+  \noindent\textbf{#1} \hfill #2 \\
+  \textit{#3}\vspace{0.5pt}
+}
+
+% Sub-line for org/location under entry header
+\newcommand{\resumeSubEntry}[2]{%
+  \noindent #1 \hfill #2 \vspace{0.5pt}
+}
+
+% Education entry
+\newcommand{\educationEntry}[4]{%
+  \noindent\textbf{#1} \hfill \textbf{#2} \\
+  \textit{#3} \hfill #4 \vspace{0.5pt}
+}
+
+% Bullet list environment (tight)
+\newenvironment{resumelist}{%
+  \begin{itemize}[leftmargin=1.5em, itemsep=0.5pt, topsep=1pt, parsep=0pt]
+}{%
+  \end{itemize}\vspace{0.5pt}
+}
+
+%----------------------------------------------------------------------------------------
+% DOCUMENT
+%----------------------------------------------------------------------------------------
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+% HEADER
+%----------------------------------------------------------------------------------------
+\begin{center}
+    {\fontsize{22}{26}\selectfont\textbf{Qasim Taha}} \\[4pt]
+    {\large
+    qasim.taha5253@gmail.com \; \textbar{} \;
+    \href{https://linkedin.com/in/qasim-taha}{linkedin.com/in/qasim-taha} \; \textbar{} \;
+    \href{https://qtaha.com}{qtaha.com}}
+\end{center}
+
+\vspace{0.3pt}
+
+%----------------------------------------------------------------------------------------
+% SKILLS SUMMARY
+%----------------------------------------------------------------------------------------
+\section{Skills}
+{\small\hyphenpenalty=10000
+\noindent
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X|>{\raggedright\arraybackslash}X@{}}
+\textbf{CAD:} SolidWorks (DFMA, Drawings), AutoCAD, GD\&T &
+\textbf{Documentation:} MS Excel, Technical Drawings, BOMs, SOPs \\
+\textbf{Analysis:} ANSYS FEA/CFD, MATLAB, Root Cause Analysis &
+\textbf{Collaboration:} Vendor Liaison, Cross-Functional Teams, Leadership \\
+\end{tabularx}}
+
+%----------------------------------------------------------------------------------------
+% CERTIFICATIONS
+%----------------------------------------------------------------------------------------
+\section{Certifications}
+
+\workEntry{SOLIDWORKS CSWP \textnormal{$|$ \itshape Certified SOLIDWORKS Professional}}{Sept.~2026}{Issued by Dassault Syst\`emes} \\
+\textit{CSWA (Nov.~2023); Associate certifications in SolidWorks Electrical, Sustainability, and Additive Manufacturing (Sept.~2026)}
+
+%----------------------------------------------------------------------------------------
+% EDUCATION
+%----------------------------------------------------------------------------------------
+\section{Education}
+
+\workEntry{Bachelor of Engineering, Mechanical Engineering Co-op \textnormal{$|$ \itshape University of Guelph}}{Sept.~2022 -- Apr.~2027}{Guelph, ON}
+
+%----------------------------------------------------------------------------------------
+% WORK EXPERIENCE
+%----------------------------------------------------------------------------------------
+\section{Work Experience}
+
+\workEntry{Manufacturing Engineer Co-op \textnormal{$|$ \itshape Roadtrek Inc.}}{May 2026 -- Present}{Cambridge, ON}
+\begin{resumelist}
+    \item Designed a \textbf{drill jig} for a propane regulator bracket that fixtures the part and locates holes, cutting prep time by \textbf{67\%}.
+    \item Rebuilt kitting checklists with part ID fields, eliminating waits on missing parts and cutting downstream station time by \textbf{60\%}.
+    \item Led \textbf{material selection} for a failing butyl sealing tape, benchmarking supplier specs on adhesion, heat, and water sealing.
+    \item Traced an assembly defect through \textbf{RCA} and worked with the vendor on a prototype part that resolved it.
+    \item Cross-checked \textbf{BOMs} from \textbf{1000+} engineering drawings, building an Excel tool to flag mismatched part numbers.
+\end{resumelist}
+
+\workEntry{Manufacturing Engineer Co-op \textnormal{$|$ \itshape Camcor, Linamar Corporation}}{Jan.~2025 -- Aug.~2025}{Guelph, ON}
+\begin{resumelist}
+        \item Owned design through release of \textbf{18} production tools in \textbf{SolidWorks} for automotive PTU and RDM driveline programs.
+    \item Produced detailed drawings to \textbf{ASME Y14.5 GD\&T} for gear cutting fixtures, robot pallets, and bearing pullers.
+    \item Laid out machine cells and the \textbf{plant floor layout} in \textbf{AutoCAD} for a new assembly line launch and set station \textbf{cycle time} targets.
+    \item Designed variable and go/no-go inspection gauges to verify part quality on the new line's launch parts.
+    \item Designed a spring-loaded oiling tool rated for \textbf{300 uses/shift}, calculating spring rate and guide sizing; cut cycle time \textbf{93\%}.
+    \item Authored Safe Cell Entry procedures and standard work instructions for new line stations, training operators through launch.
+\end{resumelist}
+
+
+%----------------------------------------------------------------------------------------
+% PROJECTS
+%----------------------------------------------------------------------------------------
+\section{Projects}
+
+\workEntry{Mobile Strawberry Pre-Cooling Cart \textnormal{$|$ \itshape Engineering \& Design III}}{Sept.~2025 -- Dec.~2025}{University of Guelph, Guelph, ON}
+\begin{resumelist}
+    \item Designed a battery-electric strawberry pre-cooling cart in a team of 5, selecting from 7 concepts via weighted decision matrices.
+    \item Sized an \textbf{R-290} refrigeration system (1,640 W load, COP 2.09) and 48 V LiFePO$_4$ battery for \textbf{5.7 h} runtime, \textbf{43\%} above target.
+    \item Modeled the assembly in \textbf{SolidWorks} and validated it with \textbf{ANSYS CFD}, confirming cooling from 30.5 to 1\,$^\circ$C in \textbf{2.17 h}.
+    \item Built a 10-year cash flow model projecting a \textbf{2-year payback} on a \textbf{\$6,515} build, a quarter the cost of commercial units.
+\end{resumelist}
+
+\workEntry{Detachable Conveyor Belt Cart \textnormal{$|$ \itshape Camcor, Linamar Corporation}}{Jan.~2025 -- Aug.~2025}{Guelph, ON}
+\begin{resumelist}
+    \item Designed a detachable cart to move parts between conveyors, replacing manual carrying and cutting handling time by \textbf{70\%}.
+    \item Reverse-engineered existing conveyors by measuring dimensions and interface points, so the cart fits varying setups.
+    \item Built the frame from \textbf{T-slot extrusion} and off-the-shelf casters, with a drive shaft coupling for tool-free attach and detach.
+    \item Detailed the cart in \textbf{SolidWorks} to \textbf{ASME Y14.5 GD\&T}; it mated with existing conveyor lines with no rework.
+\end{resumelist}
+\vspace{2pt}
+\noindent\textit{Additional projects, including a pick-and-place gripper and more tooling and fixture designs, are at qtaha.com.}
+%----------------------------------------------------------------------------------------
+% EXTRACURRICULARS
+%----------------------------------------------------------------------------------------
+\section{Extracurriculars}
+
+\resumeEntry{Product Designer \textnormal{$|$ \itshape Straw Co (Part-Time)}}{June 2025 -- Present}
+\begin{resumelist}
+    \item Design products in \textbf{SolidWorks} for a medical-accessories brand, including the Straw V2 loupe strap, from concept to production.
+\end{resumelist}
+\resumeEntry{3D Printing Business \textnormal{$|$ \itshape Self-Employed}}{June 2025 -- Present}
+\begin{resumelist}
+    \item Design and sell parts in carbon-fiber nylon (PA6-CF, PA12-CF) and ABS, optimized for tight tolerances and strength.
+\end{resumelist}
+\resumeEntry{President \textnormal{$|$ \itshape Pakistani Students Association}}{Sept.~2024 -- Apr.~2025}
+
+\end{document}

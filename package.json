@@ -10,7 +10,8 @@
     "images": "node scripts/optimize-images.mjs",
     "typecheck": "tsc -b",
     "model": "node scripts/optimize-model.mjs",
-    "video": "node scripts/optimize-video.mjs"
+    "video": "node scripts/optimize-video.mjs",
+    "resume": "node scripts/build-resume.mjs"
   },
   "devDependencies": {
     "@gltf-transform/core": "^4.5.0",

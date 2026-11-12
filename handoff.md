@@ -114,6 +114,7 @@ npm run typecheck     # tsc -b only
 npm run images        # content/photos/** -> public/projects/**/*.webp (deletes orphaned output)
 npm run model  -- <in.glb> <out.glb> [--ratio 0.2] [--no-resize] [--no-instance]
 npm run video  -- <frames-dir> <out.mp4> [--fps 30] [--width 1280] [--crf 23] [--poster]
+npm run resume        # content/resume/resume.tex -> public/Qasim-Taha-Resume.pdf (needs pdflatex)
 ```
 
 The model/video pipelines and their flags are unchanged — see §7b for the recipe. Since 2026-11-09
@@ -767,7 +768,9 @@ domain item, which is now done):**
 - ~~Custom domain~~ — **qtaha.com is registered, DNS points at Vercel, and the deploy is live
   there.** Confirmed directly by him this session. No action needed; both `qtaha.com` and the
   `.vercel.app` URL work.
-- Replace `qtaha@uoguelph.ca` — he'll do this himself before graduating, no action needed.
+- ~~Replace `qtaha@uoguelph.ca`~~ — done 2026-11-12: the site now shows `qasim.taha5253@gmail.com`
+  (his request), and a "Resume" link sits next to LinkedIn and email (PDF without his phone
+  number; CLAUDE.md, Content decisions, has the update recipe).
 - Scroll-scrubbed SolidWorks image sequences — decided against; 3D models/animations are the path
   for CAD visuals now.
 

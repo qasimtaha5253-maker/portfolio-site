@@ -94,9 +94,8 @@ anything the user must do on their end in plain terms (he is not a web developer
   (commit both). Config refers to photos by `<name>` only.
 - The script has no pixel limit (SolidWorks renders can be huge, e.g. 24000×19000), refuses
   to run if two files in a folder share a name, and deletes WebP files whose source is gone.
-- Most photos are the user's originals. Still PDF-extracted (low-res): coffee-cup-gripper/
-  built-gripper, hydraulic-hand/part-drawing, reef-rover/collection-mechanism, and
-  conveyor-cart/shaft-assembly-render (now only the reduced-motion fallback). The user will
+- Most photos are the user's originals. Still PDF-extracted (low-res), waiting on replacements:
+  hydraulic-hand/part-drawing and reef-rover/collection-mechanism. The user will
   send replacements; don't chase him for them.
 - Cooling unit: `final-design` is the dimensioned towable cart (the actual final design);
   `interim-concept` is the earlier solar-lid concept the team pivoted away from.
@@ -146,7 +145,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   and a chassis part's own geometry, not guessed — see handoff.md §7, "Meccano car orientation").
 - A model can play a looping animation of its parts: `animation: '<name>'` in its config, run by
   `src/components/visuals/modelAnimations.ts` (a plain GSAP timeline, no ScrollTrigger; loaded on
-  demand, only plays while on screen, off under reduced motion). Currently five:
+  demand, only plays while on screen, off under reduced motion). Currently seven (the five below,
+  plus `oiling-tool-coil` and `crank-rotate`, both in handoff.md §6/§7b):
   `ptu-gear-cutting` (cutter, sliding and turning gear group), `oiling-sensor` (sensor lowered
   1.25 in and raised), `conveyor-shaft` (the drive-shaft sub-assembly turned 90° and back),
   `shaft-puller` (adaptor A pulled in, sleeve down, then both back out) and `propeller-spin` (the
@@ -193,8 +193,15 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   as you scroll down the page (see "3D performance" under Step visuals), so measure phone performance
   before adding more cover models.
 - The "Choosing a concept" step was deleted from Cooling Unit at his request; don't reintroduce it.
-- Contact on the public site: LinkedIn + email only (no phone number). The email
-  (`qtaha@uoguelph.ca`) will be replaced before he graduates; not urgent.
+- Contact on the public site: LinkedIn, Resume, email (`qasim.taha5253@gmail.com`, switched from
+  his Guelph address at his request 2026-11-12). **No phone number** anywhere on the site.
+- **Resume** (added 2026-11-12): the "Resume" link (in `ContactLinks`, so it shows in About and the
+  footer) opens `public/Qasim-Taha-Resume.pdf`, built by `npm run resume` from
+  `content/resume/resume.tex`. That .tex is the web copy of his own LaTeX resume with the phone
+  number removed and a PDF title added; his standard version (with phone) stays off the repo.
+  To update: apply his edits to the web .tex (keep the phone out), `npm run resume`, commit both.
+  Needs `pdflatex`; a cloud session must install it (`texlive-latex-extra texlive-fonts-extra
+  texlive-plain-generic tex-gyre` via apt; output was checked text- and font-identical to his PDF).
 - Text is condensed from the user's PDF; keep steps short.
 - Custom domain is deliberately the last step; don't raise it early.
 - Kinder Toy Plane's "Process" step has a video of the assembly exploding apart (from a SolidWorks
@@ -226,6 +233,7 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 - `npm run images` — convert new/changed photos in `content/photos` to WebP
 - `npm run model -- <in.glb> <out.glb>` — compress a 3D model (see Step visuals)
 - `npm run video -- <frames-dir> <out.mp4>` — encode a frame sequence to video (see Step visuals)
+- `npm run resume` — rebuild the resume PDF from `content/resume/resume.tex` (see Content decisions)
 - On Windows, stopping a background `npm run dev` task can leave `vite` holding port 5173;
   find it with `Get-NetTCPConnection -LocalPort 5173` and stop that process.
 
