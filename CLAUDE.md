@@ -199,7 +199,8 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
   footer) opens `public/Qasim-Taha-Resume.pdf`, built by `npm run resume` from
   `content/resume/resume.tex`. That .tex is the web copy of his own LaTeX resume with the phone
   number removed and a PDF title added; his standard version (with phone) stays off the repo.
-  About also shows a thumbnail card of the top of page 1 (`ResumePreview.tsx`,
+  About also shows a thumbnail card of the top of page 1, to the right of the About text above
+  900px wide and under it on phones (he found it too tall below the text) (`ResumePreview.tsx`,
   `public/resume-preview-{400,800}.webp`), rendered from the PDF by the same script.
   To update: apply his edits to the web .tex (keep the phone out), `npm run resume`, commit the
   .tex, PDF and both previews. Needs `pdflatex` and `pdftoppm`; a cloud session must install them

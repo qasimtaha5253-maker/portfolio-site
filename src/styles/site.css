@@ -97,6 +97,24 @@
   padding: calc(var(--gutter) * 3) var(--gutter);
 }
 
+.hero__layout {
+  width: 100%;
+  max-width: 42rem;
+  display: grid;
+  gap: 2rem;
+}
+
+/* Wide screens: the resume card sits to the right of the About text. */
+@media (min-width: 901px) {
+  .hero__layout {
+    max-width: 66rem;
+    grid-template-columns: minmax(0, 42rem) minmax(15rem, 20rem);
+    justify-content: center;
+    align-items: center;
+    column-gap: clamp(2rem, 5vw, 4rem);
+  }
+}
+
 .hero__inner {
   max-width: 42rem;
   display: grid;
@@ -142,7 +160,6 @@
   justify-self: start;
   width: 100%;
   max-width: 22rem;
-  margin-top: 0.25rem;
   display: grid;
   overflow: hidden;
   background: var(--surface);
