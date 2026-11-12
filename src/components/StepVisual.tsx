@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Photo } from './Photo';
 import { EmbedLayer } from './visuals/EmbedLayer';
 import { ModelLayer } from './visuals/ModelLayer';
+import { ModelLoading } from './visuals/ModelLoading';
 import { VideoLayer } from './visuals/VideoLayer';
 import type { Step, StepModel } from '@/data/types';
 
@@ -28,7 +29,7 @@ function ModelBox({ model, animated, ready }: { model: StepModel; animated: bool
   const [ref, onScreen] = useOnScreen<HTMLDivElement>();
   return (
     <div className="step-visual" ref={ref}>
-      {ready && <ModelLayer model={model} active={onScreen} animated={animated} />}
+      {ready ? <ModelLayer model={model} active={onScreen} animated={animated} /> : <ModelLoading />}
     </div>
   );
 }
@@ -84,7 +85,9 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
             ready ? (
               <ModelLayer key={item.model.src} model={item.model} active={onScreen} animated={animated} />
             ) : (
-              <div key={item.model.src} />
+              <div key={item.model.src} className="model-loading-cell">
+                <ModelLoading />
+              </div>
             )
           ) : item.image ? (
             <Photo
@@ -130,7 +133,11 @@ export function StepVisual({ projectId, step, animated, coverSrc, ready }: StepV
     }
     return (
       <div className="step-visual" ref={ref}>
-        {ready && <ModelLayer model={step.model} active={onScreen} animated={animated} onError={() => setModelFailed(true)} />}
+        {ready ? (
+          <ModelLayer model={step.model} active={onScreen} animated={animated} onError={() => setModelFailed(true)} />
+        ) : (
+          <ModelLoading />
+        )}
       </div>
     );
   }

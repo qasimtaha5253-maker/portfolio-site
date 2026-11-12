@@ -185,6 +185,10 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 - Lighting is one shared setup (tone-mapping exposure 0.68). A model whose pale parts wash out to
   white gets `brightness` in its config (multiplier on that exposure; the three Small Fixtures
   models use 0.5). Applies to the cover too, unlike `margin`.
+- A step's model box shows a centred spinner and "3D Model Loading..." (`visuals/ModelLoading.tsx`,
+  added 2026-11-12 after he saw blank boxes on slower computers) from the moment the tile opens
+  (before the viewer mounts, while the expand settles) until the model's first frame is drawn.
+  Tile covers hide it; they show their still instead.
 - A resize wipes the WebGL canvas, so `ModelLayer` redraws once after every resize (otherwise a
   still cover model is blank after its tile is expanded and closed).
 

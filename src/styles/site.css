@@ -913,7 +913,8 @@
 }
 
 /* The still already stands in for a loading (or failed) cover view. */
-.cover-model .model-layer__status {
+.cover-model .model-layer__status,
+.cover-model .model-loading {
   display: none;
 }
 
@@ -1096,6 +1097,7 @@
 
 /* A step's own model, animation or split view, inline below its text. */
 .step-visual {
+  position: relative;
   margin-top: 0.9rem;
   aspect-ratio: 4 / 3;
   border-radius: var(--radius);
@@ -1275,5 +1277,41 @@
   .section-indicator__chevron {
     animation: none;
   }
+}
+
+/* "3D Model Loading..." (ModelLoading.tsx): centred in a step's model box until the model is
+   drawn. Fills its nearest positioned ancestor (.model-layer, .step-visual or a split cell). */
+.model-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.model-loading__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--accent);
+  animation: model-loading-spin 0.9s linear infinite;
+}
+
+.model-loading__text {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.model-loading-cell {
+  position: relative;
+  min-height: 6rem;
+}
+
+@keyframes model-loading-spin {
+  to { transform: rotate(360deg); }
 }
 } /* end @layer components */

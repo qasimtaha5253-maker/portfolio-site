@@ -4,6 +4,7 @@ import type { StepModel } from '@/data/types';
 import type { ModelAnimation } from './modelAnimations';
 import { RotateLeft03Icon } from '@/components/icons/RotateLeft03Icon';
 import { pixelRatioCap } from '@/lib/device';
+import { ModelLoading } from './ModelLoading';
 
 const base = import.meta.env.BASE_URL;
 
@@ -697,9 +698,8 @@ export function ModelLayer({
   return (
     <div className={cn('model-layer', active && 'is-active')} aria-label={model.title} role="img">
       <div ref={hostRef} className="model-layer__canvas" />
-      {status !== 'ready' && (
-        <p className="model-layer__status">{status === 'loading' ? 'Loading 3D model…' : 'Model unavailable'}</p>
-      )}
+      {status === 'loading' && <ModelLoading />}
+      {status === 'error' && <p className="model-layer__status">Model unavailable</p>}
       {/* Drag/pinch-to-interact hint — only where that's actually possible
           (a step's own model, not the non-interactive bento tile cover). */}
       {interactive && status === 'ready' && <RotateLeft03Icon className="model-layer__rotate-hint" aria-hidden="true" />}
