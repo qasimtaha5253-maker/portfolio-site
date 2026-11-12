@@ -62,6 +62,14 @@ anything the user must do on their end in plain terms (he is not a web developer
 - `src/components/StepContent.tsx` — body / stats / bullets. `Photo.tsx` — responsive lazy WebP
   `<img>`; widths in `src/image-widths.json` (shared with the image script); adds
   `is-transparent` from `src/transparent-photos.json`.
+- `src/components/sections/IntroBackdrop.tsx` — faint (opacity 0.1), still pictures of the nine
+  cover models scattered behind the intro headline (added 2026-11-12 at his request: "no need to
+  rotate, I don't want the page to lag at all"). Plain images, no WebGL, added only after the page
+  has loaded and gone idle; above the helix canvas (it paints an opaque background each frame),
+  below the headline. Images are small trimmed copies of the cover stills in
+  `public/intro-backdrop/`, made by `npm run backdrop`; **re-run it whenever the stills are
+  re-rendered.** Positions are in site.css (`.intro-backdrop__item--*`); portrait phones show five.
+  Measured: no frame-rate difference with vs. without it (headless, phone size, 4x CPU throttle).
 - `src/components/SectionIndicator.tsx` — the "About me — Projects" pill fixed to the bottom of
   the screen while About is being read (added 2026-11-12 at his request, so visitors know to keep
   scrolling). Shown only while About crosses the middle of the screen and the projects don't;
@@ -255,6 +263,7 @@ looping video (`video`), a rotatable 3D model (`model`), or several side by side
 - `npm run images` — convert new/changed photos in `content/photos` to WebP
 - `npm run model -- <in.glb> <out.glb>` — compress a 3D model (see Step visuals)
 - `npm run video -- <frames-dir> <out.mp4>` — encode a frame sequence to video (see Step visuals)
+- `npm run backdrop` — rebuild the intro's faint model pictures from the cover stills
 - `npm run resume` — rebuild the resume PDF from `content/resume/resume.tex` (see Content decisions)
 - On Windows, stopping a background `npm run dev` task can leave `vite` holding port 5173;
   find it with `Get-NetTCPConnection -LocalPort 5173` and stop that process.
