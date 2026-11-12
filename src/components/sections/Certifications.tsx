@@ -5,7 +5,7 @@ export function Certifications() {
   return (
     <div className="certs">
       <h3 className="certs__title">
-        Certifications
+        SOLIDWORKS certifications
       </h3>
       <ul className="certs__list">
         {certifications.map((c) => (
@@ -20,9 +20,11 @@ export function Certifications() {
               decoding="async"
             />
             <div className="cert__text">
-              <p className="cert__issuer">SOLIDWORKS{c.short ? ` · ${c.short}` : ''}</p>
               <p className="cert__name">{c.title}</p>
-              <p className="cert__date">{c.date}</p>
+              <p className="cert__date">
+                {c.short ? `${c.short} · ` : ''}
+                {c.date}
+              </p>
               <p className="cert__links">
                 <a href={`/certifications/${c.slug}.pdf`} target="_blank" rel="noopener">
                   Certificate
