@@ -1,7 +1,6 @@
 import HelixChronoMatrix, { type HelixChronoMatrixProps } from '@/components/ui/helix-chrono-matrix';
 import { useMotionAllowed } from '@/hooks/useMediaQuery';
 import { useScrollFade } from '@/hooks/useScrollFade';
-import { IntroBackdrop } from './IntroBackdrop';
 
 // Navy (top) to orange (bottom). The site is always dark, so `dark` is what shows.
 const HELIX_GRADIENT: HelixChronoMatrixProps['gradient'] = {
@@ -19,7 +18,6 @@ export function Intro() {
       <HelixChronoMatrix headline="Qasim Taha" showControls={false} speed={0.5} gradient={HELIX_GRADIENT}>
         <p className="intro__role">Mechanical Engineering · University of Guelph</p>
       </HelixChronoMatrix>
-      <IntroBackdrop />
       <a className="intro__cue" href="#about">
         Scroll to explore ↓
       </a>
